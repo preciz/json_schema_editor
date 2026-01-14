@@ -22,7 +22,7 @@ The package can be installed by adding `json_schema_editor` to your list of depe
 ```elixir
 def deps do
   [
-    {:json_schema_editor, "~> 0.1.0"}
+    {:json_schema_editor, "~> 0.2.0"}
   ]
 end
 ```
