@@ -9,39 +9,80 @@ defmodule JSONSchemaEditor.Components do
 
   def icon(%{name: :save} = assigns) do
     ~H"""
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class={["jse-icon", @class]}>
-      <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      class={["jse-icon", @class]}
+    >
+      <path
+        fill-rule="evenodd"
+        d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z"
+        clip-rule="evenodd"
+      />
     </svg>
     """
   end
 
   def icon(%{name: :chevron_up} = assigns) do
     ~H"""
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class={["jse-icon", @class]}>
-      <path fill-rule="evenodd" d="M14.77 12.79a.75.75 0 01-1.06-.02L10 8.832 6.29 12.77a.75.75 0 11-1.08-1.04l4.25-4.5a.75.75 0 011.08 0l4.25 4.5a.75.75 0 01-.02 1.06z" clip-rule="evenodd" />
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      class={["jse-icon", @class]}
+    >
+      <path
+        fill-rule="evenodd"
+        d="M14.77 12.79a.75.75 0 01-1.06-.02L10 8.832 6.29 12.77a.75.75 0 11-1.08-1.04l4.25-4.5a.75.75 0 011.08 0l4.25 4.5a.75.75 0 01-.02 1.06z"
+        clip-rule="evenodd"
+      />
     </svg>
     """
   end
 
   def icon(%{name: :chevron_down} = assigns) do
     ~H"""
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class={["jse-icon", @class]}>
-      <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      class={["jse-icon", @class]}
+    >
+      <path
+        fill-rule="evenodd"
+        d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+        clip-rule="evenodd"
+      />
     </svg>
     """
   end
 
   def icon(%{name: :trash} = assigns) do
     ~H"""
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class={["jse-icon", @class]}>
-      <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clip-rule="evenodd" />
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      class={["jse-icon", @class]}
+    >
+      <path
+        fill-rule="evenodd"
+        d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z"
+        clip-rule="evenodd"
+      />
     </svg>
     """
   end
 
   def icon(%{name: :plus} = assigns) do
     ~H"""
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class={["jse-icon", @class]}>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      class={["jse-icon", @class]}
+    >
       <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
     </svg>
     """
@@ -49,8 +90,17 @@ defmodule JSONSchemaEditor.Components do
 
   def icon(%{name: :adjustments} = assigns) do
     ~H"""
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class={["jse-icon", @class]}>
-      <path fill-rule="evenodd" d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5A.75.75 0 012 10z" clip-rule="evenodd" />
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      class={["jse-icon", @class]}
+    >
+      <path
+        fill-rule="evenodd"
+        d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5A.75.75 0 012 10z"
+        clip-rule="evenodd"
+      />
       <path d="M12.75 8a.75.75 0 01.75.75v2.5a.75.75 0 01-1.5 0v-2.5a.75.75 0 01.75-.75zM7.75 13a.75.75 0 01.75.75v2.5a.75.75 0 01-1.5 0v-2.5a.75.75 0 01.75-.75zM17.75 3a.75.75 0 01.75.75v2.5a.75.75 0 01-1.5 0v-2.5A.75.75 0 0117.75 3z" />
     </svg>
     """
@@ -62,7 +112,7 @@ defmodule JSONSchemaEditor.Components do
   defp badge(assigns) do
     ~H"""
     <span class={["jse-badge", @class]}>
-      <%= render_slot(@inner_block) %>
+      {render_slot(@inner_block)}
     </span>
     """
   end
@@ -82,7 +132,7 @@ defmodule JSONSchemaEditor.Components do
 
     ~H"""
     <div class="jse-constraint-field">
-      <label class="jse-constraint-label"><%= @label %></label>
+      <label class="jse-constraint-label">{@label}</label>
       <input
         type={@type}
         step={@step}
@@ -94,7 +144,7 @@ defmodule JSONSchemaEditor.Components do
         phx-target={@myself}
       />
       <%= if @error do %>
-        <div class="jse-error-message"><%= @error %></div>
+        <div class="jse-error-message">{@error}</div>
       <% end %>
     </div>
     """
@@ -116,7 +166,7 @@ defmodule JSONSchemaEditor.Components do
           <span class="jse-constraint-label">Enum Values</span>
           <%= if @error do %>
             <div class="jse-error-message" style="display: inline-block; margin-left: 0.5rem;">
-              <%= @error %>
+              {@error}
             </div>
           <% end %>
         </div>
@@ -274,14 +324,14 @@ defmodule JSONSchemaEditor.Components do
           <optgroup label="Basic Types">
             <%= for type <- @types do %>
               <option value={type} selected={Map.get(@node, "type") == type}>
-                <%= String.capitalize(type) %>
+                {String.capitalize(type)}
               </option>
             <% end %>
           </optgroup>
           <optgroup label="Logic Composition">
             <%= for type <- @logic_types do %>
               <option value={type} selected={Map.has_key?(@node, type)}>
-                <%= String.capitalize(type) %>
+                {String.capitalize(type)}
               </option>
             <% end %>
           </optgroup>
@@ -410,7 +460,7 @@ defmodule JSONSchemaEditor.Components do
                 <option value="">None</option>
                 <%= for fmt <- @formats do %>
                   <option value={fmt} selected={Map.get(@node, "format") == fmt}>
-                    <%= fmt %>
+                    {fmt}
                   </option>
                 <% end %>
               </select>
@@ -473,7 +523,7 @@ defmodule JSONSchemaEditor.Components do
                 phx-click="update_constraint"
                 phx-value-path={JSON.encode!(@path)}
                 phx-value-field="uniqueItems"
-                phx-value-value={(!Map.get(@node, "uniqueItems", false)) |> to_string()}
+                phx-value-value={!Map.get(@node, "uniqueItems", false) |> to_string()}
                 phx-target={@myself}
               />
             </div>
@@ -524,13 +574,13 @@ defmodule JSONSchemaEditor.Components do
     ~H"""
     <div class="jse-logic-container">
       <div class="jse-logic-header">
-        <.badge class="jse-badge-logic"><%= String.capitalize(@logic_type) %> Branches</.badge>
+        <.badge class="jse-badge-logic">{String.capitalize(@logic_type)} Branches</.badge>
       </div>
       <div class="jse-logic-content">
         <%= for {branch, idx} <- Map.get(@node, @logic_type, []) |> Enum.with_index() do %>
           <div class="jse-logic-branch">
             <div class="jse-logic-branch-header">
-              <span class="jse-logic-branch-label">Branch <%= idx + 1 %></span>
+              <span class="jse-logic-branch-label">Branch {idx + 1}</span>
               <button
                 phx-click="remove_logic_branch"
                 phx-target={@myself}

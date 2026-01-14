@@ -1,4 +1,23 @@
 defmodule JSONSchemaEditor do
+  @moduledoc """
+  A Phoenix LiveComponent for visually editing JSON Schemas.
+
+  ## Attributes
+
+    * `schema` - The JSON Schema to edit (required).
+    * `on_save` - A callback function that will be called when the schema is updated.
+      It receives the updated schema as a map.
+    * `id` - The unique identifier for the component.
+
+  ## Examples
+
+      <.live_component
+        module={JSONSchemaEditor}
+        id="json-editor"
+        schema={@my_schema}
+        on_save={fn updated_schema -> send(self(), {:schema_saved, updated_schema}) end}
+      />
+  """
   use Phoenix.LiveComponent
   alias JSONSchemaEditor.SchemaUtils
   alias JSONSchemaEditor.Styles
@@ -10,6 +29,9 @@ defmodule JSONSchemaEditor do
   @logic_types ["anyOf", "oneOf", "allOf"]
   @formats ["email", "date-time", "date", "time", "uri", "uuid", "ipv4", "ipv6", "hostname"]
 
+  @doc """
+  Initializes the component with the given assigns.
+  """
   def update(assigns, socket) do
     socket =
       socket
@@ -386,7 +408,7 @@ defmodule JSONSchemaEditor do
                 <span>Current Schema</span>
                 <button
                   class="jse-btn-copy"
-                  onclick={"navigator.clipboard.writeText(this.getAttribute('data-content')).then(() => {
+                  onclick="navigator.clipboard.writeText(this.getAttribute('data-content')).then(() => {
                     this.classList.add('jse-copied');
                     const span = this.querySelector('span');
                     const oldText = span.innerText;
@@ -395,7 +417,7 @@ defmodule JSONSchemaEditor do
                       this.classList.remove('jse-copied');
                       span.innerText = oldText;
                     }, 2000);
-                  })"}
+                  })"
                   data-content={JSON.encode!(@schema)}
                 >
                   <span>Copy to Clipboard</span>

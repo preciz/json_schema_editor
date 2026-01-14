@@ -6,6 +6,9 @@ defmodule JSONSchemaEditor.PrettyPrinter do
 
   @indent_size 2
 
+  @doc """
+  Formats a map or list as a pretty-printed JSON string.
+  """
   def format(data) do
     do_format(data, 0)
   end

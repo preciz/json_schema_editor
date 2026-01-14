@@ -1,13 +1,20 @@
-defmodule JsonSchemaEditorLib.MixProject do
+defmodule JSONSchemaEditor.MixProject do
   use Mix.Project
+
+  @source_url "https://github.com/example/json_schema_editor"
+  @version "0.1.0"
 
   def project do
     [
-      app: :json_schema_editor_lib,
-      version: "0.1.0",
-      elixir: "~> 1.19",
+      app: :json_schema_editor,
+      version: @version,
+      elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      description: description(),
+      package: package(),
+      docs: docs(),
+      deps: deps(),
+      source_url: @source_url
     ]
   end
 
@@ -18,10 +25,33 @@ defmodule JsonSchemaEditorLib.MixProject do
     ]
   end
 
+  defp description do
+    """
+    A robust Phoenix LiveComponent for visually building, editing, and validating JSON Schemas.
+    """
+  end
+
+  defp package do
+    [
+      name: "json_schema_editor",
+      files: ~w(lib .formatter.exs mix.exs README.md LICENSE CHANGELOG.md),
+      licenses: ["MIT"],
+      links: %{"GitHub" => @source_url}
+    ]
+  end
+
+  defp docs do
+    [
+      main: "readme",
+      extras: ["README.md", "CHANGELOG.md"]
+    ]
+  end
+
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:phoenix_live_view, "~> 1.1.0"}
+      {:phoenix_live_view, "~> 1.1"},
+      {:ex_doc, "~> 0.39.3", only: :dev, runtime: false}
     ]
   end
 end
