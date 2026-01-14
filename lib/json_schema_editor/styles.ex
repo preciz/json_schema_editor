@@ -375,6 +375,44 @@ defmodule JSONSchemaEditor.Styles do
     .jse-btn-toggle-constraints.jse-active {
       color: var(--primary-color);
     }
+
+    .jse-enum-container {
+      grid-column: 1 / -1;
+      margin-top: 0.5rem;
+      padding-top: 0.75rem;
+      border-top: 1px dashed var(--border-color);
+    }
+
+    .jse-enum-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .jse-enum-item {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.25rem 0.5rem;
+      background-color: var(--bg-color);
+      border: 1px solid var(--border-color);
+      border-radius: 0.375rem;
+    }
+
+    .jse-enum-input {
+      font-size: 0.75rem;
+      border: none;
+      background: transparent;
+      color: inherit;
+      padding: 0;
+      width: 4rem;
+      min-width: 2rem;
+    }
+
+    .jse-enum-input:focus {
+      outline: none;
+    }
     """
   end
 end

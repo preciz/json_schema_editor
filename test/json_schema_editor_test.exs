@@ -86,18 +86,19 @@ defmodule JSONSchemaEditorTest do
     assert html =~ "Min Props"
 
     # Expanded description
-    ui_state = %{"expanded_description:#{path_json}" => true}
-
-    html =
-      render_component(JSONSchemaEditor,
-        id: "jse",
-        schema: %{"type" => "string", "description" => "Long desc"},
-        ui_state: ui_state
-      )
-
-    assert html =~ "textarea"
-    assert html =~ "Long desc"
-  end
+        ui_state = %{"expanded_description:#{path_json}" => true}
+        html = render_component(JSONSchemaEditor, id: "jse", schema: %{"type" => "string", "description" => "Long desc"}, ui_state: ui_state)
+        assert html =~ "textarea"
+        assert html =~ "Long desc"
+    
+        # Enum section
+        ui_state = %{"expanded_constraints:#{path_json}" => true}
+        html = render_component(JSONSchemaEditor, id: "jse", schema: %{"type" => "string", "enum" => ["A", "B"]}, ui_state: ui_state)
+        assert html =~ "Enum Values"
+        assert html =~ "value=\"A\""
+        assert html =~ "value=\"B\""
+      end
+    
 
   test "update/2 initializes schema and defaults" do
     assigns = %{id: "test"}
@@ -398,5 +399,133 @@ defmodule JSONSchemaEditorTest do
 
     {:noreply, _socket} = JSONSchemaEditor.handle_event("save", %{}, socket)
     assert_receive {:saved, %{"type" => "string"}}
+  end
+
+  test "handle_event enum management" do
+    socket = setup_socket(%{"type" => "string"})
+    path_json = JSON.encode!([])
+
+    # Add
+    {:noreply, socket} =
+      JSONSchemaEditor.handle_event("add_enum_value", %{"path" => path_json}, socket)
+
+    assert socket.assigns.schema["enum"] == ["new value"]
+
+    # Update
+    {:noreply, socket} =
+      JSONSchemaEditor.handle_event(
+        "update_enum_value",
+        %{"path" => path_json, "index" => "0", "value" => "fixed"},
+        socket
+      )
+
+    assert socket.assigns.schema["enum"] == ["fixed"]
+
+    # Add another
+    {:noreply, socket} =
+      JSONSchemaEditor.handle_event("add_enum_value", %{"path" => path_json}, socket)
+
+    assert socket.assigns.schema["enum"] == ["fixed", "new value"]
+
+    # Remove
+    {:noreply, socket} =
+      JSONSchemaEditor.handle_event(
+        "remove_enum_value",
+        %{"path" => path_json, "index" => "0"},
+        socket
+      )
+
+    assert socket.assigns.schema["enum"] == ["new value"]
+
+    # Remove last one
+    {:noreply, socket} =
+      JSONSchemaEditor.handle_event(
+        "remove_enum_value",
+        %{"path" => path_json, "index" => "0"},
+        socket
+      )
+
+    refute Map.has_key?(socket.assigns.schema, "enum")
+
+    # Type casting - Number
+    socket = setup_socket(%{"type" => "number", "enum" => [0.0]})
+
+    {:noreply, socket} =
+      JSONSchemaEditor.handle_event(
+        "update_enum_value",
+        %{"path" => path_json, "index" => "0", "value" => "1.5"},
+        socket
+      )
+
+    assert socket.assigns.schema["enum"] == [1.5]
+
+    # Type casting - Integer
+    socket = setup_socket(%{"type" => "integer", "enum" => [0]})
+
+    {:noreply, socket} =
+      JSONSchemaEditor.handle_event(
+        "update_enum_value",
+        %{"path" => path_json, "index" => "0", "value" => "10"},
+        socket
+      )
+
+    assert socket.assigns.schema["enum"] == [10]
+
+    # Type casting - Boolean
+    socket = setup_socket(%{"type" => "boolean", "enum" => [true]})
+
+    {:noreply, socket} =
+      JSONSchemaEditor.handle_event(
+        "update_enum_value",
+        %{"path" => path_json, "index" => "0", "value" => "false"},
+        socket
+      )
+
+    assert socket.assigns.schema["enum"] == [false]
+
+    # Default values for different types
+    socket = setup_socket(%{"type" => "number"})
+
+    {:noreply, socket} =
+      JSONSchemaEditor.handle_event("add_enum_value", %{"path" => path_json}, socket)
+
+    assert socket.assigns.schema["enum"] == [0.0]
+
+    socket = setup_socket(%{"type" => "integer"})
+
+    {:noreply, socket} =
+      JSONSchemaEditor.handle_event("add_enum_value", %{"path" => path_json}, socket)
+
+    assert socket.assigns.schema["enum"] == [0]
+
+    socket = setup_socket(%{"type" => "boolean"})
+
+    {:noreply, socket} =
+      JSONSchemaEditor.handle_event("add_enum_value", %{"path" => path_json}, socket)
+
+    assert socket.assigns.schema["enum"] == [true]
+
+    # Invalid casting defaults
+    socket = setup_socket(%{"type" => "integer", "enum" => [0]})
+
+    {:noreply, socket} =
+      JSONSchemaEditor.handle_event(
+        "update_enum_value",
+        %{"path" => path_json, "index" => "0", "value" => "abc"},
+        socket
+      )
+
+    assert socket.assigns.schema["enum"] == [0]
+
+    socket = setup_socket(%{"type" => "number", "enum" => [0.0]})
+
+    {:noreply, socket} =
+      JSONSchemaEditor.handle_event(
+        "update_enum_value",
+        %{"path" => path_json, "index" => "0", "value" => "abc"},
+        socket
+      )
+
+    assert socket.assigns.schema["enum"] == [0.0]
   end
 end

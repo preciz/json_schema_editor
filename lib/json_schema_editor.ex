@@ -141,12 +141,10 @@ defmodule JSONSchemaEditor do
     {:noreply, assign(socket, :ui_state, ui_state)}
   end
 
-  def handle_event(
-        "update_constraint",
-        %{"path" => path_json, "field" => field, "value" => value},
-        socket
-      ) do
+  def handle_event("update_constraint", %{"path" => path_json, "field" => field, "value" => value}, socket) do
     path = JSON.decode!(path_json)
+
+    # Cast value based on field type
     casted_value = cast_constraint_value(field, value)
 
     schema =
@@ -156,6 +154,64 @@ defmodule JSONSchemaEditor do
         else
           Map.put(node, field, casted_value)
         end
+      end)
+
+    {:noreply, assign(socket, :schema, schema)}
+  end
+
+  def handle_event("add_enum_value", %{"path" => path_json}, socket) do
+    path = JSON.decode!(path_json)
+
+    schema =
+      SchemaUtils.update_in_path(socket.assigns.schema, path, fn node ->
+        current_enum = Map.get(node, "enum", [])
+        type = Map.get(node, "type", "string")
+
+        default_value =
+          case type do
+            "number" -> 0.0
+            "integer" -> 0
+            "boolean" -> true
+            _ -> "new value"
+          end
+
+        Map.put(node, "enum", current_enum ++ [default_value])
+      end)
+
+    {:noreply, assign(socket, :schema, schema)}
+  end
+
+  def handle_event("remove_enum_value", %{"path" => path_json, "index" => index}, socket) do
+    path = JSON.decode!(path_json)
+    index = String.to_integer(index)
+
+    schema =
+      SchemaUtils.update_in_path(socket.assigns.schema, path, fn node ->
+        current_enum = Map.get(node, "enum", [])
+        new_enum = List.delete_at(current_enum, index)
+
+        if new_enum == [] do
+          Map.delete(node, "enum")
+        else
+          Map.put(node, "enum", new_enum)
+        end
+      end)
+
+    {:noreply, assign(socket, :schema, schema)}
+  end
+
+  def handle_event("update_enum_value", %{"path" => path_json, "index" => index, "value" => value}, socket) do
+    path = JSON.decode!(path_json)
+    index = String.to_integer(index)
+
+    schema =
+      SchemaUtils.update_in_path(socket.assigns.schema, path, fn node ->
+        current_enum = Map.get(node, "enum", [])
+        type = Map.get(node, "type", "string")
+        casted_value = cast_value_by_type(type, value)
+
+        new_enum = List.replace_at(current_enum, index, casted_value)
+        Map.put(node, "enum", new_enum)
       end)
 
     {:noreply, assign(socket, :schema, schema)}
@@ -185,36 +241,93 @@ defmodule JSONSchemaEditor do
     {:noreply, assign(socket, :schema, schema)}
   end
 
-  defp cast_constraint_value(field, value) do
-    cond do
-      field in [
-        "minLength",
-        "maxLength",
-        "minItems",
-        "maxItems",
-        "minProperties",
-        "maxProperties"
-      ] ->
-        case Integer.parse(value) do
-          {int, _} -> int
-          :error -> nil
-        end
+    defp cast_constraint_value(field, value) do
 
-      field in ["minimum", "maximum", "multipleOf"] ->
-        case Float.parse(value) do
-          {float, _} -> float
-          :error -> nil
-        end
+      cond do
 
-      field == "uniqueItems" ->
-        value == "true"
+        field in ["minLength", "maxLength", "minItems", "maxItems", "minProperties", "maxProperties"] ->
 
-      true ->
-        value
+          case Integer.parse(value) do
+
+            {int, _} -> int
+
+            :error -> nil
+
+          end
+
+  
+
+        field in ["minimum", "maximum", "multipleOf"] ->
+
+          case Float.parse(value) do
+
+            {float, _} -> float
+
+            :error -> nil
+
+          end
+
+  
+
+        field == "uniqueItems" ->
+
+          value == "true"
+
+  
+
+        true ->
+
+          value
+
+      end
+
     end
-  end
 
-  attr(:class, :string, default: nil)
+  
+
+    defp cast_value_by_type("integer", value) do
+
+      case Integer.parse(value) do
+
+        {int, _} -> int
+
+        :error -> 0
+
+      end
+
+    end
+
+  
+
+    defp cast_value_by_type("number", value) do
+
+      case Float.parse(value) do
+
+        {float, _} -> float
+
+        :error -> 0.0
+
+      end
+
+    end
+
+  
+
+    defp cast_value_by_type("boolean", value) do
+
+      value == "true"
+
+    end
+
+  
+
+    defp cast_value_by_type(_type, value), do: value
+
+  
+
+    attr(:class, :string, default: nil)
+
+  
   slot(:inner_block, required: true)
 
   defp badge(assigns) do
@@ -247,6 +360,53 @@ defmodule JSONSchemaEditor do
         phx-value-field={@field}
         phx-target={@myself}
       />
+    </div>
+    """
+  end
+
+  attr(:path, :list, required: true)
+  attr(:node, :map, required: true)
+  attr(:myself, :any, required: true)
+
+  defp enum_section(assigns) do
+    ~H"""
+    <div class="jse-enum-container">
+      <div class="jse-header" style="margin-bottom: 0.5rem; padding-bottom: 0.25rem;">
+        <span class="jse-constraint-label">Enum Values</span>
+        <button
+          class="jse-btn jse-btn-secondary jse-btn-sm"
+          style="padding: 0.125rem 0.5rem;"
+          phx-click="add_enum_value"
+          phx-target={@myself}
+          phx-value-path={JSON.encode!(@path)}
+        >
+          <.icon name={:plus} class="jse-icon-xs" /> Add
+        </button>
+      </div>
+      <div class="jse-enum-list">
+        <%= for {val, idx} <- Enum.with_index(Map.get(@node, "enum", [])) do %>
+          <div class="jse-enum-item">
+            <input
+              type="text"
+              value={to_string(val)}
+              class="jse-enum-input"
+              phx-blur="update_enum_value"
+              phx-target={@myself}
+              phx-value-path={JSON.encode!(@path)}
+              phx-value-index={idx}
+            />
+            <button
+              class="jse-btn-icon"
+              phx-click="remove_enum_value"
+              phx-target={@myself}
+              phx-value-path={JSON.encode!(@path)}
+              phx-value-index={idx}
+            >
+              <.icon name={:trash} class="jse-icon-xs" />
+            </button>
+          </div>
+        <% end %>
+      </div>
     </div>
     """
   end
@@ -512,6 +672,7 @@ defmodule JSONSchemaEditor do
               <% _ -> %>
                 <span class="jse-constraint-label">No constraints for this type</span>
             <% end %>
+            <.enum_section node={@node} path={@path} myself={@myself} />
           </div>
         </div>
       <% end %>
