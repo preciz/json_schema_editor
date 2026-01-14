@@ -159,18 +159,17 @@ defmodule JSONSchemaEditor.Components do
 
     ~H"""
     <div class="jse-enum-container">
-      <div class="jse-header" style="margin-bottom: 0.5rem; padding-bottom: 0.25rem;">
+      <div class="jse-enum-header">
         <div>
           <span class="jse-constraint-label">Enum Values</span>
           <%= if @error do %>
-            <div class="jse-error-message" style="display: inline-block; margin-left: 0.5rem;">
+            <div class="jse-error-message jse-enum-error">
               {@error}
             </div>
           <% end %>
         </div>
         <button
-          class="jse-btn jse-btn-secondary jse-btn-sm"
-          style="padding: 0.125rem 0.5rem;"
+          class="jse-btn jse-btn-secondary jse-btn-xs"
           phx-click="add_enum_value"
           phx-target={@myself}
           phx-value-path={JSON.encode!(@path)}

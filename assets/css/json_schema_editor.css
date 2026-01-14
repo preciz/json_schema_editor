@@ -152,6 +152,11 @@
     font-size: 0.75rem;
   }
 
+  .jse-btn-xs {
+    padding: 0.125rem 0.5rem;
+    font-size: 0.75rem;
+  }
+
   .jse-btn-primary {
     background-color: var(--jse-primary);
     color: var(--jse-primary-text);
@@ -399,6 +404,19 @@
     padding-top: 1rem;
     margin-top: 0.5rem;
     border-top: 1px dashed var(--jse-border);
+  }
+
+  .jse-enum-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.25rem;
+  }
+
+  .jse-enum-error {
+    display: inline-block;
+    margin-left: 0.5rem;
   }
 
   .jse-enum-list {
