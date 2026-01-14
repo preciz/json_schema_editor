@@ -125,11 +125,11 @@ defmodule JSONSchemaEditor do
             </svg>
           </button>
         </div>
-        
-        <.render_node 
-          node={@schema} 
-          path={[]} 
-          myself={@myself} 
+
+        <.render_node
+          node={@schema}
+          path={[]}
+          myself={@myself}
         />
       </div>
     </div>
@@ -143,7 +143,7 @@ defmodule JSONSchemaEditor do
         <span class="type-label">
           <%= type_label(@node) %>
         </span>
-        
+
         <form phx-change="change_type" phx-target={@myself} class="type-form">
           <input type="hidden" name="path" value={JSON.encode!(@path)} />
           <select name="type" class="type-select">
@@ -159,7 +159,7 @@ defmodule JSONSchemaEditor do
           <%= for {key, val} <- Map.get(@node, "properties", %{}) do %>
             <div class="property-item">
               <div class="property-row">
-                <button 
+                <button
                   phx-click="delete_property"
                   phx-target={@myself}
                   phx-value-path={JSON.encode!(@path)}
@@ -172,9 +172,9 @@ defmodule JSONSchemaEditor do
                   </svg>
                 </button>
                 <div class="property-content">
-                  <input 
-                    type="text" 
-                    value={key} 
+                  <input
+                    type="text"
+                    value={key}
                     name="property_name"
                     class="property-key-input"
                     phx-blur="rename_property"
@@ -187,10 +187,10 @@ defmodule JSONSchemaEditor do
               </div>
             </div>
           <% end %>
-          
+
           <div class="add-property-container">
-            <button 
-              phx-click="add_property" 
+            <button
+              phx-click="add_property"
               phx-target={@myself}
               phx-value-path={JSON.encode!(@path)}
               class="btn btn-secondary btn-sm"
