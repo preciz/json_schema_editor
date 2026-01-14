@@ -1,6 +1,8 @@
 defmodule JSONSchemaEditor.Components do
+  @moduledoc """
+  UI components for the JSON Schema Editor.
+  """
   use Phoenix.Component
-  alias JSONSchemaEditor.Styles
 
   attr(:name, :atom, required: true)
   attr(:class, :string, default: nil)
@@ -57,7 +59,7 @@ defmodule JSONSchemaEditor.Components do
   attr(:class, :string, default: nil)
   slot(:inner_block, required: true)
 
-  def badge(assigns) do
+  defp badge(assigns) do
     ~H"""
     <span class={["jse-badge", @class]}>
       <%= render_slot(@inner_block) %>
@@ -74,7 +76,7 @@ defmodule JSONSchemaEditor.Components do
   attr(:validation_errors, :map, required: true)
   attr(:myself, :any, required: true)
 
-  def constraint_input(assigns) do
+  defp constraint_input(assigns) do
     error_key = "#{JSON.encode!(assigns.path)}:#{assigns.field}"
     assigns = assign(assigns, :error, Map.get(assigns.validation_errors, error_key))
 
@@ -103,7 +105,7 @@ defmodule JSONSchemaEditor.Components do
   attr(:validation_errors, :map, required: true)
   attr(:myself, :any, required: true)
 
-  def enum_section(assigns) do
+  defp enum_section(assigns) do
     error_key = "#{JSON.encode!(assigns.path)}:enum"
     assigns = assign(assigns, :error, Map.get(assigns.validation_errors, error_key))
 
@@ -162,6 +164,7 @@ defmodule JSONSchemaEditor.Components do
   attr(:validation_errors, :map, required: true)
   attr(:types, :list, required: true)
   attr(:logic_types, :list, required: true)
+  attr(:formats, :list, default: [])
   attr(:myself, :any, required: true)
 
   def render_node(assigns) do
@@ -187,6 +190,7 @@ defmodule JSONSchemaEditor.Components do
             node={@node}
             path={@path}
             validation_errors={@validation_errors}
+            formats={@formats}
             myself={@myself}
           />
         <% end %>
@@ -200,6 +204,7 @@ defmodule JSONSchemaEditor.Components do
             validation_errors={@validation_errors}
             types={@types}
             logic_types={@logic_types}
+            formats={@formats}
             myself={@myself}
           />
         <% else %>
@@ -212,6 +217,7 @@ defmodule JSONSchemaEditor.Components do
                 validation_errors={@validation_errors}
                 types={@types}
                 logic_types={@logic_types}
+                formats={@formats}
                 myself={@myself}
               />
             <% "object" -> %>
@@ -222,6 +228,7 @@ defmodule JSONSchemaEditor.Components do
                 validation_errors={@validation_errors}
                 types={@types}
                 logic_types={@logic_types}
+                formats={@formats}
                 myself={@myself}
               />
             <% _ -> %>
@@ -239,10 +246,9 @@ defmodule JSONSchemaEditor.Components do
   attr(:validation_errors, :map, required: true)
   attr(:types, :list, required: true)
   attr(:logic_types, :list, required: true)
-  attr(:formats, :list, default: [])
   attr(:myself, :any, required: true)
 
-  def node_header(assigns) do
+  defp node_header(assigns) do
     ~H"""
     <div class="jse-node-header">
       <% logic_active = Enum.any?(@logic_types, &Map.has_key?(@node, &1)) %>
@@ -358,10 +364,10 @@ defmodule JSONSchemaEditor.Components do
   attr(:node, :map, required: true)
   attr(:path, :list, required: true)
   attr(:validation_errors, :map, required: true)
-  attr(:formats, :list, default: ["email", "date-time", "date", "time", "uri", "uuid", "ipv4", "ipv6", "hostname"])
+  attr(:formats, :list, default: [])
   attr(:myself, :any, required: true)
 
-  def constraint_grid(assigns) do
+  defp constraint_grid(assigns) do
     ~H"""
     <div class="jse-constraints-container">
       <div class="jse-constraints-grid">
@@ -511,9 +517,10 @@ defmodule JSONSchemaEditor.Components do
   attr(:validation_errors, :map, required: true)
   attr(:types, :list, required: true)
   attr(:logic_types, :list, required: true)
+  attr(:formats, :list, default: [])
   attr(:myself, :any, required: true)
 
-  def logic_branches(assigns) do
+  defp logic_branches(assigns) do
     ~H"""
     <div class="jse-logic-container">
       <div class="jse-logic-header">
@@ -543,6 +550,7 @@ defmodule JSONSchemaEditor.Components do
               validation_errors={@validation_errors}
               types={@types}
               logic_types={@logic_types}
+              formats={@formats}
               myself={@myself}
             />
           </div>
@@ -573,9 +581,10 @@ defmodule JSONSchemaEditor.Components do
   attr(:validation_errors, :map, required: true)
   attr(:types, :list, required: true)
   attr(:logic_types, :list, required: true)
+  attr(:formats, :list, default: [])
   attr(:myself, :any, required: true)
 
-  def array_items(assigns) do
+  defp array_items(assigns) do
     ~H"""
     <div class="jse-array-items-container">
       <div class="jse-array-items-header">
@@ -589,6 +598,7 @@ defmodule JSONSchemaEditor.Components do
           validation_errors={@validation_errors}
           types={@types}
           logic_types={@logic_types}
+          formats={@formats}
           myself={@myself}
         />
       </div>
@@ -602,9 +612,10 @@ defmodule JSONSchemaEditor.Components do
   attr(:validation_errors, :map, required: true)
   attr(:types, :list, required: true)
   attr(:logic_types, :list, required: true)
+  attr(:formats, :list, default: [])
   attr(:myself, :any, required: true)
 
-  def object_properties(assigns) do
+  defp object_properties(assigns) do
     ~H"""
     <div class="jse-properties-list">
       <div class="jse-object-controls">
@@ -662,6 +673,7 @@ defmodule JSONSchemaEditor.Components do
                 validation_errors={@validation_errors}
                 types={@types}
                 logic_types={@logic_types}
+                formats={@formats}
                 myself={@myself}
               />
             </div>

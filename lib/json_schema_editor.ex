@@ -374,6 +374,7 @@ defmodule JSONSchemaEditor do
                 validation_errors={@validation_errors}
                 types={@types}
                 logic_types={@logic_types}
+                formats={@formats}
                 myself={@myself}
               />
             </div>
