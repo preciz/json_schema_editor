@@ -213,12 +213,18 @@ defmodule JSONSchemaEditorTest do
   test "update/2 initializes schema and defaults" do
     assigns = %{id: "test"}
     {:ok, socket} = JSONSchemaEditor.update(assigns, %Phoenix.LiveView.Socket{})
-    assert socket.assigns.schema == %{"type" => "object", "properties" => %{}}
-    assert socket.assigns.ui_state == %{}
 
+    assert socket.assigns.schema == %{
+             "$schema" => "https://json-schema.org/draft-07/schema"
+           }
+
+    assert socket.assigns.active_tab == :editor
+    assert is_map(socket.assigns.ui_state)
+
+    # Test with existing schema
     assigns = %{id: "test", schema: %{"type" => "string"}}
     {:ok, socket} = JSONSchemaEditor.update(assigns, %Phoenix.LiveView.Socket{})
-    assert socket.assigns.schema == %{"type" => "string"}
+    assert socket.assigns.schema == %{"type" => "string", "$schema" => "https://json-schema.org/draft-07/schema"}
   end
 
   test "handle_event change_type" do

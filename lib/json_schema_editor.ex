@@ -61,7 +61,10 @@ defmodule JSONSchemaEditor do
       |> assign(:class, class)
       |> assign(:rest, rest)
       |> assign_new(:ui_state, fn -> %{} end)
-      |> assign_new(:schema, fn -> %{"type" => "object", "properties" => %{}} end)
+      |> assign_new(:schema, fn -> %{} end)
+      |> update(:schema, fn s ->
+        Map.put_new(s, "$schema", "https://json-schema.org/draft-07/schema")
+      end)
       |> assign(:types, @types)
       |> assign(:formats, @formats)
       |> assign_new(:active_tab, fn -> :editor end)
@@ -74,6 +77,19 @@ defmodule JSONSchemaEditor do
   defp validate_and_assign_errors(socket) do
     errors = Validator.validate_schema(socket.assigns.schema)
     assign(socket, :validation_errors, errors)
+  end
+
+  def handle_event("change_schema", %{"value" => schema_uri}, socket) do
+    socket =
+      update_schema(socket, JSON.encode!([]), fn node ->
+        if schema_uri == "" do
+          Map.delete(node, "$schema")
+        else
+          Map.put(node, "$schema", schema_uri)
+        end
+      end)
+
+    {:noreply, socket}
   end
 
   def handle_event("change_format", %{"path" => path_json, "value" => format}, socket) do
@@ -393,6 +409,18 @@ defmodule JSONSchemaEditor do
             >
               JSON Preview
             </button>
+          </div>
+
+          <div class="jse-schema-selector">
+            <label for={"#{@id}-schema-uri"}>$schema</label>
+            <input
+              type="text"
+              id={"#{@id}-schema-uri"}
+              value={Map.get(@schema, "$schema")}
+              phx-blur="change_schema"
+              phx-target={@myself}
+              placeholder="Schema URI..."
+            />
           </div>
 
           <button
