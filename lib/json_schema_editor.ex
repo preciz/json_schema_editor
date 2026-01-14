@@ -4,6 +4,8 @@ defmodule JSONSchemaEditor do
   alias JSONSchemaEditor.Styles
   alias JSONSchemaEditor.Validator
 
+  @types ["string", "number", "integer", "boolean", "object", "array"]
+
   def update(assigns, socket) do
     socket =
       socket
@@ -21,43 +23,32 @@ defmodule JSONSchemaEditor do
   end
 
   def handle_event("change_type", %{"path" => path_json, "type" => new_type}, socket) do
-    path = JSON.decode!(path_json)
-
-    new_value =
-      case new_type do
-        "object" -> %{"type" => "object", "properties" => %{}}
-        "array" -> %{"type" => "array", "items" => %{"type" => "string"}}
-        _ -> %{"type" => new_type}
-      end
-
-    schema = SchemaUtils.put_in_path(socket.assigns.schema, path, new_value)
-
     socket =
-      socket
-      |> assign(:schema, schema)
-      |> validate_and_assign_errors()
+      update_schema(socket, path_json, fn _node ->
+        case new_type do
+          "object" -> %{"type" => "object", "properties" => %{}}
+          "array" -> %{"type" => "array", "items" => %{"type" => "string"}}
+          _ -> %{"type" => new_type}
+        end
+      end)
 
     {:noreply, socket}
   end
 
   def handle_event("add_property", %{"path" => path_json}, socket) do
-    path = JSON.decode!(path_json)
-
-    schema =
-      SchemaUtils.update_in_path(socket.assigns.schema, path ++ ["properties"], fn props ->
-        props = props || %{}
+    socket =
+      update_schema(socket, path_json, fn node ->
+        props = Map.get(node, "properties", %{})
         new_key = SchemaUtils.generate_unique_key(props, "new_field")
-        Map.put(props, new_key, %{"type" => "string"})
+        Map.put(node, "properties", Map.put(props, new_key, %{"type" => "string"}))
       end)
 
-    {:noreply, assign(socket, :schema, schema) |> validate_and_assign_errors()}
+    {:noreply, socket}
   end
 
   def handle_event("delete_property", %{"path" => path_json, "key" => key}, socket) do
-    path = JSON.decode!(path_json)
-
-    schema =
-      SchemaUtils.update_in_path(socket.assigns.schema, path, fn node ->
+    socket =
+      update_schema(socket, path_json, fn node ->
         new_props = Map.delete(Map.get(node, "properties", %{}), key)
         new_required = List.delete(Map.get(node, "required", []), key)
 
@@ -66,14 +57,12 @@ defmodule JSONSchemaEditor do
         |> Map.put("required", new_required)
       end)
 
-    {:noreply, assign(socket, :schema, schema) |> validate_and_assign_errors()}
+    {:noreply, socket}
   end
 
   def handle_event("toggle_required", %{"path" => path_json, "key" => key}, socket) do
-    path = JSON.decode!(path_json)
-
-    schema =
-      SchemaUtils.update_in_path(socket.assigns.schema, path, fn node ->
+    socket =
+      update_schema(socket, path_json, fn node ->
         current_required = Map.get(node, "required", [])
 
         new_required =
@@ -86,7 +75,7 @@ defmodule JSONSchemaEditor do
         Map.put(node, "required", new_required)
       end)
 
-    {:noreply, assign(socket, :schema, schema) |> validate_and_assign_errors()}
+    {:noreply, socket}
   end
 
   def handle_event(
@@ -99,10 +88,8 @@ defmodule JSONSchemaEditor do
     if new_key == "" or new_key == old_key do
       {:noreply, socket}
     else
-      path = JSON.decode!(path_json)
-
-      schema =
-        SchemaUtils.update_in_path(socket.assigns.schema, path, fn node ->
+      socket =
+        update_schema(socket, path_json, fn node ->
           current_props = Map.get(node, "properties", %{})
 
           if Map.has_key?(current_props, new_key) do
@@ -124,16 +111,16 @@ defmodule JSONSchemaEditor do
           end
         end)
 
-      {:noreply, assign(socket, :schema, schema) |> validate_and_assign_errors()}
+      {:noreply, socket}
     end
   end
 
   def handle_event("change_title", %{"path" => path_json, "value" => title}, socket) do
-    update_node_field(socket, path_json, "title", title)
+    {:noreply, update_node_field(socket, path_json, "title", title)}
   end
 
   def handle_event("change_description", %{"path" => path_json, "value" => description}, socket) do
-    update_node_field(socket, path_json, "description", description)
+    {:noreply, update_node_field(socket, path_json, "description", description)}
   end
 
   def handle_event("toggle_ui", %{"path" => path_json, "type" => type}, socket) do
@@ -146,13 +133,10 @@ defmodule JSONSchemaEditor do
   end
 
   def handle_event("update_constraint", %{"path" => path_json, "field" => field, "value" => value}, socket) do
-    path = JSON.decode!(path_json)
-
-    # Cast value based on field type
     casted_value = cast_constraint_value(field, value)
 
-    schema =
-      SchemaUtils.update_in_path(socket.assigns.schema, path, fn node ->
+    socket =
+      update_schema(socket, path_json, fn node ->
         if casted_value in [nil, "", false] do
           Map.delete(node, field)
         else
@@ -160,14 +144,12 @@ defmodule JSONSchemaEditor do
         end
       end)
 
-    {:noreply, assign(socket, :schema, schema) |> validate_and_assign_errors()}
+    {:noreply, socket}
   end
 
   def handle_event("add_enum_value", %{"path" => path_json}, socket) do
-    path = JSON.decode!(path_json)
-
-    schema =
-      SchemaUtils.update_in_path(socket.assigns.schema, path, fn node ->
+    socket =
+      update_schema(socket, path_json, fn node ->
         current_enum = Map.get(node, "enum", [])
         type = Map.get(node, "type", "string")
 
@@ -182,15 +164,14 @@ defmodule JSONSchemaEditor do
         Map.put(node, "enum", current_enum ++ [default_value])
       end)
 
-    {:noreply, assign(socket, :schema, schema) |> validate_and_assign_errors()}
+    {:noreply, socket}
   end
 
   def handle_event("remove_enum_value", %{"path" => path_json, "index" => index}, socket) do
-    path = JSON.decode!(path_json)
     index = String.to_integer(index)
 
-    schema =
-      SchemaUtils.update_in_path(socket.assigns.schema, path, fn node ->
+    socket =
+      update_schema(socket, path_json, fn node ->
         current_enum = Map.get(node, "enum", [])
         new_enum = List.delete_at(current_enum, index)
 
@@ -201,15 +182,14 @@ defmodule JSONSchemaEditor do
         end
       end)
 
-    {:noreply, assign(socket, :schema, schema) |> validate_and_assign_errors()}
+    {:noreply, socket}
   end
 
   def handle_event("update_enum_value", %{"path" => path_json, "index" => index, "value" => value}, socket) do
-    path = JSON.decode!(path_json)
     index = String.to_integer(index)
 
-    schema =
-      SchemaUtils.update_in_path(socket.assigns.schema, path, fn node ->
+    socket =
+      update_schema(socket, path_json, fn node ->
         current_enum = Map.get(node, "enum", [])
         type = Map.get(node, "type", "string")
         casted_value = cast_value_by_type(type, value)
@@ -218,7 +198,7 @@ defmodule JSONSchemaEditor do
         Map.put(node, "enum", new_enum)
       end)
 
-    {:noreply, assign(socket, :schema, schema) |> validate_and_assign_errors()}
+    {:noreply, socket}
   end
 
   def handle_event("save", _params, socket) do
@@ -229,20 +209,25 @@ defmodule JSONSchemaEditor do
     {:noreply, socket}
   end
 
-  defp update_node_field(socket, path_json, field, value) do
+  defp update_schema(socket, path_json, update_fn) do
     path = JSON.decode!(path_json)
+    schema = SchemaUtils.update_in_path(socket.assigns.schema, path, update_fn)
+
+    socket
+    |> assign(:schema, schema)
+    |> validate_and_assign_errors()
+  end
+
+  defp update_node_field(socket, path_json, field, value) do
     value = String.trim(value)
 
-    schema =
-      SchemaUtils.update_in_path(socket.assigns.schema, path, fn node ->
-        if value == "" do
-          Map.delete(node, field)
-        else
-          Map.put(node, field, value)
-        end
-      end)
-
-    {:noreply, assign(socket, :schema, schema) |> validate_and_assign_errors()}
+    update_schema(socket, path_json, fn node ->
+      if value == "" do
+        Map.delete(node, field)
+      else
+        Map.put(node, field, value)
+      end
+    end)
   end
 
     defp cast_constraint_value(field, value) do
@@ -486,6 +471,8 @@ defmodule JSONSchemaEditor do
   end
 
   def render(assigns) do
+    assigns = assign(assigns, :types, @types)
+
     ~H"""
     <div id={@id} class="jse-host">
       <style>
@@ -511,12 +498,19 @@ defmodule JSONSchemaEditor do
           path={[]}
           ui_state={@ui_state}
           validation_errors={@validation_errors}
+          types={@types}
           myself={@myself}
         />
       </div>
     </div>
     """
   end
+
+  attr(:path, :list, required: true)
+  attr(:ui_state, :map, required: true)
+  attr(:validation_errors, :map, required: true)
+  attr(:types, :list, required: true)
+  attr(:myself, :any, required: true)
 
   defp render_node(assigns) do
     ~H"""
@@ -526,19 +520,20 @@ defmodule JSONSchemaEditor do
         path={@path}
         ui_state={@ui_state}
         validation_errors={@validation_errors}
+        types={@types}
         myself={@myself}
       />
 
-      <%= if Map.get(@ui_state, "expanded_constraints:#{JSON.encode!(@path)}", false) do %>
-        <.constraint_grid
-          node={@node}
-          path={@path}
-          validation_errors={@validation_errors}
-          myself={@myself}
-        />
-      <% end %>
-
       <%= if !Map.get(@ui_state, "collapsed_node:#{JSON.encode!(@path)}", false) do %>
+        <%= if Map.get(@ui_state, "expanded_constraints:#{JSON.encode!(@path)}", false) do %>
+          <.constraint_grid
+            node={@node}
+            path={@path}
+            validation_errors={@validation_errors}
+            myself={@myself}
+          />
+        <% end %>
+
         <%= case Map.get(@node, "type") do %>
           <% "array" -> %>
             <.array_items
@@ -546,6 +541,7 @@ defmodule JSONSchemaEditor do
               path={@path}
               ui_state={@ui_state}
               validation_errors={@validation_errors}
+              types={@types}
               myself={@myself}
             />
           <% "object" -> %>
@@ -554,6 +550,7 @@ defmodule JSONSchemaEditor do
               path={@path}
               ui_state={@ui_state}
               validation_errors={@validation_errors}
+              types={@types}
               myself={@myself}
             />
           <% _ -> %>
@@ -568,6 +565,7 @@ defmodule JSONSchemaEditor do
   attr(:path, :list, required: true)
   attr(:ui_state, :map, required: true)
   attr(:validation_errors, :map, required: true)
+  attr(:types, :list, required: true)
   attr(:myself, :any, required: true)
 
   defp node_header(assigns) do
@@ -592,7 +590,7 @@ defmodule JSONSchemaEditor do
       <form phx-change="change_type" phx-target={@myself} class="jse-type-form">
         <input type="hidden" name="path" value={JSON.encode!(@path)} />
         <select name="type" class="jse-type-select">
-          <%= for type <- ["string", "number", "integer", "boolean", "object", "array"] do %>
+          <%= for type <- @types do %>
             <option value={type} selected={Map.get(@node, "type") == type}>
               <%= String.capitalize(type) %>
             </option>
@@ -809,6 +807,7 @@ defmodule JSONSchemaEditor do
   attr(:path, :list, required: true)
   attr(:ui_state, :map, required: true)
   attr(:validation_errors, :map, required: true)
+  attr(:types, :list, required: true)
   attr(:myself, :any, required: true)
 
   defp array_items(assigns) do
@@ -823,6 +822,7 @@ defmodule JSONSchemaEditor do
           path={@path ++ ["items"]}
           ui_state={@ui_state}
           validation_errors={@validation_errors}
+          types={@types}
           myself={@myself}
         />
       </div>
@@ -834,6 +834,7 @@ defmodule JSONSchemaEditor do
   attr(:path, :list, required: true)
   attr(:ui_state, :map, required: true)
   attr(:validation_errors, :map, required: true)
+  attr(:types, :list, required: true)
   attr(:myself, :any, required: true)
 
   defp object_properties(assigns) do
@@ -879,6 +880,7 @@ defmodule JSONSchemaEditor do
                 path={@path ++ ["properties", key]}
                 ui_state={@ui_state}
                 validation_errors={@validation_errors}
+                types={@types}
                 myself={@myself}
               />
             </div>
