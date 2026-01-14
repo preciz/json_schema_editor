@@ -166,6 +166,60 @@ defmodule JSONSchemaEditor do
     {:noreply, socket}
   end
 
+  attr(:class, :string, default: nil)
+  slot(:inner_block, required: true)
+
+  defp badge(assigns) do
+    ~H"""
+    <span class={["jse-badge", @class]}>
+      <%= render_slot(@inner_block) %>
+    </span>
+    """
+  end
+
+  attr(:name, :atom, required: true)
+  attr(:class, :string, default: nil)
+
+  defp icon(%{name: :save} = assigns) do
+    ~H"""
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class={["jse-icon", @class]}>
+      <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
+    </svg>
+    """
+  end
+
+  defp icon(%{name: :chevron_up} = assigns) do
+    ~H"""
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class={["jse-icon", @class]}>
+      <path fill-rule="evenodd" d="M14.77 12.79a.75.75 0 01-1.06-.02L10 8.832 6.29 12.77a.75.75 0 11-1.08-1.04l4.25-4.5a.75.75 0 011.08 0l4.25 4.5a.75.75 0 01-.02 1.06z" clip-rule="evenodd" />
+    </svg>
+    """
+  end
+
+  defp icon(%{name: :chevron_down} = assigns) do
+    ~H"""
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class={["jse-icon", @class]}>
+      <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+    </svg>
+    """
+  end
+
+  defp icon(%{name: :trash} = assigns) do
+    ~H"""
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class={["jse-icon", @class]}>
+      <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clip-rule="evenodd" />
+    </svg>
+    """
+  end
+
+  defp icon(%{name: :plus} = assigns) do
+    ~H"""
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class={["jse-icon", @class]}>
+      <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+    </svg>
+    """
+  end
+
   def render(assigns) do
     ~H"""
     <div id={@id} class="jse-host">
@@ -174,12 +228,10 @@ defmodule JSONSchemaEditor do
       </style>
       <div class="jse-container">
         <div class="jse-header">
-          <span class="jse-badge">Schema Root</span>
+          <.badge>Schema Root</.badge>
           <button class="jse-btn jse-btn-primary" phx-click="save" phx-target={@myself}>
             <span>Save Changes</span>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="jse-icon">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
-            </svg>
+            <.icon name={:save} />
           </button>
         </div>
 
@@ -236,9 +288,7 @@ defmodule JSONSchemaEditor do
                 phx-value-path={JSON.encode!(@path)}
                 title="Collapse Description"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="jse-icon-sm">
-                  <path fill-rule="evenodd" d="M14.77 12.79a.75.75 0 01-1.06-.02L10 8.832 6.29 12.77a.75.75 0 11-1.08-1.04l4.25-4.5a.75.75 0 011.08 0l4.25 4.5a.75.75 0 01-.02 1.06z" clip-rule="evenodd" />
-                </svg>
+                <.icon name={:chevron_up} class="jse-icon-sm" />
               </button>
             </div>
           <% else %>
@@ -259,9 +309,7 @@ defmodule JSONSchemaEditor do
                 phx-value-path={JSON.encode!(@path)}
                 title="Expand Description"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="jse-icon-sm">
-                   <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
-                </svg>
+                <.icon name={:chevron_down} class="jse-icon-sm" />
               </button>
             </div>
           <% end %>
@@ -271,7 +319,7 @@ defmodule JSONSchemaEditor do
       <%= if Map.get(@node, "type") == "array" do %>
         <div class="jse-array-items-container">
           <div class="jse-array-items-header">
-            <span class="jse-badge jse-badge-info">Array Items</span>
+            <.badge class="jse-badge-info">Array Items</.badge>
           </div>
           <div class="jse-array-items-content">
             <.render_node
@@ -297,9 +345,7 @@ defmodule JSONSchemaEditor do
                   class="jse-btn-icon jse-btn-delete"
                   title="Delete Property"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="jse-icon-sm">
-                    <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clip-rule="evenodd" />
-                  </svg>
+                  <.icon name={:trash} class="jse-icon-sm" />
                 </button>
                 <div class="jse-property-content">
                   <input
@@ -341,9 +387,7 @@ defmodule JSONSchemaEditor do
               class="jse-btn jse-btn-secondary jse-btn-sm"
             >
               <div class="jse-icon-circle">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="jse-icon-xs">
-                  <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-                </svg>
+                <.icon name={:plus} class="jse-icon-xs" />
               </div>
               Add Property
             </button>
