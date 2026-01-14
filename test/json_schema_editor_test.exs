@@ -174,4 +174,34 @@ defmodule JSONSchemaEditorTest do
 
     assert socket.assigns.schema["items"]["type"] == "integer"
   end
+
+  test "updates title" do
+    assigns = %{
+      id: "test",
+      schema: %{"type" => "string"}
+    }
+
+    {:ok, socket} = JSONSchemaEditor.update(assigns, %Phoenix.LiveView.Socket{})
+
+    path_json = JSON.encode!([])
+
+    {:noreply, socket} =
+      JSONSchemaEditor.handle_event(
+        "change_title",
+        %{"path" => path_json, "value" => "  A nice title  "},
+        socket
+      )
+
+    assert socket.assigns.schema["title"] == "A nice title"
+
+    # Clear title
+    {:noreply, socket} =
+      JSONSchemaEditor.handle_event(
+        "change_title",
+        %{"path" => path_json, "value" => ""},
+        socket
+      )
+
+    refute Map.has_key?(socket.assigns.schema, "title")
+  end
 end

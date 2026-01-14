@@ -118,6 +118,23 @@ defmodule JSONSchemaEditor do
     end
   end
 
+  def handle_event("change_title", %{"path" => path_json, "value" => title}, socket) do
+    path = JSON.decode!(path_json)
+    title = String.trim(title)
+
+    node = get_in_path(socket.assigns.schema, path)
+
+    new_node =
+      if title == "" do
+        Map.delete(node, "title")
+      else
+        Map.put(node, "title", title)
+      end
+
+    schema = put_in_path(socket.assigns.schema, path, new_node)
+    {:noreply, assign(socket, :schema, schema)}
+  end
+
   def handle_event("change_description", %{"path" => path_json, "value" => description}, socket) do
     path = JSON.decode!(path_json)
     description = String.trim(description)
@@ -227,13 +244,33 @@ defmodule JSONSchemaEditor do
 
               <% end %>
 
-            </select>
+                      </select>
 
-          </form>
+                    </form>
 
+            
 
+                    <input
 
-          <div class="description-container">
+                      type="text"
+
+                      value={Map.get(@node, "title", "")}
+
+                      placeholder="Title..."
+
+                      class="title-input"
+
+                      phx-blur="change_title"
+
+                      phx-target={@myself}
+
+                      phx-value-path={JSON.encode!(@path)}
+
+                    />
+
+            
+
+                    <div class="description-container">
           <%= if Map.get(@node, "expanded_description", false) do %>
             <div class="description-expanded">
               <textarea
@@ -486,6 +523,26 @@ defmodule JSONSchemaEditor do
     .type-select:focus {
       outline: 2px solid var(--primary-color);
       border-color: transparent;
+    }
+
+    .title-input {
+      width: 8rem;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      padding: 0.375rem 0.75rem;
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      background-color: transparent;
+      color: inherit;
+      transition: border-color 0.2s;
+    }
+
+    .title-input:hover, .title-input:focus {
+      border-color: var(--primary-color);
+    }
+
+    .title-input:focus {
+      outline: none;
     }
 
     .description-container {
