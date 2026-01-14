@@ -46,7 +46,34 @@ defmodule JSONSchemaEditor do
     current_props = get_in_path(socket.assigns.schema, props_path) || %{}
     new_props = Map.delete(current_props, key)
 
-    schema = put_in_path(socket.assigns.schema, props_path, new_props)
+    schema_with_props = put_in_path(socket.assigns.schema, props_path, new_props)
+
+    # Also remove from required list
+    object = get_in_path(schema_with_props, path)
+    current_required = Map.get(object, "required", [])
+    new_required = List.delete(current_required, key)
+    new_object = Map.put(object, "required", new_required)
+
+    schema = put_in_path(schema_with_props, path, new_object)
+
+    {:noreply, assign(socket, :schema, schema)}
+  end
+
+  def handle_event("toggle_required", %{"path" => path_json, "key" => key}, socket) do
+    path = JSON.decode!(path_json)
+    object = get_in_path(socket.assigns.schema, path)
+    current_required = Map.get(object, "required", [])
+
+    new_required =
+      if key in current_required do
+        List.delete(current_required, key)
+      else
+        current_required ++ [key]
+      end
+
+    new_object = Map.put(object, "required", new_required)
+    schema = put_in_path(socket.assigns.schema, path, new_object)
+
     {:noreply, assign(socket, :schema, schema)}
   end
 
@@ -72,7 +99,20 @@ defmodule JSONSchemaEditor do
         {value, remaining} = Map.pop(current_props, old_key)
         new_props = Map.put(remaining, new_key, value)
 
-        schema = put_in_path(socket.assigns.schema, props_path, new_props)
+        schema_with_props = put_in_path(socket.assigns.schema, props_path, new_props)
+
+        # Update required list
+        object = get_in_path(schema_with_props, path)
+        current_required = Map.get(object, "required", [])
+
+        new_required =
+          Enum.map(current_required, fn k ->
+            if k == old_key, do: new_key, else: k
+          end)
+
+        new_object = Map.put(object, "required", new_required)
+        schema = put_in_path(schema_with_props, path, new_object)
+
         {:noreply, assign(socket, :schema, schema)}
       end
     end
@@ -171,20 +211,30 @@ defmodule JSONSchemaEditor do
                     <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clip-rule="evenodd" />
                   </svg>
                 </button>
-                <div class="property-content">
-                  <input
-                    type="text"
-                    value={key}
-                    name="property_name"
-                    class="property-key-input"
-                    phx-blur="rename_property"
-                    phx-target={@myself}
-                    phx-value-path={JSON.encode!(@path)}
-                    phx-value-old_key={key}
-                  />
-                  <.render_node node={val} path={@path ++ ["properties", key]} myself={@myself} />
-                </div>
-              </div>
+                                <div class="property-content">
+                                  <input
+                                    type="text"
+                                    value={key}
+                                    name="property_name"
+                                    class="property-key-input"
+                                    phx-blur="rename_property"
+                                    phx-target={@myself}
+                                    phx-value-path={JSON.encode!(@path)}
+                                    phx-value-old_key={key}
+                                  />
+                                  <label class="required-checkbox-label" title="Toggle Required">
+                                    <input
+                                      type="checkbox"
+                                      checked={key in Map.get(@node, "required", [])}
+                                      phx-click="toggle_required"
+                                      phx-value-path={JSON.encode!(@path)}
+                                      phx-value-key={key}
+                                      phx-target={@myself}
+                                    />
+                                    <span class="required-text">Req</span>
+                                  </label>
+                                  <.render_node node={val} path={@path ++ ["properties", key]} myself={@myself} />
+                                </div>              </div>
             </div>
           <% end %>
 
@@ -431,6 +481,27 @@ defmodule JSONSchemaEditor do
 
     .type-form {
       display: inline-block;
+    }
+
+    .required-checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.75rem;
+      color: #6b7280;
+      cursor: pointer;
+      user-select: none;
+      margin-right: 0.5rem;
+    }
+
+    .required-checkbox-label:hover {
+      color: var(--text-color);
+    }
+
+    .required-text {
+      font-weight: 600;
+      font-size: 0.7rem;
+      text-transform: uppercase;
     }
     """
   end
