@@ -536,10 +536,6 @@ defmodule JSONSchemaEditor do
       </style>
       <div class="jse-container">
         <div class="jse-header">
-          <div class="jse-title-badge-container">
-            <.badge>Schema Editor</.badge>
-          </div>
-
           <div class="jse-tabs">
             <button
               class={["jse-tab-btn", @active_tab == :editor && "active"]}

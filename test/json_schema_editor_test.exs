@@ -25,7 +25,6 @@ defmodule JSONSchemaEditorTest do
 
     assert html =~ "jse-container"
     assert html =~ "Test Schema"
-    assert html =~ "Schema Editor"
   end
 
   test "renders with different types and states" do
