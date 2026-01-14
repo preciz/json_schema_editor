@@ -83,8 +83,28 @@ defmodule JSONSchemaEditor.Validator do
           %{}
       end
 
+    # Recurse into logic branches
+    logic_errors =
+      Enum.reduce(["anyOf", "oneOf", "allOf"], %{}, fn key, acc ->
+        case Map.get(schema, key) do
+          branches when is_list(branches) ->
+            branch_errors =
+              branches
+              |> Enum.with_index()
+              |> Enum.reduce(%{}, fn {branch, idx}, b_acc ->
+                Map.merge(b_acc, validate_schema(branch, path ++ [key, idx]))
+              end)
+
+            Map.merge(acc, branch_errors)
+
+          _ ->
+            acc
+        end
+      end)
+
     base_errors
     |> Map.merge(prop_errors)
     |> Map.merge(item_errors)
+    |> Map.merge(logic_errors)
   end
 end

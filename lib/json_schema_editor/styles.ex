@@ -61,6 +61,57 @@ defmodule JSONSchemaEditor.Styles do
       border: 1px solid rgba(14, 165, 233, 0.2);
     }
 
+    .jse-badge-logic {
+      background-color: #fef2f2;
+      color: #991b1b;
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .jse-logic-container {
+      margin-top: 0.75rem;
+      padding: 1rem;
+      background-color: var(--secondary-bg);
+      border-radius: 0.75rem;
+      border: 1px solid var(--border-color);
+    }
+
+    .jse-logic-header {
+      margin-bottom: 0.75rem;
+    }
+
+    .jse-logic-content {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .jse-logic-branch {
+      padding: 0.75rem;
+      background-color: var(--bg-color);
+      border-radius: 0.5rem;
+      border: 1px solid var(--border-color);
+    }
+
+    .jse-logic-branch-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+      padding-bottom: 0.25rem;
+      border-bottom: 1px dashed var(--border-color);
+    }
+
+    .jse-logic-branch-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #6b7280;
+    }
+
+    .jse-icon-circle-logic {
+      background-color: #fee2e2;
+      color: #ef4444;
+    }
+
     .jse-btn {
       display: inline-flex;
       align-items: center;

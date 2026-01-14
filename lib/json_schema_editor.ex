@@ -5,6 +5,7 @@ defmodule JSONSchemaEditor do
   alias JSONSchemaEditor.Validator
 
   @types ["string", "number", "integer", "boolean", "object", "array"]
+  @logic_types ["anyOf", "oneOf", "allOf"]
 
   def update(assigns, socket) do
     socket =
@@ -12,6 +13,8 @@ defmodule JSONSchemaEditor do
       |> assign(assigns)
       |> assign_new(:ui_state, fn -> %{} end)
       |> assign_new(:schema, fn -> %{"type" => "object", "properties" => %{}} end)
+      |> assign(:types, @types)
+      |> assign(:logic_types, @logic_types)
       |> validate_and_assign_errors()
 
     {:ok, socket}
@@ -24,11 +27,15 @@ defmodule JSONSchemaEditor do
 
   def handle_event("change_type", %{"path" => path_json, "type" => new_type}, socket) do
     socket =
-      update_schema(socket, path_json, fn _node ->
+      update_schema(socket, path_json, fn node ->
+        # Clean up existing conflicting keys
+        base_node = Map.drop(node, ["type", "properties", "required", "items", "anyOf", "oneOf", "allOf"])
+
         case new_type do
-          "object" -> %{"type" => "object", "properties" => %{}}
-          "array" -> %{"type" => "array", "items" => %{"type" => "string"}}
-          _ -> %{"type" => new_type}
+          "object" -> Map.put(base_node, "type", "object") |> Map.put("properties", %{})
+          "array" -> Map.put(base_node, "type", "array") |> Map.put("items", %{"type" => "string"})
+          logic when logic in @logic_types -> Map.put(base_node, logic, [%{"type" => "string"}])
+          _ -> Map.put(base_node, "type", new_type)
         end
       end)
 
@@ -204,6 +211,35 @@ defmodule JSONSchemaEditor do
 
         new_enum = List.replace_at(current_enum, index, casted_value)
         Map.put(node, "enum", new_enum)
+      end)
+
+    {:noreply, socket}
+  end
+
+  def handle_event("add_logic_branch", %{"path" => path_json, "type" => logic_type}, socket) do
+    socket =
+      update_schema(socket, path_json, fn node ->
+        branches = Map.get(node, logic_type, [])
+        Map.put(node, logic_type, branches ++ [%{"type" => "string"}])
+      end)
+
+    {:noreply, socket}
+  end
+
+  def handle_event("remove_logic_branch", %{"path" => path_json, "type" => logic_type, "index" => index}, socket) do
+    index = String.to_integer(index)
+
+    socket =
+      update_schema(socket, path_json, fn node ->
+        branches = Map.get(node, logic_type, [])
+        new_branches = List.delete_at(branches, index)
+
+        if new_branches == [] do
+          # Revert to a basic type if all branches are gone
+          Map.delete(node, logic_type) |> Map.put("type", "string")
+        else
+          Map.put(node, logic_type, new_branches)
+        end
       end)
 
     {:noreply, socket}
@@ -443,7 +479,10 @@ defmodule JSONSchemaEditor do
   end
 
   def render(assigns) do
-    assigns = assign(assigns, :types, @types)
+    assigns =
+      assigns
+      |> assign(:types, @types)
+      |> assign(:logic_types, @logic_types)
 
     ~H"""
     <div id={@id} class="jse-host">
@@ -471,6 +510,7 @@ defmodule JSONSchemaEditor do
           ui_state={@ui_state}
           validation_errors={@validation_errors}
           types={@types}
+          logic_types={@logic_types}
           myself={@myself}
         />
       </div>
@@ -478,13 +518,19 @@ defmodule JSONSchemaEditor do
     """
   end
 
+  attr(:node, :map, required: true)
   attr(:path, :list, required: true)
   attr(:ui_state, :map, required: true)
   attr(:validation_errors, :map, required: true)
   attr(:types, :list, required: true)
+  attr(:logic_types, :list, required: true)
   attr(:myself, :any, required: true)
 
   defp render_node(assigns) do
+    logic_key = Enum.find(assigns.logic_types, &Map.has_key?(assigns.node, &1))
+
+    assigns = assign(assigns, :logic_key, logic_key)
+
     ~H"""
     <div class="jse-node-container">
       <.node_header
@@ -493,6 +539,7 @@ defmodule JSONSchemaEditor do
         ui_state={@ui_state}
         validation_errors={@validation_errors}
         types={@types}
+        logic_types={@logic_types}
         myself={@myself}
       />
 
@@ -506,27 +553,42 @@ defmodule JSONSchemaEditor do
           />
         <% end %>
 
-        <%= case Map.get(@node, "type") do %>
-          <% "array" -> %>
-            <.array_items
-              node={@node}
-              path={@path}
-              ui_state={@ui_state}
-              validation_errors={@validation_errors}
-              types={@types}
-              myself={@myself}
-            />
-          <% "object" -> %>
-            <.object_properties
-              node={@node}
-              path={@path}
-              ui_state={@ui_state}
-              validation_errors={@validation_errors}
-              types={@types}
-              myself={@myself}
-            />
-          <% _ -> %>
-            <%!-- No children --%>
+        <%= if @logic_key do %>
+          <.logic_branches
+            node={@node}
+            path={@path}
+            logic_type={@logic_key}
+            ui_state={@ui_state}
+            validation_errors={@validation_errors}
+            types={@types}
+            logic_types={@logic_types}
+            myself={@myself}
+          />
+        <% else %>
+          <%= case Map.get(@node, "type") do %>
+            <% "array" -> %>
+              <.array_items
+                node={@node}
+                path={@path}
+                ui_state={@ui_state}
+                validation_errors={@validation_errors}
+                types={@types}
+                logic_types={@logic_types}
+                myself={@myself}
+              />
+            <% "object" -> %>
+              <.object_properties
+                node={@node}
+                path={@path}
+                ui_state={@ui_state}
+                validation_errors={@validation_errors}
+                types={@types}
+                logic_types={@logic_types}
+                myself={@myself}
+              />
+            <% _ -> %>
+              <%!-- No children --%>
+          <% end %>
         <% end %>
       <% end %>
     </div>
@@ -538,12 +600,14 @@ defmodule JSONSchemaEditor do
   attr(:ui_state, :map, required: true)
   attr(:validation_errors, :map, required: true)
   attr(:types, :list, required: true)
+  attr(:logic_types, :list, required: true)
   attr(:myself, :any, required: true)
 
   defp node_header(assigns) do
     ~H"""
     <div class="jse-node-header">
-      <%= if Map.get(@node, "type") in ["object", "array"] do %>
+      <% logic_active = Enum.any?(@logic_types, &Map.has_key?(@node, &1)) %>
+      <%= if Map.get(@node, "type") in ["object", "array"] or logic_active do %>
         <button
           class={[
             "jse-btn-icon jse-node-toggle",
@@ -562,11 +626,20 @@ defmodule JSONSchemaEditor do
       <form phx-change="change_type" phx-target={@myself} class="jse-type-form">
         <input type="hidden" name="path" value={JSON.encode!(@path)} />
         <select name="type" class="jse-type-select">
-          <%= for type <- @types do %>
-            <option value={type} selected={Map.get(@node, "type") == type}>
-              <%= String.capitalize(type) %>
-            </option>
-          <% end %>
+          <optgroup label="Basic Types">
+            <%= for type <- @types do %>
+              <option value={type} selected={Map.get(@node, "type") == type}>
+                <%= String.capitalize(type) %>
+              </option>
+            <% end %>
+          </optgroup>
+          <optgroup label="Logic Composition">
+            <%= for type <- @logic_types do %>
+              <option value={type} selected={Map.has_key?(@node, type)}>
+                <%= String.capitalize(type) %>
+              </option>
+            <% end %>
+          </optgroup>
         </select>
       </form>
 
@@ -777,9 +850,73 @@ defmodule JSONSchemaEditor do
 
   attr(:node, :map, required: true)
   attr(:path, :list, required: true)
+  attr(:logic_type, :string, required: true)
   attr(:ui_state, :map, required: true)
   attr(:validation_errors, :map, required: true)
   attr(:types, :list, required: true)
+  attr(:logic_types, :list, required: true)
+  attr(:myself, :any, required: true)
+
+  defp logic_branches(assigns) do
+    ~H"""
+    <div class="jse-logic-container">
+      <div class="jse-logic-header">
+        <.badge class="jse-badge-logic"><%= String.capitalize(@logic_type) %> Branches</.badge>
+      </div>
+      <div class="jse-logic-content">
+        <%= for {branch, idx} <- Map.get(@node, @logic_type, []) |> Enum.with_index() do %>
+          <div class="jse-logic-branch">
+            <div class="jse-logic-branch-header">
+              <span class="jse-logic-branch-label">Branch <%= idx + 1 %></span>
+              <button
+                phx-click="remove_logic_branch"
+                phx-target={@myself}
+                phx-value-path={JSON.encode!(@path)}
+                phx-value-type={@logic_type}
+                phx-value-index={idx}
+                class="jse-btn-icon jse-btn-delete"
+                title="Remove Branch"
+              >
+                <.icon name={:trash} class="jse-icon-xs" />
+              </button>
+            </div>
+            <.render_node
+              node={branch}
+              path={@path ++ [@logic_type, idx]}
+              ui_state={@ui_state}
+              validation_errors={@validation_errors}
+              types={@types}
+              logic_types={@logic_types}
+              myself={@myself}
+            />
+          </div>
+        <% end %>
+
+        <div class="jse-add-property-container">
+          <button
+            phx-click="add_logic_branch"
+            phx-target={@myself}
+            phx-value-path={JSON.encode!(@path)}
+            phx-value-type={@logic_type}
+            class="jse-btn jse-btn-secondary jse-btn-sm"
+          >
+            <div class="jse-icon-circle jse-icon-circle-logic">
+              <.icon name={:plus} class="jse-icon-xs" />
+            </div>
+            Add Branch
+          </button>
+        </div>
+      </div>
+    </div>
+    """
+  end
+
+  attr(:node, :map, required: true)
+  attr(:path, :list, required: true)
+  attr(:ui_state, :map, required: true)
+  attr(:validation_errors, :map, required: true)
+  attr(:types, :list, required: true)
+  attr(:logic_types, :list, required: true)
   attr(:myself, :any, required: true)
 
   defp array_items(assigns) do
@@ -795,6 +932,7 @@ defmodule JSONSchemaEditor do
           ui_state={@ui_state}
           validation_errors={@validation_errors}
           types={@types}
+          logic_types={@logic_types}
           myself={@myself}
         />
       </div>
@@ -807,6 +945,7 @@ defmodule JSONSchemaEditor do
   attr(:ui_state, :map, required: true)
   attr(:validation_errors, :map, required: true)
   attr(:types, :list, required: true)
+  attr(:logic_types, :list, required: true)
   attr(:myself, :any, required: true)
 
   defp object_properties(assigns) do
@@ -853,6 +992,7 @@ defmodule JSONSchemaEditor do
                 ui_state={@ui_state}
                 validation_errors={@validation_errors}
                 types={@types}
+                logic_types={@logic_types}
                 myself={@myself}
               />
             </div>
