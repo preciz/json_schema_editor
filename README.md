@@ -4,6 +4,8 @@
 
 A robust Phoenix LiveComponent for visually building, editing, and validating JSON Schemas.
 
+![JSON Schema Editor Screenshot](screenshot.png)
+
 ## Features
 
 - **Visual Editing**: Recursively build and edit deeply nested objects and arrays.
