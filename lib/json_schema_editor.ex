@@ -136,18 +136,9 @@ defmodule JSONSchemaEditor do
     update_node_field(socket, path_json, "description", description)
   end
 
-  def handle_event("toggle_description", %{"path" => path_json}, socket) do
+  def handle_event("toggle_ui", %{"path" => path_json, "type" => type}, socket) do
     ui_state = socket.assigns.ui_state
-    key = "expanded_description:#{path_json}"
-    new_expanded = !Map.get(ui_state, key, false)
-    ui_state = Map.put(ui_state, key, new_expanded)
-
-    {:noreply, assign(socket, :ui_state, ui_state)}
-  end
-
-  def handle_event("toggle_constraints", %{"path" => path_json}, socket) do
-    ui_state = socket.assigns.ui_state
-    key = "expanded_constraints:#{path_json}"
+    key = "#{type}:#{path_json}"
     new_expanded = !Map.get(ui_state, key, false)
     ui_state = Map.put(ui_state, key, new_expanded)
 
@@ -530,292 +521,366 @@ defmodule JSONSchemaEditor do
   defp render_node(assigns) do
     ~H"""
     <div class="jse-node-container">
-      <div class="jse-node-header">
-        <form phx-change="change_type" phx-target={@myself} class="jse-type-form">
-          <input type="hidden" name="path" value={JSON.encode!(@path)} />
-          <select name="type" class="jse-type-select">
-            <%= for type <- ["string", "number", "integer", "boolean", "object", "array"] do %>
-              <option value={type} selected={Map.get(@node, "type") == type}>
-                <%= String.capitalize(type) %>
-              </option>
-            <% end %>
-          </select>
-        </form>
-
-        <input
-          type="text"
-          value={Map.get(@node, "title", "")}
-          placeholder="Title..."
-          class="jse-title-input"
-          phx-blur="change_title"
-          phx-target={@myself}
-          phx-value-path={JSON.encode!(@path)}
-        />
-
-        <div class="jse-description-container">
-          <%= if Map.get(@ui_state, "expanded_description:#{JSON.encode!(@path)}", false) do %>
-            <div class="jse-description-expanded">
-              <textarea
-                class="jse-description-textarea"
-                placeholder="Description..."
-                phx-blur="change_description"
-                phx-target={@myself}
-                phx-value-path={JSON.encode!(@path)}
-              ><%= Map.get(@node, "description", "") %></textarea>
-              <button
-                class="jse-btn-icon jse-btn-sm"
-                phx-click="toggle_description"
-                phx-target={@myself}
-                phx-value-path={JSON.encode!(@path)}
-                title="Collapse Description"
-              >
-                <.icon name={:chevron_up} class="jse-icon-sm" />
-              </button>
-            </div>
-          <% else %>
-            <div class="jse-description-collapsed">
-              <input
-                type="text"
-                value={Map.get(@node, "description", "")}
-                placeholder="Description..."
-                class="jse-description-input"
-                phx-blur="change_description"
-                phx-target={@myself}
-                phx-value-path={JSON.encode!(@path)}
-              />
-              <button
-                class="jse-btn-icon jse-btn-sm"
-                phx-click="toggle_description"
-                phx-target={@myself}
-                phx-value-path={JSON.encode!(@path)}
-                title="Expand Description"
-              >
-                <.icon name={:chevron_down} class="jse-icon-sm" />
-              </button>
-            </div>
-          <% end %>
-        </div>
-
-        <button
-          class={[
-            "jse-btn-icon jse-btn-toggle-constraints",
-            Map.get(@ui_state, "expanded_constraints:#{JSON.encode!(@path)}", false) && "jse-active"
-          ]}
-          phx-click="toggle_constraints"
-          phx-target={@myself}
-          phx-value-path={JSON.encode!(@path)}
-          title="Toggle Constraints"
-        >
-          <.icon name={:adjustments} class="jse-icon-sm" />
-        </button>
-      </div>
+      <.node_header
+        node={@node}
+        path={@path}
+        ui_state={@ui_state}
+        validation_errors={@validation_errors}
+        myself={@myself}
+      />
 
       <%= if Map.get(@ui_state, "expanded_constraints:#{JSON.encode!(@path)}", false) do %>
-        <div class="jse-constraints-container">
-          <div class="jse-constraints-grid">
-            <%= case Map.get(@node, "type") do %>
-              <% "string" -> %>
-                <.constraint_input
-                  label="Min Length"
-                  field="minLength"
-                  value={Map.get(@node, "minLength")}
-                  path={@path}
-                  type="number"
-                  validation_errors={@validation_errors}
-                  myself={@myself}
-                />
-                <.constraint_input
-                  label="Max Length"
-                  field="maxLength"
-                  value={Map.get(@node, "maxLength")}
-                  path={@path}
-                  type="number"
-                  validation_errors={@validation_errors}
-                  myself={@myself}
-                />
-                <.constraint_input
-                  label="Pattern"
-                  field="pattern"
-                  value={Map.get(@node, "pattern")}
-                  path={@path}
-                  validation_errors={@validation_errors}
-                  myself={@myself}
-                />
-              <% type when type in ["number", "integer"] -> %>
-                <.constraint_input
-                  label="Minimum"
-                  field="minimum"
-                  value={Map.get(@node, "minimum")}
-                  path={@path}
-                  type="number"
-                  step="any"
-                  validation_errors={@validation_errors}
-                  myself={@myself}
-                />
-                <.constraint_input
-                  label="Maximum"
-                  field="maximum"
-                  value={Map.get(@node, "maximum")}
-                  path={@path}
-                  type="number"
-                  step="any"
-                  validation_errors={@validation_errors}
-                  myself={@myself}
-                />
-                <.constraint_input
-                  label="Multiple Of"
-                  field="multipleOf"
-                  value={Map.get(@node, "multipleOf")}
-                  path={@path}
-                  type="number"
-                  step="any"
-                  validation_errors={@validation_errors}
-                  myself={@myself}
-                />
-              <% "array" -> %>
-                <.constraint_input
-                  label="Min Items"
-                  field="minItems"
-                  value={Map.get(@node, "minItems")}
-                  path={@path}
-                  type="number"
-                  validation_errors={@validation_errors}
-                  myself={@myself}
-                />
-                <.constraint_input
-                  label="Max Items"
-                  field="maxItems"
-                  value={Map.get(@node, "maxItems")}
-                  path={@path}
-                  type="number"
-                  validation_errors={@validation_errors}
-                  myself={@myself}
-                />
-                <div class="jse-constraint-field">
-                  <label class="jse-constraint-label">Unique Items</label>
-                  <input
-                    type="checkbox"
-                    checked={Map.get(@node, "uniqueItems") == true}
-                    phx-click="update_constraint"
-                    phx-value-path={JSON.encode!(@path)}
-                    phx-value-field="uniqueItems"
-                    phx-value-value={(!Map.get(@node, "uniqueItems", false)) |> to_string()}
-                    phx-target={@myself}
-                  />
-                </div>
-              <% "object" -> %>
-                <.constraint_input
-                  label="Min Props"
-                  field="minProperties"
-                  value={Map.get(@node, "minProperties")}
-                  path={@path}
-                  type="number"
-                  validation_errors={@validation_errors}
-                  myself={@myself}
-                />
-                <.constraint_input
-                  label="Max Props"
-                  field="maxProperties"
-                  value={Map.get(@node, "maxProperties")}
-                  path={@path}
-                  type="number"
-                  validation_errors={@validation_errors}
-                  myself={@myself}
-                />
-              <% _ -> %>
-                <span class="jse-constraint-label">No constraints for this type</span>
-            <% end %>
-            <.enum_section
-              node={@node}
+        <.constraint_grid
+          node={@node}
+          path={@path}
+          validation_errors={@validation_errors}
+          myself={@myself}
+        />
+      <% end %>
+
+      <%= case Map.get(@node, "type") do %>
+        <% "array" -> %>
+          <.array_items
+            node={@node}
+            path={@path}
+            ui_state={@ui_state}
+            validation_errors={@validation_errors}
+            myself={@myself}
+          />
+        <% "object" -> %>
+          <.object_properties
+            node={@node}
+            path={@path}
+            ui_state={@ui_state}
+            validation_errors={@validation_errors}
+            myself={@myself}
+          />
+        <% _ -> %>
+          <%!-- No children --%>
+      <% end %>
+    </div>
+    """
+  end
+
+  attr(:node, :map, required: true)
+  attr(:path, :list, required: true)
+  attr(:ui_state, :map, required: true)
+  attr(:validation_errors, :map, required: true)
+  attr(:myself, :any, required: true)
+
+  defp node_header(assigns) do
+    ~H"""
+    <div class="jse-node-header">
+      <form phx-change="change_type" phx-target={@myself} class="jse-type-form">
+        <input type="hidden" name="path" value={JSON.encode!(@path)} />
+        <select name="type" class="jse-type-select">
+          <%= for type <- ["string", "number", "integer", "boolean", "object", "array"] do %>
+            <option value={type} selected={Map.get(@node, "type") == type}>
+              <%= String.capitalize(type) %>
+            </option>
+          <% end %>
+        </select>
+      </form>
+
+      <input
+        type="text"
+        value={Map.get(@node, "title", "")}
+        placeholder="Title..."
+        class="jse-title-input"
+        phx-blur="change_title"
+        phx-target={@myself}
+        phx-value-path={JSON.encode!(@path)}
+      />
+
+      <div class="jse-description-container">
+        <%= if Map.get(@ui_state, "expanded_description:#{JSON.encode!(@path)}", false) do %>
+          <div class="jse-description-expanded">
+            <textarea
+              class="jse-description-textarea"
+              placeholder="Description..."
+              phx-blur="change_description"
+              phx-target={@myself}
+              phx-value-path={JSON.encode!(@path)}
+            ><%= Map.get(@node, "description", "") %></textarea>
+            <button
+              class="jse-btn-icon jse-btn-sm"
+              phx-click="toggle_ui"
+              phx-value-type="expanded_description"
+              phx-target={@myself}
+              phx-value-path={JSON.encode!(@path)}
+              title="Collapse Description"
+            >
+              <.icon name={:chevron_up} class="jse-icon-sm" />
+            </button>
+          </div>
+        <% else %>
+          <div class="jse-description-collapsed">
+            <input
+              type="text"
+              value={Map.get(@node, "description", "")}
+              placeholder="Description..."
+              class="jse-description-input"
+              phx-blur="change_description"
+              phx-target={@myself}
+              phx-value-path={JSON.encode!(@path)}
+            />
+            <button
+              class="jse-btn-icon jse-btn-sm"
+              phx-click="toggle_ui"
+              phx-value-type="expanded_description"
+              phx-target={@myself}
+              phx-value-path={JSON.encode!(@path)}
+              title="Expand Description"
+            >
+              <.icon name={:chevron_down} class="jse-icon-sm" />
+            </button>
+          </div>
+        <% end %>
+      </div>
+
+      <button
+        class={[
+          "jse-btn-icon jse-btn-toggle-constraints",
+          Map.get(@ui_state, "expanded_constraints:#{JSON.encode!(@path)}", false) && "jse-active"
+        ]}
+        phx-click="toggle_ui"
+        phx-value-type="expanded_constraints"
+        phx-target={@myself}
+        phx-value-path={JSON.encode!(@path)}
+        title="Toggle Constraints"
+      >
+        <.icon name={:adjustments} class="jse-icon-sm" />
+      </button>
+    </div>
+    """
+  end
+
+  attr(:node, :map, required: true)
+  attr(:path, :list, required: true)
+  attr(:validation_errors, :map, required: true)
+  attr(:myself, :any, required: true)
+
+  defp constraint_grid(assigns) do
+    ~H"""
+    <div class="jse-constraints-container">
+      <div class="jse-constraints-grid">
+        <%= case Map.get(@node, "type") do %>
+          <% "string" -> %>
+            <.constraint_input
+              label="Min Length"
+              field="minLength"
+              value={Map.get(@node, "minLength")}
+              path={@path}
+              type="number"
+              validation_errors={@validation_errors}
+              myself={@myself}
+            />
+            <.constraint_input
+              label="Max Length"
+              field="maxLength"
+              value={Map.get(@node, "maxLength")}
+              path={@path}
+              type="number"
+              validation_errors={@validation_errors}
+              myself={@myself}
+            />
+            <.constraint_input
+              label="Pattern"
+              field="pattern"
+              value={Map.get(@node, "pattern")}
               path={@path}
               validation_errors={@validation_errors}
               myself={@myself}
             />
-          </div>
-        </div>
-      <% end %>
-
-      <%= if Map.get(@node, "type") == "array" do %>
-        <div class="jse-array-items-container">
-          <div class="jse-array-items-header">
-            <.badge class="jse-badge-info">Array Items</.badge>
-          </div>
-          <div class="jse-array-items-content">
-            <.render_node
-              node={Map.get(@node, "items", %{"type" => "string"})}
-              path={@path ++ ["items"]}
-              ui_state={@ui_state}
+          <% type when type in ["number", "integer"] -> %>
+            <.constraint_input
+              label="Minimum"
+              field="minimum"
+              value={Map.get(@node, "minimum")}
+              path={@path}
+              type="number"
+              step="any"
               validation_errors={@validation_errors}
               myself={@myself}
             />
-          </div>
-        </div>
-      <% end %>
-
-      <%= if Map.get(@node, "type") == "object" do %>
-        <div class="jse-properties-list">
-          <%= for {key, val} <- Map.get(@node, "properties", %{}) |> Enum.sort_by(fn {k, _v} -> k end) do %>
-            <div class="jse-property-item">
-              <div class="jse-property-row">
-                <button
-                  phx-click="delete_property"
-                  phx-target={@myself}
-                  phx-value-path={JSON.encode!(@path)}
-                  phx-value-key={key}
-                  class="jse-btn-icon jse-btn-delete"
-                  title="Delete Property"
-                >
-                  <.icon name={:trash} class="jse-icon-sm" />
-                </button>
-                <div class="jse-property-content">
-                  <input
-                    type="text"
-                    value={key}
-                    name="property_name"
-                    class="jse-property-key-input"
-                    phx-blur="rename_property"
-                    phx-target={@myself}
-                    phx-value-path={JSON.encode!(@path)}
-                    phx-value-old_key={key}
-                  />
-                  <label class="jse-required-checkbox-label" title="Toggle Required">
-                    <input
-                      type="checkbox"
-                      checked={key in Map.get(@node, "required", [])}
-                      phx-click="toggle_required"
-                      phx-value-path={JSON.encode!(@path)}
-                      phx-value-key={key}
-                      phx-target={@myself}
-                    />
-                    <span class="jse-required-text">Req</span>
-                  </label>
-                  <.render_node
-                    node={val}
-                    path={@path ++ ["properties", key]}
-                    ui_state={@ui_state}
-                    validation_errors={@validation_errors}
-                    myself={@myself}
-                  />
-                </div>
-              </div>
+            <.constraint_input
+              label="Maximum"
+              field="maximum"
+              value={Map.get(@node, "maximum")}
+              path={@path}
+              type="number"
+              step="any"
+              validation_errors={@validation_errors}
+              myself={@myself}
+            />
+            <.constraint_input
+              label="Multiple Of"
+              field="multipleOf"
+              value={Map.get(@node, "multipleOf")}
+              path={@path}
+              type="number"
+              step="any"
+              validation_errors={@validation_errors}
+              myself={@myself}
+            />
+          <% "array" -> %>
+            <.constraint_input
+              label="Min Items"
+              field="minItems"
+              value={Map.get(@node, "minItems")}
+              path={@path}
+              type="number"
+              validation_errors={@validation_errors}
+              myself={@myself}
+            />
+            <.constraint_input
+              label="Max Items"
+              field="maxItems"
+              value={Map.get(@node, "maxItems")}
+              path={@path}
+              type="number"
+              validation_errors={@validation_errors}
+              myself={@myself}
+            />
+            <div class="jse-constraint-field">
+              <label class="jse-constraint-label">Unique Items</label>
+              <input
+                type="checkbox"
+                checked={Map.get(@node, "uniqueItems") == true}
+                phx-click="update_constraint"
+                phx-value-path={JSON.encode!(@path)}
+                phx-value-field="uniqueItems"
+                phx-value-value={(!Map.get(@node, "uniqueItems", false)) |> to_string()}
+                phx-target={@myself}
+              />
             </div>
-          <% end %>
+          <% "object" -> %>
+            <.constraint_input
+              label="Min Props"
+              field="minProperties"
+              value={Map.get(@node, "minProperties")}
+              path={@path}
+              type="number"
+              validation_errors={@validation_errors}
+              myself={@myself}
+            />
+            <.constraint_input
+              label="Max Props"
+              field="maxProperties"
+              value={Map.get(@node, "maxProperties")}
+              path={@path}
+              type="number"
+              validation_errors={@validation_errors}
+              myself={@myself}
+            />
+          <% _ -> %>
+            <span class="jse-constraint-label">No constraints for this type</span>
+        <% end %>
+        <.enum_section
+          node={@node}
+          path={@path}
+          validation_errors={@validation_errors}
+          myself={@myself}
+        />
+      </div>
+    </div>
+    """
+  end
 
-          <div class="jse-add-property-container">
+  attr(:node, :map, required: true)
+  attr(:path, :list, required: true)
+  attr(:ui_state, :map, required: true)
+  attr(:validation_errors, :map, required: true)
+  attr(:myself, :any, required: true)
+
+  defp array_items(assigns) do
+    ~H"""
+    <div class="jse-array-items-container">
+      <div class="jse-array-items-header">
+        <.badge class="jse-badge-info">Array Items</.badge>
+      </div>
+      <div class="jse-array-items-content">
+        <.render_node
+          node={Map.get(@node, "items", %{"type" => "string"})}
+          path={@path ++ ["items"]}
+          ui_state={@ui_state}
+          validation_errors={@validation_errors}
+          myself={@myself}
+        />
+      </div>
+    </div>
+    """
+  end
+
+  attr(:node, :map, required: true)
+  attr(:path, :list, required: true)
+  attr(:ui_state, :map, required: true)
+  attr(:validation_errors, :map, required: true)
+  attr(:myself, :any, required: true)
+
+  defp object_properties(assigns) do
+    ~H"""
+    <div class="jse-properties-list">
+      <%= for {key, val} <- Map.get(@node, "properties", %{}) |> Enum.sort_by(fn {k, _v} -> k end) do %>
+        <div class="jse-property-item">
+          <div class="jse-property-row">
             <button
-              phx-click="add_property"
+              phx-click="delete_property"
               phx-target={@myself}
               phx-value-path={JSON.encode!(@path)}
-              class="jse-btn jse-btn-secondary jse-btn-sm"
+              phx-value-key={key}
+              class="jse-btn-icon jse-btn-delete"
+              title="Delete Property"
             >
-              <div class="jse-icon-circle">
-                <.icon name={:plus} class="jse-icon-xs" />
-              </div>
-              Add Property
+              <.icon name={:trash} class="jse-icon-sm" />
             </button>
+            <div class="jse-property-content">
+              <input
+                type="text"
+                value={key}
+                name="property_name"
+                class="jse-property-key-input"
+                phx-blur="rename_property"
+                phx-target={@myself}
+                phx-value-path={JSON.encode!(@path)}
+                phx-value-old_key={key}
+              />
+              <label class="jse-required-checkbox-label" title="Toggle Required">
+                <input
+                  type="checkbox"
+                  checked={key in Map.get(@node, "required", [])}
+                  phx-click="toggle_required"
+                  phx-value-path={JSON.encode!(@path)}
+                  phx-value-key={key}
+                  phx-target={@myself}
+                />
+                <span class="jse-required-text">Req</span>
+              </label>
+              <.render_node
+                node={val}
+                path={@path ++ ["properties", key]}
+                ui_state={@ui_state}
+                validation_errors={@validation_errors}
+                myself={@myself}
+              />
+            </div>
           </div>
         </div>
       <% end %>
+
+      <div class="jse-add-property-container">
+        <button
+          phx-click="add_property"
+          phx-target={@myself}
+          phx-value-path={JSON.encode!(@path)}
+          class="jse-btn jse-btn-secondary jse-btn-sm"
+        >
+          <div class="jse-icon-circle">
+            <.icon name={:plus} class="jse-icon-xs" />
+          </div>
+          Add Property
+        </button>
+      </div>
     </div>
     """
   end

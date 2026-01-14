@@ -291,12 +291,12 @@ defmodule JSONSchemaEditorTest do
     path_json = JSON.encode!([])
 
     {:noreply, socket} =
-      JSONSchemaEditor.handle_event("toggle_description", %{"path" => path_json}, socket)
+      JSONSchemaEditor.handle_event("toggle_ui", %{"path" => path_json, "type" => "expanded_description"}, socket)
 
     assert socket.assigns.ui_state["expanded_description:#{path_json}"]
 
     {:noreply, socket} =
-      JSONSchemaEditor.handle_event("toggle_constraints", %{"path" => path_json}, socket)
+      JSONSchemaEditor.handle_event("toggle_ui", %{"path" => path_json, "type" => "expanded_constraints"}, socket)
 
     assert socket.assigns.ui_state["expanded_constraints:#{path_json}"]
   end
