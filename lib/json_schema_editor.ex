@@ -528,7 +528,7 @@ defmodule JSONSchemaEditor do
     .property-row {
       display: flex;
       gap: 0.5rem;
-      align-items: flex-start;
+      align-items: center;
     }
 
     .property-content {
@@ -569,6 +569,9 @@ defmodule JSONSchemaEditor do
     }
 
     .btn-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       padding: 0.25rem;
       color: #9ca3af;
       background: transparent;
