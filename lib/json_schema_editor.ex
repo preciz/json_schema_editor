@@ -196,16 +196,16 @@ defmodule JSONSchemaEditor do
 
   def render(assigns) do
     ~H"""
-    <div id={@id} class="json-schema-editor-host">
+    <div id={@id} class="jse-host">
       <style>
         <%= styles() %>
       </style>
-      <div class="editor-container">
-        <div class="header">
-          <span class="badge">Schema Root</span>
-          <button class="btn btn-primary" phx-click="save" phx-target={@myself}>
+      <div class="jse-container">
+        <div class="jse-header">
+          <span class="jse-badge">Schema Root</span>
+          <button class="jse-btn jse-btn-primary" phx-click="save" phx-target={@myself}>
             <span>Save Changes</span>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="jse-icon">
               <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
             </svg>
           </button>
@@ -223,94 +223,70 @@ defmodule JSONSchemaEditor do
 
   defp render_node(assigns) do
     ~H"""
+    <div class="jse-node-container">
+      <div class="jse-node-header">
+        <form phx-change="change_type" phx-target={@myself} class="jse-type-form">
+          <input type="hidden" name="path" value={JSON.encode!(@path)} />
+          <select name="type" class="jse-type-select">
+            <%= for type <- ["string", "number", "integer", "boolean", "object", "array"] do %>
+              <option value={type} selected={Map.get(@node, "type") == type}>
+                <%= String.capitalize(type) %>
+              </option>
+            <% end %>
+          </select>
+        </form>
 
-      <div class="node-container">
+        <input
+          type="text"
+          value={Map.get(@node, "title", "")}
+          placeholder="Title..."
+          class="jse-title-input"
+          phx-blur="change_title"
+          phx-target={@myself}
+          phx-value-path={JSON.encode!(@path)}
+        />
 
-        <div class="node-header">
-
-          <form phx-change="change_type" phx-target={@myself} class="type-form">
-
-            <input type="hidden" name="path" value={JSON.encode!(@path)} />
-
-            <select name="type" class="type-select">
-
-              <%= for type <- ["string", "number", "integer", "boolean", "object", "array"] do %>
-
-                <option value={type} selected={Map.get(@node, "type") == type}>
-
-                  <%= String.capitalize(type) %>
-
-                </option>
-
-              <% end %>
-
-                      </select>
-
-                    </form>
-
-            
-
-                    <input
-
-                      type="text"
-
-                      value={Map.get(@node, "title", "")}
-
-                      placeholder="Title..."
-
-                      class="title-input"
-
-                      phx-blur="change_title"
-
-                      phx-target={@myself}
-
-                      phx-value-path={JSON.encode!(@path)}
-
-                    />
-
-            
-
-                    <div class="description-container">
+        <div class="jse-description-container">
           <%= if Map.get(@node, "expanded_description", false) do %>
-            <div class="description-expanded">
+            <div class="jse-description-expanded">
               <textarea
-                class="description-textarea"
+                class="jse-description-textarea"
                 placeholder="Description..."
                 phx-blur="change_description"
                 phx-target={@myself}
                 phx-value-path={JSON.encode!(@path)}
               ><%= Map.get(@node, "description", "") %></textarea>
               <button
-                class="btn-icon btn-sm"
+                class="jse-btn-icon jse-btn-sm"
                 phx-click="toggle_description"
                 phx-target={@myself}
                 phx-value-path={JSON.encode!(@path)}
                 title="Collapse Description"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="icon-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="jse-icon-sm">
                   <path fill-rule="evenodd" d="M14.77 12.79a.75.75 0 01-1.06-.02L10 8.832 6.29 12.77a.75.75 0 11-1.08-1.04l4.25-4.5a.75.75 0 011.08 0l4.25 4.5a.75.75 0 01-.02 1.06z" clip-rule="evenodd" />
                 </svg>
               </button>
             </div>
           <% else %>
-            <div class="description-collapsed">
+            <div class="jse-description-collapsed">
               <input
                 type="text"
                 value={Map.get(@node, "description", "")}
                 placeholder="Description..."
-                class="description-input"
+                class="jse-description-input"
                 phx-blur="change_description"
                 phx-target={@myself}
                 phx-value-path={JSON.encode!(@path)}
               />
               <button
-                class="btn-icon btn-sm"
+                class="jse-btn-icon jse-btn-sm"
                 phx-click="toggle_description"
                 phx-target={@myself}
                 phx-value-path={JSON.encode!(@path)}
                 title="Expand Description"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="icon-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="jse-icon-sm">
                    <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
                 </svg>
               </button>
@@ -320,11 +296,11 @@ defmodule JSONSchemaEditor do
       </div>
 
       <%= if Map.get(@node, "type") == "array" do %>
-        <div class="array-items-container">
-          <div class="array-items-header">
-            <span class="badge badge-info">Array Items</span>
+        <div class="jse-array-items-container">
+          <div class="jse-array-items-header">
+            <span class="jse-badge jse-badge-info">Array Items</span>
           </div>
-          <div class="array-items-content">
+          <div class="jse-array-items-content">
             <.render_node
               node={Map.get(@node, "items", %{"type" => "string"})}
               path={@path ++ ["items"]}
@@ -335,58 +311,59 @@ defmodule JSONSchemaEditor do
       <% end %>
 
       <%= if Map.get(@node, "type") == "object" do %>
-        <div class="properties-list">
+        <div class="jse-properties-list">
           <%= for {key, val} <- Map.get(@node, "properties", %{}) |> Enum.sort_by(fn {k, _v} -> k end) do %>
-            <div class="property-item">
-              <div class="property-row">
+            <div class="jse-property-item">
+              <div class="jse-property-row">
                 <button
                   phx-click="delete_property"
                   phx-target={@myself}
                   phx-value-path={JSON.encode!(@path)}
                   phx-value-key={key}
-                  class="btn-icon btn-delete"
+                  class="jse-btn-icon jse-btn-delete"
                   title="Delete Property"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="icon-sm">
-                    <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clip-rule="evenodd" />
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="jse-icon-sm">
+                    <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clip-rule="evenodd" />
                   </svg>
                 </button>
-                                <div class="property-content">
-                                  <input
-                                    type="text"
-                                    value={key}
-                                    name="property_name"
-                                    class="property-key-input"
-                                    phx-blur="rename_property"
-                                    phx-target={@myself}
-                                    phx-value-path={JSON.encode!(@path)}
-                                    phx-value-old_key={key}
-                                  />
-                                  <label class="required-checkbox-label" title="Toggle Required">
-                                    <input
-                                      type="checkbox"
-                                      checked={key in Map.get(@node, "required", [])}
-                                      phx-click="toggle_required"
-                                      phx-value-path={JSON.encode!(@path)}
-                                      phx-value-key={key}
-                                      phx-target={@myself}
-                                    />
-                                    <span class="required-text">Req</span>
-                                  </label>
-                                  <.render_node node={val} path={@path ++ ["properties", key]} myself={@myself} />
-                                </div>              </div>
+                <div class="jse-property-content">
+                  <input
+                    type="text"
+                    value={key}
+                    name="property_name"
+                    class="jse-property-key-input"
+                    phx-blur="rename_property"
+                    phx-target={@myself}
+                    phx-value-path={JSON.encode!(@path)}
+                    phx-value-old_key={key}
+                  />
+                  <label class="jse-required-checkbox-label" title="Toggle Required">
+                    <input
+                      type="checkbox"
+                      checked={key in Map.get(@node, "required", [])}
+                      phx-click="toggle_required"
+                      phx-value-path={JSON.encode!(@path)}
+                      phx-value-key={key}
+                      phx-target={@myself}
+                    />
+                    <span class="jse-required-text">Req</span>
+                  </label>
+                  <.render_node node={val} path={@path ++ ["properties", key]} myself={@myself} />
+                </div>
+              </div>
             </div>
           <% end %>
 
-          <div class="add-property-container">
+          <div class="jse-add-property-container">
             <button
               phx-click="add_property"
               phx-target={@myself}
               phx-value-path={JSON.encode!(@path)}
-              class="btn btn-secondary btn-sm"
+              class="jse-btn jse-btn-secondary jse-btn-sm"
             >
-              <div class="icon-circle">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="icon-xs">
+              <div class="jse-icon-circle">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="jse-icon-xs">
                   <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
                 </svg>
               </div>
@@ -401,7 +378,7 @@ defmodule JSONSchemaEditor do
 
   defp styles do
     """
-    .json-schema-editor-host {
+    .jse-host {
       display: block;
       font-family: system-ui, -apple-system, sans-serif;
       --primary-color: #4f46e5;
@@ -413,7 +390,7 @@ defmodule JSONSchemaEditor do
     }
 
     @media (prefers-color-scheme: dark) {
-      .json-schema-editor-host {
+      .jse-host {
         --bg-color: #1e293b;
         --text-color: #f3f4f6;
         --border-color: #374151;
@@ -421,7 +398,7 @@ defmodule JSONSchemaEditor do
       }
     }
 
-    .editor-container {
+    .jse-container {
       background-color: var(--bg-color);
       color: var(--text-color);
       border: 1px solid var(--border-color);
@@ -431,7 +408,7 @@ defmodule JSONSchemaEditor do
       transition: all 0.3s;
     }
 
-    .header {
+    .jse-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -440,7 +417,7 @@ defmodule JSONSchemaEditor do
       border-bottom: 1px solid var(--border-color);
     }
 
-    .badge {
+    .jse-badge {
       padding: 0.25rem 0.625rem;
       font-size: 0.75rem;
       font-weight: 700;
@@ -451,13 +428,13 @@ defmodule JSONSchemaEditor do
       border: 1px solid rgba(168, 85, 247, 0.2);
     }
 
-    .badge-info {
+    .jse-badge-info {
       background-color: #e0f2fe;
       color: #0369a1;
       border: 1px solid rgba(14, 165, 233, 0.2);
     }
 
-    .btn {
+    .jse-btn {
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
@@ -470,45 +447,45 @@ defmodule JSONSchemaEditor do
       transition: all 0.2s;
     }
 
-    .btn-primary {
+    .jse-btn-primary {
       background-color: var(--primary-color);
       color: white;
       box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
     }
 
-    .btn-primary:hover {
+    .jse-btn-primary:hover {
       background-color: var(--primary-hover);
     }
 
-    .btn-secondary {
+    .jse-btn-secondary {
       color: var(--primary-color);
       background-color: transparent;
     }
 
-    .btn-secondary:hover {
+    .jse-btn-secondary:hover {
       background-color: #eef2ff;
     }
 
-    .icon {
+    .jse-icon {
       width: 1rem;
       height: 1rem;
       opacity: 0.75;
     }
 
-    .node-container {
+    .jse-node-container {
       margin-left: 1rem;
       margin-top: 0.5rem;
       border-left: 2px solid var(--border-color);
       padding-left: 1rem;
     }
 
-    .node-header {
+    .jse-node-header {
       display: flex;
       align-items: center;
       gap: 0.5rem;
     }
 
-    .type-select {
+    .jse-type-select {
       display: block;
       width: 9rem;
       border-radius: 0.5rem;
@@ -520,12 +497,12 @@ defmodule JSONSchemaEditor do
       cursor: pointer;
     }
 
-    .type-select:focus {
+    .jse-type-select:focus {
       outline: 2px solid var(--primary-color);
       border-color: transparent;
     }
 
-    .title-input {
+    .jse-title-input {
       width: 8rem;
       font-size: 0.8125rem;
       font-weight: 600;
@@ -537,26 +514,26 @@ defmodule JSONSchemaEditor do
       transition: border-color 0.2s;
     }
 
-    .title-input:hover, .title-input:focus {
+    .jse-title-input:hover, .jse-title-input:focus {
       border-color: var(--primary-color);
     }
 
-    .title-input:focus {
+    .jse-title-input:focus {
       outline: none;
     }
 
-    .description-container {
+    .jse-description-container {
       flex: 1;
       min-width: 200px;
     }
 
-    .description-collapsed, .description-expanded {
+    .jse-description-collapsed, .jse-description-expanded {
       display: flex;
       gap: 0.5rem;
       align-items: flex-start;
     }
 
-    .description-input {
+    .jse-description-input {
       flex: 1;
       font-size: 0.8125rem;
       padding: 0.375rem 0.75rem;
@@ -568,7 +545,7 @@ defmodule JSONSchemaEditor do
       transition: opacity 0.2s, border-color 0.2s;
     }
 
-    .description-textarea {
+    .jse-description-textarea {
       flex: 1;
       font-family: inherit;
       font-size: 0.8125rem;
@@ -581,22 +558,22 @@ defmodule JSONSchemaEditor do
       resize: vertical;
     }
 
-    .description-textarea:focus {
+    .jse-description-textarea:focus {
       outline: 2px solid var(--primary-color);
       border-color: transparent;
     }
 
-    .description-input:hover, .description-input:focus {
+    .jse-description-input:hover, .jse-description-input:focus {
       opacity: 1;
       border-color: var(--primary-color);
     }
 
-    .description-input:focus {
+    .jse-description-input:focus {
       outline: none;
       opacity: 1;
     }
 
-    .array-items-container {
+    .jse-array-items-container {
       margin-top: 0.75rem;
       padding: 1rem;
       background-color: var(--secondary-bg);
@@ -604,37 +581,37 @@ defmodule JSONSchemaEditor do
       border: 1px dashed var(--border-color);
     }
 
-    .array-items-header {
+    .jse-array-items-header {
       margin-bottom: 0.75rem;
     }
 
-    .properties-list {
+    .jse-properties-list {
       margin-top: 0.5rem;
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
     }
 
-    .property-row {
+    .jse-property-row {
       display: flex;
       gap: 0.5rem;
       align-items: center;
     }
 
-    .property-content {
+    .jse-property-content {
       flex: 1;
       display: flex;
       align-items: center;
       gap: 0.5rem;
     }
 
-    .property-key {
+    .jse-property-key {
       font-weight: 600;
       font-size: 0.875rem;
       min-width: 3rem;
     }
 
-    .property-key-input {
+    .jse-property-key-input {
       font-weight: 600;
       font-size: 0.875rem;
       min-width: 5rem;
@@ -647,18 +624,18 @@ defmodule JSONSchemaEditor do
       font-family: inherit;
     }
 
-    .property-key-input:hover {
+    .jse-property-key-input:hover {
       border-color: var(--border-color);
       background-color: var(--secondary-bg);
     }
 
-    .property-key-input:focus {
+    .jse-property-key-input:focus {
       outline: none;
       border-color: var(--primary-color);
       background-color: var(--bg-color);
     }
 
-    .btn-icon {
+    .jse-btn-icon {
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -670,22 +647,22 @@ defmodule JSONSchemaEditor do
       cursor: pointer;
     }
 
-    .btn-delete:hover {
+    .jse-btn-delete:hover {
       color: #dc2626;
       background-color: #fef2f2;
     }
 
-    .icon-sm {
+    .jse-icon-sm {
       width: 1rem;
       height: 1rem;
     }
 
-    .icon-xs {
+    .jse-icon-xs {
       width: 0.875rem;
       height: 0.875rem;
     }
 
-    .icon-circle {
+    .jse-icon-circle {
       display: flex;
       align-items: center;
       justify-content: center;
@@ -696,15 +673,11 @@ defmodule JSONSchemaEditor do
       color: var(--primary-color);
     }
 
-    .group:hover .btn-delete {
-      opacity: 1;
-    }
-
-    .type-form {
+    .jse-type-form {
       display: inline-block;
     }
 
-    .required-checkbox-label {
+    .jse-required-checkbox-label {
       display: flex;
       align-items: center;
       gap: 0.25rem;
@@ -715,11 +688,11 @@ defmodule JSONSchemaEditor do
       margin-right: 0.5rem;
     }
 
-    .required-checkbox-label:hover {
+    .jse-required-checkbox-label:hover {
       color: var(--text-color);
     }
 
-    .required-text {
+    .jse-required-text {
       font-weight: 600;
       font-size: 0.7rem;
       text-transform: uppercase;
