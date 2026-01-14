@@ -118,6 +118,23 @@ defmodule JSONSchemaEditor do
     end
   end
 
+  def handle_event("change_description", %{"path" => path_json, "value" => description}, socket) do
+    path = JSON.decode!(path_json)
+    description = String.trim(description)
+
+    node = get_in_path(socket.assigns.schema, path)
+
+    new_node =
+      if description == "" do
+        Map.delete(node, "description")
+      else
+        Map.put(node, "description", description)
+      end
+
+    schema = put_in_path(socket.assigns.schema, path, new_node)
+    {:noreply, assign(socket, :schema, schema)}
+  end
+
   def handle_event("save", _params, socket) do
     if socket.assigns[:on_save] do
       socket.assigns.on_save.(socket.assigns.schema)
@@ -192,6 +209,16 @@ defmodule JSONSchemaEditor do
             <% end %>
           </select>
         </form>
+
+        <input
+          type="text"
+          value={Map.get(@node, "description", "")}
+          placeholder="Description..."
+          class="description-input"
+          phx-blur="change_description"
+          phx-target={@myself}
+          phx-value-path={JSON.encode!(@path)}
+        />
       </div>
 
       <%= if Map.get(@node, "type") == "object" do %>
@@ -388,6 +415,29 @@ defmodule JSONSchemaEditor do
     .type-select:focus {
       outline: 2px solid var(--primary-color);
       border-color: transparent;
+    }
+
+    .description-input {
+      flex: 1;
+      font-size: 0.8125rem;
+      padding: 0.375rem 0.75rem;
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      background-color: transparent;
+      color: inherit;
+      opacity: 0.6;
+      transition: opacity 0.2s, border-color 0.2s;
+    }
+
+    .description-input:hover,
+    .description-input:focus {
+      opacity: 1;
+      border-color: var(--primary-color);
+    }
+
+    .description-input:focus {
+      outline: none;
+      opacity: 1;
     }
 
     .properties-list {
