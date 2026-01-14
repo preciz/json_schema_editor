@@ -3,9 +3,11 @@ defmodule JSONSchemaEditor do
   alias JSONSchemaEditor.SchemaUtils
   alias JSONSchemaEditor.Styles
   alias JSONSchemaEditor.Validator
+  alias JSONSchemaEditor.PrettyPrinter
 
   @types ["string", "number", "integer", "boolean", "object", "array"]
   @logic_types ["anyOf", "oneOf", "allOf"]
+  @formats ["email", "date-time", "date", "time", "uri", "uuid", "ipv4", "ipv6", "hostname"]
 
   def update(assigns, socket) do
     socket =
@@ -14,6 +16,8 @@ defmodule JSONSchemaEditor do
       |> assign_new(:ui_state, fn -> %{} end)
       |> assign_new(:schema, fn -> %{"type" => "object", "properties" => %{}} end)
       |> assign(:types, @types)
+      |> assign(:formats, @formats)
+      |> assign_new(:active_tab, fn -> :editor end)
       |> assign(:logic_types, @logic_types)
       |> validate_and_assign_errors()
 
@@ -23,6 +27,23 @@ defmodule JSONSchemaEditor do
   defp validate_and_assign_errors(socket) do
     errors = Validator.validate_schema(socket.assigns.schema)
     assign(socket, :validation_errors, errors)
+  end
+
+  def handle_event("change_format", %{"path" => path_json, "value" => format}, socket) do
+    socket =
+      update_schema(socket, path_json, fn node ->
+        if format == "" do
+          Map.delete(node, "format")
+        else
+          Map.put(node, "format", format)
+        end
+      end)
+
+    {:noreply, socket}
+  end
+
+  def handle_event("switch_tab", %{"tab" => tab}, socket) do
+    {:noreply, assign(socket, :active_tab, String.to_existing_atom(tab))}
   end
 
   def handle_event("change_type", %{"path" => path_json, "type" => new_type}, socket) do
@@ -503,7 +524,29 @@ defmodule JSONSchemaEditor do
       </style>
       <div class="jse-container">
         <div class="jse-header">
-          <.badge>Schema Root</.badge>
+          <div class="jse-title-badge-container">
+            <.badge>Schema Editor</.badge>
+          </div>
+          
+          <div class="jse-tabs">
+            <button 
+              class={["jse-tab-btn", @active_tab == :editor && "active"]}
+              phx-click="switch_tab"
+              phx-value-tab="editor"
+              phx-target={@myself}
+            >
+              Visual Editor
+            </button>
+            <button 
+              class={["jse-tab-btn", @active_tab == :preview && "active"]}
+              phx-click="switch_tab"
+              phx-value-tab="preview"
+              phx-target={@myself}
+            >
+              JSON Preview
+            </button>
+          </div>
+
           <button
             class="jse-btn jse-btn-primary"
             phx-click="save"
@@ -511,48 +554,52 @@ defmodule JSONSchemaEditor do
             disabled={not Enum.empty?(@validation_errors)}
             style={if not Enum.empty?(@validation_errors), do: "opacity: 0.5; cursor: not-allowed;"}
           >
-            <span>Save Changes</span>
+            <span>Save</span>
             <.icon name={:save} />
           </button>
         </div>
 
-        <div class="jse-main-layout">
-          <div class="jse-editor-pane">
-            <.render_node
-              node={@schema}
-              path={[]}
-              ui_state={@ui_state}
-              validation_errors={@validation_errors}
-              types={@types}
-              logic_types={@logic_types}
-              myself={@myself}
-            />
-          </div>
+        <div class="jse-content-area">
+          <%= if @active_tab == :editor do %>
+            <div class="jse-editor-pane">
+              <.render_node
+                node={@schema}
+                path={[]}
+                ui_state={@ui_state}
+                validation_errors={@validation_errors}
+                types={@types}
+                logic_types={@logic_types}
+                myself={@myself}
+              />
+            </div>
+          <% end %>
 
-          <div class="jse-preview-panel">
-            <div class="jse-preview-header">
-              <span>JSON Schema Preview</span>
-              <button
-                class="jse-btn-copy"
-                onclick={"navigator.clipboard.writeText(this.getAttribute('data-content')).then(() => { 
-                  this.classList.add('jse-copied'); 
-                  const span = this.querySelector('span');
-                  const oldText = span.innerText;
-                  span.innerText = 'Copied!';
-                  setTimeout(() => { 
-                    this.classList.remove('jse-copied'); 
-                    span.innerText = oldText;
-                  }, 2000); 
-                })"}
-                data-content={JSON.encode!(@schema)}
-              >
-                <span>Copy</span>
-              </button>
+          <%= if @active_tab == :preview do %>
+            <div class="jse-preview-panel">
+              <div class="jse-preview-header">
+                <span>Current Schema</span>
+                <button
+                  class="jse-btn-copy"
+                  onclick={"navigator.clipboard.writeText(this.getAttribute('data-content')).then(() => { 
+                    this.classList.add('jse-copied'); 
+                    const span = this.querySelector('span');
+                    const oldText = span.innerText;
+                    span.innerText = 'Copied!';
+                    setTimeout(() => { 
+                      this.classList.remove('jse-copied'); 
+                      span.innerText = oldText;
+                    }, 2000); 
+                  })"}
+                  data-content={JSON.encode!(@schema)}
+                >
+                  <span>Copy to Clipboard</span>
+                </button>
+              </div>
+              <div class="jse-preview-content">
+                <pre class="jse-code-block"><code><%= PrettyPrinter.format(@schema) %></code></pre>
+              </div>
             </div>
-            <div class="jse-preview-content">
-              <pre class="jse-code-block"><code><%= JSON.encode!(@schema) %></code></pre>
-            </div>
-          </div>
+          <% end %>
         </div>
       </div>
     </div>
@@ -642,6 +689,7 @@ defmodule JSONSchemaEditor do
   attr(:validation_errors, :map, required: true)
   attr(:types, :list, required: true)
   attr(:logic_types, :list, required: true)
+  attr(:formats, :list, default: [])
   attr(:myself, :any, required: true)
 
   defp node_header(assigns) do
@@ -760,6 +808,7 @@ defmodule JSONSchemaEditor do
   attr(:node, :map, required: true)
   attr(:path, :list, required: true)
   attr(:validation_errors, :map, required: true)
+  attr(:formats, :list, default: [])
   attr(:myself, :any, required: true)
 
   defp constraint_grid(assigns) do
@@ -794,6 +843,22 @@ defmodule JSONSchemaEditor do
               validation_errors={@validation_errors}
               myself={@myself}
             />
+            <div class="jse-constraint-field">
+              <label class="jse-constraint-label">Format</label>
+              <select
+                class="jse-constraint-input"
+                phx-change="change_format"
+                phx-target={@myself}
+              >
+                <input type="hidden" name="path" value={JSON.encode!(@path)} />
+                <option value="">None</option>
+                <%= for fmt <- @formats do %>
+                  <option value={fmt} selected={Map.get(@node, "format") == fmt}>
+                    <%= fmt %>
+                  </option>
+                <% end %>
+              </select>
+            </div>
           <% type when type in ["number", "integer"] -> %>
             <.constraint_input
               label="Minimum"

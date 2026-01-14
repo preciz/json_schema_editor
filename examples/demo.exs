@@ -25,19 +25,13 @@ defmodule Demo do
       <div style="padding: 1rem; border-bottom: 1px solid #eee;">
         <h1>JSON Schema Editor Demo</h1>
       </div>
-      <div style="flex: 1; display: flex; overflow: hidden;">
-        <div style="flex: 1; padding: 2rem; overflow: auto;">
-          <.live_component
-            module={JSONSchemaEditor}
-            id="editor"
-            schema={@my_schema}
-            on_save={fn updated_json -> send(self(), {:schema_updated, updated_json}) end}
-          />
-        </div>
-        <div style="width: 400px; padding: 1rem; border-left: 1px solid #eee; background: #f9f9f9; overflow: auto;">
-          <h3>Current Schema</h3>
-          <pre><%= Jason.encode!(@my_schema, pretty: true) %></pre>
-        </div>
+      <div style="flex: 1; padding: 2rem; overflow: auto;">
+        <.live_component
+          module={JSONSchemaEditor}
+          id="editor"
+          schema={@my_schema}
+          on_save={fn updated_json -> send(self(), {:schema_updated, updated_json}) end}
+        />
       </div>
     </div>
     """

@@ -7,268 +7,304 @@ defmodule JSONSchemaEditor.Styles do
     """
     .jse-host {
       display: block;
-      font-family: system-ui, -apple-system, sans-serif;
-      --primary-color: #4f46e5;
-      --primary-hover: #4338ca;
-      --bg-color: #ffffff;
-      --text-color: #1f2937;
-      --border-color: #e5e7eb;
-      --secondary-bg: #f9fafb;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+      
+      /* Light Mode Palette */
+      --jse-bg: #ffffff;
+      --jse-bg-secondary: #f3f4f6; /* Gray 100 */
+      --jse-bg-tertiary: #e5e7eb;  /* Gray 200 */
+      
+      --jse-text-primary: #111827; /* Gray 900 */
+      --jse-text-secondary: #4b5563; /* Gray 600 */
+      --jse-text-tertiary: #9ca3af; /* Gray 400 */
+      
+      --jse-border: #e5e7eb; /* Gray 200 */
+      --jse-border-focus: #6366f1; /* Indigo 500 */
+      
+      --jse-primary: #4f46e5; /* Indigo 600 */
+      --jse-primary-hover: #4338ca; /* Indigo 700 */
+      --jse-primary-text: #ffffff;
+      
+      --jse-danger: #dc2626; /* Red 600 */
+      --jse-danger-bg: #fef2f2; /* Red 50 */
+      --jse-danger-border: #fecaca; /* Red 200 */
+      
+      --jse-success: #059669; /* Emerald 600 */
+      --jse-success-bg: #ecfdf5; /* Emerald 50 */
+
+      --jse-radius: 0.375rem;
+      --jse-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --jse-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     }
 
     @media (prefers-color-scheme: dark) {
       .jse-host {
-        --bg-color: #1e293b;
-        --text-color: #f3f4f6;
-        --border-color: #374151;
-        --secondary-bg: #0f172a;
+        /* Dark Mode Palette */
+        --jse-bg: #111827; /* Gray 900 */
+        --jse-bg-secondary: #1f2937; /* Gray 800 */
+        --jse-bg-tertiary: #374151;  /* Gray 700 */
+        
+        --jse-text-primary: #f9fafb; /* Gray 50 */
+        --jse-text-secondary: #d1d5db; /* Gray 300 */
+        --jse-text-tertiary: #9ca3af; /* Gray 400 */
+        
+        --jse-border: #374151; /* Gray 700 */
+        --jse-border-focus: #818cf8; /* Indigo 400 */
+        
+        --jse-primary: #6366f1; /* Indigo 500 */
+        --jse-primary-hover: #818cf8; /* Indigo 400 */
+        
+        --jse-danger: #ef4444; /* Red 500 */
+        --jse-danger-bg: #450a0a; /* Red 950 */
+        --jse-danger-border: #7f1d1d; /* Red 900 */
+        
+        --jse-success: #10b981; /* Emerald 500 */
+        --jse-success-bg: #064e3b; /* Emerald 900 */
       }
     }
 
+    /* Layout & Containers */
     .jse-container {
       display: flex;
       flex-direction: column;
-      gap: 1.5rem;
+      gap: 1rem;
+      color: var(--jse-text-primary);
+      background-color: var(--jse-bg);
+      min-height: 100vh;
     }
 
-    @media (min-width: 1024px) {
-      .jse-main-layout {
-        display: grid;
-        grid-template-columns: 1fr 400px;
-        gap: 2rem;
-        align-items: start;
-      }
-    }
-
-    .jse-preview-panel {
-      position: sticky;
-      top: 1rem;
-      background-color: #1e293b;
-      border-radius: 0.75rem;
-      border: 1px solid #334155;
-      display: flex;
-      flex-direction: column;
-      max-height: calc(100vh - 2rem);
-    }
-
-    .jse-preview-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.75rem 1rem;
-      border-bottom: 1px solid #334155;
-      color: #f8fafc;
-      font-weight: 600;
-      font-size: 0.875rem;
-    }
-
-    .jse-preview-content {
-      padding: 1rem;
-      overflow: auto;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size: 0.75rem;
-      line-height: 1.5;
-      color: #e2e8f0;
-    }
-
-    .jse-code-block {
-      white-space: pre-wrap;
-      word-break: break-all;
-      margin: 0;
-    }
-
-    .jse-btn-copy {
-      background-color: #334155;
-      color: #f8fafc;
-      border: 1px solid #475569;
-      padding: 0.25rem 0.5rem;
-      border-radius: 0.375rem;
-      font-size: 0.75rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
-      transition: all 0.2s;
-    }
-
-    .jse-btn-copy:hover {
-      background-color: #475569;
-    }
-
-    .jse-btn-copy:active {
-      transform: scale(0.95);
-    }
-
-    .jse-btn-copy.jse-copied {
-      background-color: #059669;
-      border-color: #10b981;
-    }
-
+    /* Header & Tabs */
     .jse-header {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      margin-bottom: 1rem;
-      padding-bottom: 1rem;
-      border-bottom: 1px solid var(--border-color);
+      justify-content: space-between;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--jse-border);
+    }
+
+    .jse-title-badge-container {
+      display: flex;
+      align-items: center;
     }
 
     .jse-badge {
-      padding: 0.25rem 0.625rem;
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.75rem;
       font-size: 0.75rem;
       font-weight: 700;
       text-transform: uppercase;
+      letter-spacing: 0.05em;
       border-radius: 9999px;
-      background-color: #f3e8ff;
-      color: #7e22ce;
-      border: 1px solid rgba(168, 85, 247, 0.2);
+      background-color: var(--jse-bg-secondary);
+      color: var(--jse-text-secondary);
+      border: 1px solid var(--jse-border);
     }
 
     .jse-badge-info {
-      background-color: #e0f2fe;
-      color: #0369a1;
-      border: 1px solid rgba(14, 165, 233, 0.2);
+      background-color: var(--jse-bg-tertiary);
+      color: var(--jse-text-primary);
     }
 
     .jse-badge-logic {
-      background-color: #fef2f2;
-      color: #991b1b;
-      border: 1px solid rgba(239, 68, 68, 0.2);
+      background-color: var(--jse-danger-bg);
+      color: var(--jse-danger);
+      border-color: var(--jse-danger-border);
     }
 
-    .jse-logic-container {
-      margin-top: 0.75rem;
-      padding: 1rem;
-      background-color: var(--secondary-bg);
-      border-radius: 0.75rem;
-      border: 1px solid var(--border-color);
-    }
-
-    .jse-logic-header {
-      margin-bottom: 0.75rem;
-    }
-
-    .jse-logic-content {
+    .jse-tabs {
       display: flex;
-      flex-direction: column;
-      gap: 1rem;
+      gap: 0.25rem;
+      background-color: var(--jse-bg-secondary);
+      padding: 0.25rem;
+      border-radius: var(--jse-radius);
+      border: 1px solid var(--jse-border);
     }
 
-    .jse-logic-branch {
-      padding: 0.75rem;
-      background-color: var(--bg-color);
-      border-radius: 0.5rem;
-      border: 1px solid var(--border-color);
+    .jse-tab-btn {
+      padding: 0.375rem 0.75rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      border-radius: calc(var(--jse-radius) - 2px);
+      border: none;
+      background: transparent;
+      color: var(--jse-text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
     }
 
-    .jse-logic-branch-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 0.5rem;
-      padding-bottom: 0.25rem;
-      border-bottom: 1px dashed var(--border-color);
+    .jse-tab-btn:hover {
+      color: var(--jse-text-primary);
     }
 
-    .jse-logic-branch-label {
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: #6b7280;
+    .jse-tab-btn.active {
+      background-color: var(--jse-bg);
+      color: var(--jse-primary);
+      box-shadow: var(--jse-shadow-sm);
     }
 
-    .jse-icon-circle-logic {
-      background-color: #fee2e2;
-      color: #ef4444;
-    }
-
+    /* Buttons */
     .jse-btn {
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 0.5rem;
       padding: 0.5rem 1rem;
       font-size: 0.875rem;
       font-weight: 600;
-      border-radius: 0.5rem;
-      border: none;
+      border-radius: var(--jse-radius);
+      border: 1px solid transparent;
       cursor: pointer;
       transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .jse-btn-sm {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
     }
 
     .jse-btn-primary {
-      background-color: var(--primary-color);
-      color: white;
-      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+      background-color: var(--jse-primary);
+      color: var(--jse-primary-text);
+      box-shadow: var(--jse-shadow-sm);
     }
 
     .jse-btn-primary:hover {
-      background-color: var(--primary-hover);
+      background-color: var(--jse-primary-hover);
+    }
+
+    .jse-btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
 
     .jse-btn-secondary {
-      color: var(--primary-color);
       background-color: transparent;
+      color: var(--jse-text-secondary);
+      border: 1px dashed var(--jse-border);
     }
 
     .jse-btn-secondary:hover {
-      background-color: #eef2ff;
+      background-color: var(--jse-bg-secondary);
+      border-color: var(--jse-text-tertiary);
+      color: var(--jse-text-primary);
     }
 
-    .jse-icon {
-      width: 1rem;
-      height: 1rem;
-      opacity: 0.75;
+    .jse-btn-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      height: 2rem;
+      padding: 0;
+      color: var(--jse-text-tertiary);
+      background: transparent;
+      border: none;
+      border-radius: var(--jse-radius);
+      cursor: pointer;
+      transition: color 0.2s;
     }
 
+    .jse-btn-icon:hover {
+      color: var(--jse-text-primary);
+      background-color: var(--jse-bg-secondary);
+    }
+
+    .jse-btn-delete:hover {
+      color: var(--jse-danger);
+      background-color: var(--jse-danger-bg);
+    }
+
+    /* Node Structure */
     .jse-node-container {
       margin-left: 1rem;
-      margin-top: 0.5rem;
-      border-left: 2px solid var(--border-color);
       padding-left: 1rem;
+      border-left: 2px solid var(--jse-border);
+      position: relative;
     }
 
+    .jse-node-container:hover > .jse-node-header .jse-title-input {
+      border-color: var(--jse-border);
+    }
+    
     .jse-node-header {
       display: flex;
       align-items: center;
       gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      padding: 0.5rem 0;
     }
 
+    .jse-node-toggle {
+      position: absolute;
+      left: -1rem;
+      width: 1rem;
+      height: 1rem;
+      transform: translateX(-50%);
+      background-color: var(--jse-bg);
+      border: 1px solid var(--jse-border);
+      border-radius: 50%;
+      color: var(--jse-text-tertiary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    .jse-node-toggle:hover {
+      color: var(--jse-primary);
+      border-color: var(--jse-primary);
+    }
+    
+    .jse-node-toggle.jse-collapsed {
+       transform: translateX(-50%) rotate(-90deg);
+    }
+
+    /* Inputs */
     .jse-type-select {
-      display: block;
-      width: 9rem;
-      border-radius: 0.5rem;
-      border: 1px solid var(--border-color);
+      background-color: var(--jse-bg-secondary);
+      border: 1px solid transparent;
+      border-radius: var(--jse-radius);
       padding: 0.375rem 0.75rem;
-      background-color: transparent;
-      color: inherit;
       font-size: 0.875rem;
+      color: var(--jse-text-primary);
       cursor: pointer;
     }
 
+    .jse-type-select:hover {
+      background-color: var(--jse-bg-tertiary);
+    }
+    
     .jse-type-select:focus {
-      outline: 2px solid var(--primary-color);
-      border-color: transparent;
+      outline: none;
+      box-shadow: 0 0 0 2px var(--jse-primary);
     }
 
     .jse-title-input {
-      width: 8rem;
-      font-size: 0.8125rem;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: var(--jse-radius);
+      padding: 0.375rem 0.5rem;
+      font-size: 0.875rem;
       font-weight: 600;
-      padding: 0.375rem 0.75rem;
-      border: 1px solid var(--border-color);
-      border-radius: 0.5rem;
-      background-color: transparent;
-      color: inherit;
+      color: var(--jse-text-primary);
+      width: 12rem;
       transition: border-color 0.2s;
     }
 
     .jse-title-input:hover, .jse-title-input:focus {
-      border-color: var(--primary-color);
+      border-color: var(--jse-border);
+      background-color: var(--jse-bg);
     }
-
+    
     .jse-title-input:focus {
+      border-color: var(--jse-border-focus);
       outline: none;
     }
 
+    /* Description */
     .jse-description-container {
       flex: 1;
       min-width: 200px;
@@ -282,286 +318,111 @@ defmodule JSONSchemaEditor.Styles do
 
     .jse-description-input {
       flex: 1;
-      font-size: 0.8125rem;
-      padding: 0.375rem 0.75rem;
-      border: 1px solid var(--border-color);
-      border-radius: 0.5rem;
-      background-color: transparent;
-      color: inherit;
-      opacity: 0.6;
-      transition: opacity 0.2s, border-color 0.2s;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: var(--jse-radius);
+      padding: 0.375rem 0.5rem;
+      font-size: 0.875rem;
+      color: var(--jse-text-secondary);
+      transition: all 0.2s;
+    }
+
+    .jse-description-input:hover, .jse-description-input:focus {
+      border-color: var(--jse-border);
+      color: var(--jse-text-primary);
+    }
+    
+    .jse-description-input:focus {
+      border-color: var(--jse-border-focus);
+      outline: none;
     }
 
     .jse-description-textarea {
       flex: 1;
-      font-family: inherit;
-      font-size: 0.8125rem;
-      padding: 0.5rem 0.75rem;
-      border: 1px solid var(--border-color);
-      border-radius: 0.5rem;
-      background-color: var(--bg-color);
-      color: inherit;
+      width: 100%;
       min-height: 4rem;
+      background-color: var(--jse-bg);
+      border: 1px solid var(--jse-border);
+      border-radius: var(--jse-radius);
+      padding: 0.5rem;
+      font-family: inherit;
+      font-size: 0.875rem;
+      color: var(--jse-text-primary);
       resize: vertical;
     }
 
     .jse-description-textarea:focus {
-      outline: 2px solid var(--primary-color);
-      border-color: transparent;
-    }
-
-    .jse-description-input:hover, .jse-description-input:focus {
-      opacity: 1;
-      border-color: var(--primary-color);
-    }
-
-    .jse-description-input:focus {
       outline: none;
-      opacity: 1;
+      border-color: var(--jse-border-focus);
     }
 
-    .jse-array-items-container {
-      margin-top: 0.75rem;
-      padding: 1rem;
-      background-color: var(--secondary-bg);
-      border-radius: 0.75rem;
-      border: 1px dashed var(--border-color);
-    }
-
-    .jse-array-items-header {
-      margin-bottom: 0.75rem;
-    }
-
-    .jse-properties-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      margin-top: 0.75rem;
-      padding-left: 1.25rem;
-      border-left: 2px solid var(--border-color);
-    }
-
-    .jse-object-controls {
-      margin-bottom: 0.5rem;
-      padding: 0.25rem 0.5rem;
-      background-color: #f9fafb;
-      border-radius: 0.375rem;
-      border: 1px dashed #d1d5db;
-    }
-
-    .jse-strict-toggle {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      cursor: pointer;
-      font-size: 0.75rem;
-      color: #374151;
-      font-weight: 500;
-    }
-
-    .jse-strict-text {
-      user-select: none;
-    }
-
-    .jse-property-item {
-      padding: 0.5rem;
-      background-color: var(--bg-color);
-      border: 1px solid var(--border-color);
-      border-radius: 0.5rem;
-    }
-
-    .jse-property-row {
-      display: flex;
-      gap: 0.5rem;
-      align-items: center;
-    }
-
-    .jse-property-content {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .jse-property-key {
-      font-weight: 600;
-      font-size: 0.875rem;
-      min-width: 3rem;
-    }
-
-    .jse-property-key-input {
-      font-weight: 600;
-      font-size: 0.875rem;
-      min-width: 5rem;
-      max-width: 10rem;
-      padding: 0.25rem 0.5rem;
-      border: 1px solid transparent;
-      border-radius: 0.375rem;
-      background: transparent;
-      color: inherit;
-      font-family: inherit;
-    }
-
-    .jse-property-key-input:hover {
-      border-color: var(--border-color);
-      background-color: var(--secondary-bg);
-    }
-
-    .jse-property-key-input:focus {
-      outline: none;
-      border-color: var(--primary-color);
-      background-color: var(--bg-color);
-    }
-
-    .jse-btn-icon {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0.25rem;
-      color: #9ca3af;
-      background: transparent;
-      border: none;
-      border-radius: 9999px;
-      cursor: pointer;
-    }
-
-    .jse-btn-delete:hover {
-      color: #dc2626;
-      background-color: #fef2f2;
-    }
-
-    .jse-icon-sm {
-      width: 1rem;
-      height: 1rem;
-    }
-
-    .jse-icon-xs {
-      width: 0.875rem;
-      height: 0.875rem;
-    }
-
-    .jse-icon-circle {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 1.25rem;
-      height: 1.25rem;
-      border-radius: 9999px;
-      background-color: #e0e7ff;
-      color: var(--primary-color);
-    }
-
-    .jse-type-form {
-      display: inline-block;
-    }
-
-    .jse-required-checkbox-label {
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
-      font-size: 0.75rem;
-      color: #6b7280;
-      cursor: pointer;
-      user-select: none;
-      margin-right: 0.5rem;
-    }
-
-    .jse-required-checkbox-label:hover {
-      color: var(--text-color);
-    }
-
-    .jse-required-text {
-      font-weight: 600;
-      font-size: 0.7rem;
-      text-transform: uppercase;
-    }
-
+    /* Constraints Grid */
     .jse-constraints-container {
-      margin-top: 0.5rem;
-      margin-bottom: 0.5rem;
-      padding: 0.75rem;
-      background-color: var(--secondary-bg);
-      border-radius: 0.5rem;
-      border: 1px solid var(--border-color);
+      background-color: var(--jse-bg-secondary);
+      border: 1px solid var(--jse-border);
+      border-radius: var(--jse-radius);
+      padding: 1rem;
+      margin-bottom: 1rem;
     }
 
     .jse-constraints-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 0.75rem;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 1rem;
     }
 
     .jse-constraint-field {
       display: flex;
       flex-direction: column;
-      gap: 0.25rem;
+      gap: 0.375rem;
     }
 
     .jse-constraint-label {
-      font-size: 0.7rem;
-      font-weight: 700;
-      color: #6b7280;
+      font-size: 0.75rem;
+      font-weight: 600;
       text-transform: uppercase;
+      color: var(--jse-text-tertiary);
     }
 
     .jse-constraint-input {
-      font-size: 0.8125rem;
-      padding: 0.25rem 0.5rem;
-      border: 1px solid var(--border-color);
-      border-radius: 0.375rem;
-      background-color: var(--bg-color);
-      color: inherit;
+      background-color: var(--jse-bg);
+      border: 1px solid var(--jse-border);
+      border-radius: var(--jse-radius);
+      padding: 0.375rem 0.5rem;
+      font-size: 0.875rem;
+      color: var(--jse-text-primary);
+      width: 100%;
     }
 
     .jse-constraint-input:focus {
-      outline: 2px solid var(--primary-color);
-      border-color: transparent;
-    }
-
-    .jse-btn-toggle-constraints {
-      color: #9ca3af;
-      transition: color 0.2s;
-    }
-
-    .jse-btn-toggle-constraints.jse-active {
-      color: var(--primary-color);
-    }
-
-    .jse-node-toggle {
-      margin-left: -1.25rem;
-      width: 1.25rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #9ca3af;
-      cursor: pointer;
-      transition: transform 0.2s;
-    }
-
-    .jse-node-toggle:hover {
-      color: var(--primary-color);
-    }
-
-    .jse-node-toggle.jse-collapsed {
-      transform: rotate(-90deg);
+      outline: none;
+      border-color: var(--jse-border-focus);
     }
 
     .jse-input-error {
-      border-color: #dc2626 !important;
+      border-color: var(--jse-danger);
     }
 
     .jse-error-message {
-      font-size: 0.65rem;
-      color: #dc2626;
-      font-weight: 600;
-      margin-top: 0.125rem;
+      font-size: 0.75rem;
+      color: var(--jse-danger);
+    }
+    
+    .jse-btn-toggle-constraints {
+       color: var(--jse-text-tertiary);
+    }
+    
+    .jse-btn-toggle-constraints.jse-active {
+      color: var(--jse-primary);
+      background-color: var(--jse-bg-secondary);
     }
 
+    /* Enums */
     .jse-enum-container {
       grid-column: 1 / -1;
+      padding-top: 1rem;
       margin-top: 0.5rem;
-      padding-top: 0.75rem;
-      border-top: 1px dashed var(--border-color);
+      border-top: 1px dashed var(--jse-border);
     }
 
     .jse-enum-list {
@@ -575,24 +436,240 @@ defmodule JSONSchemaEditor.Styles do
       display: flex;
       align-items: center;
       gap: 0.25rem;
+      background-color: var(--jse-bg);
+      border: 1px solid var(--jse-border);
+      border-radius: var(--jse-radius);
       padding: 0.25rem 0.5rem;
-      background-color: var(--bg-color);
-      border: 1px solid var(--border-color);
-      border-radius: 0.375rem;
     }
 
     .jse-enum-input {
-      font-size: 0.75rem;
       border: none;
       background: transparent;
-      color: inherit;
-      padding: 0;
-      width: 4rem;
-      min-width: 2rem;
+      color: var(--jse-text-primary);
+      font-size: 0.875rem;
+      width: auto;
+      min-width: 3rem;
     }
-
+    
     .jse-enum-input:focus {
       outline: none;
+    }
+
+    /* Object Properties */
+    .jse-properties-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .jse-object-controls {
+      padding: 0.5rem;
+      background-color: var(--jse-bg-secondary);
+      border-radius: var(--jse-radius);
+      margin-bottom: 0.5rem;
+    }
+
+    .jse-strict-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      color: var(--jse-text-secondary);
+      cursor: pointer;
+    }
+
+    .jse-property-item {
+      background-color: var(--jse-bg);
+      border: 1px solid var(--jse-border);
+      border-radius: var(--jse-radius);
+      padding: 0.75rem;
+      position: relative;
+    }
+
+    .jse-property-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .jse-property-content {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .jse-property-key-input {
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: var(--jse-radius);
+      padding: 0.25rem 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--jse-text-primary);
+      transition: all 0.2s;
+    }
+
+    .jse-property-key-input:hover {
+      background-color: var(--jse-bg-secondary);
+    }
+
+    .jse-property-key-input:focus {
+      outline: none;
+      background-color: var(--jse-bg);
+      border-color: var(--jse-border-focus);
+    }
+    
+    .jse-required-checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--jse-text-tertiary);
+      cursor: pointer;
+      text-transform: uppercase;
+    }
+    
+    .jse-required-checkbox-label:hover {
+      color: var(--jse-text-primary);
+    }
+
+    /* Array & Logic Items */
+    .jse-array-items-container, .jse-logic-container {
+      background-color: var(--jse-bg-secondary);
+      border: 1px solid var(--jse-border);
+      border-radius: var(--jse-radius);
+      padding: 1rem;
+      margin-top: 1rem;
+    }
+    
+    .jse-logic-header, .jse-array-items-header {
+      margin-bottom: 1rem;
+    }
+    
+    .jse-logic-content {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .jse-logic-branch {
+      background-color: var(--jse-bg);
+      border: 1px solid var(--jse-border);
+      border-radius: var(--jse-radius);
+      padding: 1rem;
+    }
+    
+    .jse-logic-branch-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px dashed var(--jse-border);
+      margin-bottom: 0.5rem;
+    }
+    
+    .jse-logic-branch-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--jse-text-tertiary);
+      text-transform: uppercase;
+    }
+
+    /* Preview Panel */
+    .jse-preview-panel {
+      background-color: var(--jse-bg-secondary);
+      border: 1px solid var(--jse-border);
+      border-radius: var(--jse-radius);
+      overflow: hidden;
+    }
+
+    .jse-preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      background-color: var(--jse-bg-tertiary);
+      border-bottom: 1px solid var(--jse-border);
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--jse-text-primary);
+    }
+
+    .jse-preview-content {
+      padding: 1rem;
+      overflow: auto;
+      max-height: 80vh;
+    }
+    
+    .jse-code-block {
+      margin: 0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.875rem;
+      color: var(--jse-text-primary);
+      white-space: pre-wrap;
+    }
+
+    .jse-btn-copy {
+      background-color: var(--jse-bg);
+      border: 1px solid var(--jse-border);
+      border-radius: var(--jse-radius);
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--jse-text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .jse-btn-copy:hover {
+      background-color: var(--jse-bg-secondary);
+      color: var(--jse-text-primary);
+    }
+    
+    .jse-btn-copy.jse-copied {
+      background-color: var(--jse-success);
+      border-color: var(--jse-success);
+      color: #ffffff;
+    }
+
+    /* Utilities */
+    .jse-icon {
+      width: 1.25rem;
+      height: 1.25rem;
+    }
+    
+    .jse-icon-sm {
+      width: 1rem;
+      height: 1rem;
+    }
+    
+    .jse-icon-xs {
+      width: 0.875rem;
+      height: 0.875rem;
+    }
+    
+    .jse-icon-circle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: 50%;
+      background-color: var(--jse-bg-tertiary);
+      color: var(--jse-text-secondary);
+    }
+    
+    .jse-icon-circle-logic {
+      background-color: var(--jse-danger-bg);
+      color: var(--jse-danger);
+    }
+
+    .jse-add-property-container {
+      margin-top: 0.5rem;
+      display: flex;
+      justify-content: center;
     }
     """
   end

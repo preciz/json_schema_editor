@@ -58,6 +58,14 @@ defmodule JSONSchemaEditor.ValidatorTest do
            }
   end
 
+  test "validate_node format" do
+    assert Validator.validate_node(%{"type" => "string", "format" => "email"}) == %{}
+    
+    assert Validator.validate_node(%{"type" => "number", "format" => "email"}) == %{
+             "format" => "Only valid for strings"
+           }
+  end
+
   test "validate_schema recursion" do
     schema = %{
       "type" => "object",

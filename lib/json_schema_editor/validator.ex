@@ -15,6 +15,15 @@ defmodule JSONSchemaEditor.Validator do
     |> check_min_max(node, "minProperties", "maxProperties")
     |> check_positive(node, "multipleOf")
     |> check_unique_enum(node)
+    |> check_format_type(node)
+  end
+
+  defp check_format_type(errors, node) do
+    if Map.has_key?(node, "format") and Map.get(node, "type") != "string" do
+      Map.put(errors, "format", "Only valid for strings")
+    else
+      errors
+    end
   end
 
   defp check_min_max(errors, node, min_key, max_key) do

@@ -25,7 +25,7 @@ defmodule JSONSchemaEditorTest do
 
     assert html =~ "jse-container"
     assert html =~ "Test Schema"
-    assert html =~ "Schema Root"
+    assert html =~ "Schema Editor"
   end
 
   test "renders with different types and states" do
@@ -119,13 +119,12 @@ defmodule JSONSchemaEditorTest do
     html = render_component(JSONSchemaEditor, id: "jse", schema: schema, ui_state: ui_state)
     assert html =~ "jse-collapsed"
     
-    # Check that it's hidden in the editor pane specifically
-    # The editor pane uses jse-editor-pane class
-    [editor_pane | _] = String.split(html, "jse-preview-panel")
-    refute editor_pane =~ "hidden_field"
-    # But it IS in the preview
-    assert html =~ "hidden_field"
+    # Check that it's hidden in the editor pane
+    refute html =~ "hidden_field"
 
+    # Preview panel rendering (requires switching tab or manual check)
+    # We'll check this in a separate test for tab switching logic
+    
     # Logic composition rendering
     schema = %{"oneOf" => [%{"type" => "string"}, %{"type" => "number"}]}
     html = render_component(JSONSchemaEditor, id: "jse", schema: schema)
@@ -145,11 +144,20 @@ defmodule JSONSchemaEditorTest do
     schema = %{"type" => "array", "items" => %{"type" => "string"}}
     html = render_component(JSONSchemaEditor, id: "jse", schema: schema)
     assert html =~ "jse-badge-info"
+  end
 
-    # Preview panel rendering
-    assert html =~ "JSON Schema Preview"
+  test "handles tab switching and preview rendering" do
+    # Default is editor tab
+    html = render_component(JSONSchemaEditor, id: "jse", schema: %{"type" => "string"})
+    assert html =~ "class=\"jse-editor-pane\""
+    refute html =~ "class=\"jse-preview-panel\""
+
+    # Switch to preview tab
+    html = render_component(JSONSchemaEditor, id: "jse", schema: %{"type" => "string"}, active_tab: :preview)
+    refute html =~ "class=\"jse-editor-pane\""
+    assert html =~ "class=\"jse-preview-panel\""
+    assert html =~ "Current Schema"
     assert html =~ "jse-code-block"
-    assert html =~ "jse-btn-copy"
   end
 
   test "renders badge with custom class" do
@@ -723,5 +731,39 @@ defmodule JSONSchemaEditorTest do
     # Disable Strict Mode
     {:noreply, socket} = JSONSchemaEditor.handle_event("toggle_additional_properties", %{"path" => path_json}, socket)
     refute Map.has_key?(socket.assigns.schema, "additionalProperties")
+  end
+
+  test "handle_event change_format" do
+    socket = setup_socket(%{"type" => "string"})
+    path_json = JSON.encode!([])
+
+    # Set format
+    {:noreply, socket} = JSONSchemaEditor.handle_event("change_format", %{"path" => path_json, "value" => "email"}, socket)
+    assert socket.assigns.schema["format"] == "email"
+
+    # Unset format
+    {:noreply, socket} = JSONSchemaEditor.handle_event("change_format", %{"path" => path_json, "value" => ""}, socket)
+    refute Map.has_key?(socket.assigns.schema, "format")
+  end
+
+  test "handle_event switch_tab" do
+    socket = setup_socket()
+    {:noreply, socket} = JSONSchemaEditor.handle_event("switch_tab", %{"tab" => "preview"}, socket)
+    assert socket.assigns.active_tab == :preview
+
+    {:noreply, socket} = JSONSchemaEditor.handle_event("switch_tab", %{"tab" => "editor"}, socket)
+    assert socket.assigns.active_tab == :editor
+  end
+
+  test "renders validation errors" do
+    # Schema with an invalid constraint (min > max)
+    schema = %{"type" => "string", "minLength" => 10, "maxLength" => 5}
+    path_json = JSON.encode!([])
+    ui_state = %{"expanded_constraints:#{path_json}" => true}
+    
+    html = render_component(JSONSchemaEditor, id: "jse", schema: schema, ui_state: ui_state)
+    
+    assert html =~ "Must be ≤ maxLength"
+    assert html =~ "jse-input-error"
   end
 end
