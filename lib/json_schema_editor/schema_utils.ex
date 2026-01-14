@@ -24,6 +24,14 @@ defmodule JSONSchemaEditor.SchemaUtils do
   end
 
   @doc """
+  Updates a value at a given path in a nested map using a transformation function.
+  """
+  def update_in_path(data, path, func) do
+    node = get_in_path(data, path)
+    put_in_path(data, path, func.(node))
+  end
+
+  @doc """
   Generates a unique key in a map by appending a counter to a base name.
   """
   def generate_unique_key(existing_map, base_name, counter \\ 1) do

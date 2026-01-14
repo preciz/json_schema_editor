@@ -30,50 +30,49 @@ defmodule JSONSchemaEditor do
 
   def handle_event("add_property", %{"path" => path_json}, socket) do
     path = JSON.decode!(path_json)
-    props_path = path ++ ["properties"]
 
-    current_props = SchemaUtils.get_in_path(socket.assigns.schema, props_path) || %{}
-    new_key = SchemaUtils.generate_unique_key(current_props, "new_field")
-    new_props = Map.put(current_props, new_key, %{"type" => "string"})
+    schema =
+      SchemaUtils.update_in_path(socket.assigns.schema, path ++ ["properties"], fn props ->
+        props = props || %{}
+        new_key = SchemaUtils.generate_unique_key(props, "new_field")
+        Map.put(props, new_key, %{"type" => "string"})
+      end)
 
-    schema = SchemaUtils.put_in_path(socket.assigns.schema, props_path, new_props)
     {:noreply, assign(socket, :schema, schema)}
   end
 
   def handle_event("delete_property", %{"path" => path_json, "key" => key}, socket) do
     path = JSON.decode!(path_json)
-    props_path = path ++ ["properties"]
 
-    current_props = SchemaUtils.get_in_path(socket.assigns.schema, props_path) || %{}
-    new_props = Map.delete(current_props, key)
+    schema =
+      SchemaUtils.update_in_path(socket.assigns.schema, path, fn node ->
+        new_props = Map.delete(Map.get(node, "properties", %{}), key)
+        new_required = List.delete(Map.get(node, "required", []), key)
 
-    schema_with_props = SchemaUtils.put_in_path(socket.assigns.schema, props_path, new_props)
-
-    # Also remove from required list
-    object = SchemaUtils.get_in_path(schema_with_props, path)
-    current_required = Map.get(object, "required", [])
-    new_required = List.delete(current_required, key)
-    new_object = Map.put(object, "required", new_required)
-
-    schema = SchemaUtils.put_in_path(schema_with_props, path, new_object)
+        node
+        |> Map.put("properties", new_props)
+        |> Map.put("required", new_required)
+      end)
 
     {:noreply, assign(socket, :schema, schema)}
   end
 
   def handle_event("toggle_required", %{"path" => path_json, "key" => key}, socket) do
     path = JSON.decode!(path_json)
-    object = SchemaUtils.get_in_path(socket.assigns.schema, path)
-    current_required = Map.get(object, "required", [])
 
-    new_required =
-      if key in current_required do
-        List.delete(current_required, key)
-      else
-        current_required ++ [key]
-      end
+    schema =
+      SchemaUtils.update_in_path(socket.assigns.schema, path, fn node ->
+        current_required = Map.get(node, "required", [])
 
-    new_object = Map.put(object, "required", new_required)
-    schema = SchemaUtils.put_in_path(socket.assigns.schema, path, new_object)
+        new_required =
+          if key in current_required do
+            List.delete(current_required, key)
+          else
+            current_required ++ [key]
+          end
+
+        Map.put(node, "required", new_required)
+      end)
 
     {:noreply, assign(socket, :schema, schema)}
   end
@@ -89,33 +88,31 @@ defmodule JSONSchemaEditor do
       {:noreply, socket}
     else
       path = JSON.decode!(path_json)
-      props_path = path ++ ["properties"]
 
-      current_props = SchemaUtils.get_in_path(socket.assigns.schema, props_path) || %{}
+      schema =
+        SchemaUtils.update_in_path(socket.assigns.schema, path, fn node ->
+          current_props = Map.get(node, "properties", %{})
 
-      # Check if new key already exists
-      if Map.has_key?(current_props, new_key) do
-        {:noreply, socket}
-      else
-        {value, remaining} = Map.pop(current_props, old_key)
-        new_props = Map.put(remaining, new_key, value)
+          if Map.has_key?(current_props, new_key) do
+            node
+          else
+            {value, remaining} = Map.pop(current_props, old_key)
+            new_props = Map.put(remaining, new_key, value)
 
-        schema_with_props = SchemaUtils.put_in_path(socket.assigns.schema, props_path, new_props)
+            current_required = Map.get(node, "required", [])
 
-        # Update required list
-        object = SchemaUtils.get_in_path(schema_with_props, path)
-        current_required = Map.get(object, "required", [])
+            new_required =
+              Enum.map(current_required, fn k ->
+                if k == old_key, do: new_key, else: k
+              end)
 
-        new_required =
-          Enum.map(current_required, fn k ->
-            if k == old_key, do: new_key, else: k
-          end)
+            node
+            |> Map.put("properties", new_props)
+            |> Map.put("required", new_required)
+          end
+        end)
 
-        new_object = Map.put(object, "required", new_required)
-        schema = SchemaUtils.put_in_path(schema_with_props, path, new_object)
-
-        {:noreply, assign(socket, :schema, schema)}
-      end
+      {:noreply, assign(socket, :schema, schema)}
     end
   end
 
@@ -123,16 +120,15 @@ defmodule JSONSchemaEditor do
     path = JSON.decode!(path_json)
     title = String.trim(title)
 
-    node = SchemaUtils.get_in_path(socket.assigns.schema, path)
+    schema =
+      SchemaUtils.update_in_path(socket.assigns.schema, path, fn node ->
+        if title == "" do
+          Map.delete(node, "title")
+        else
+          Map.put(node, "title", title)
+        end
+      end)
 
-    new_node =
-      if title == "" do
-        Map.delete(node, "title")
-      else
-        Map.put(node, "title", title)
-      end
-
-    schema = SchemaUtils.put_in_path(socket.assigns.schema, path, new_node)
     {:noreply, assign(socket, :schema, schema)}
   end
 
@@ -140,27 +136,27 @@ defmodule JSONSchemaEditor do
     path = JSON.decode!(path_json)
     description = String.trim(description)
 
-    node = SchemaUtils.get_in_path(socket.assigns.schema, path)
+    schema =
+      SchemaUtils.update_in_path(socket.assigns.schema, path, fn node ->
+        if description == "" do
+          Map.delete(node, "description")
+        else
+          Map.put(node, "description", description)
+        end
+      end)
 
-    new_node =
-      if description == "" do
-        Map.delete(node, "description")
-      else
-        Map.put(node, "description", description)
-      end
-
-    schema = SchemaUtils.put_in_path(socket.assigns.schema, path, new_node)
     {:noreply, assign(socket, :schema, schema)}
   end
 
   def handle_event("toggle_description", %{"path" => path_json}, socket) do
     path = JSON.decode!(path_json)
-    node = SchemaUtils.get_in_path(socket.assigns.schema, path)
 
-    new_expanded = !Map.get(node, "expanded_description", false)
-    new_node = Map.put(node, "expanded_description", new_expanded)
+    schema =
+      SchemaUtils.update_in_path(socket.assigns.schema, path, fn node ->
+        new_expanded = !Map.get(node, "expanded_description", false)
+        Map.put(node, "expanded_description", new_expanded)
+      end)
 
-    schema = SchemaUtils.put_in_path(socket.assigns.schema, path, new_node)
     {:noreply, assign(socket, :schema, schema)}
   end
 
