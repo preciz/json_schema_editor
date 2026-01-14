@@ -4,24 +4,12 @@ A robust Phoenix LiveComponent for visually building, editing, and validating JS
 
 ## Features
 
-- **Visual Editor**: Intuitive UI for defining complex JSON Schema structures.
-- **Recursive Depth**: Full support for deeply nested objects and array items.
-- **Logical Validation**: 
-    - Real-time checking of constraints (e.g., `minLength` vs `maxLength`, `minItems` vs `maxItems`).
-    - Visual error feedback (red borders and descriptive messages).
-    - Prevents saving if the schema is in an invalid state.
-- **Advanced Constraints**:
-    - **Strings**: minLength, maxLength, pattern.
-    - **Numbers**: minimum, maximum, multipleOf.
-    - **Arrays**: minItems, maxItems, uniqueItems.
-    - **Objects**: minProperties, maxProperties, required fields.
-- **Enum Support**: Type-safe management of enumeration values.
-- **Metadata**: Support for `title` and `description` at every node level.
-- **UX Focused**:
-    - **Collapsible Nodes**: Collapse/Expand entire object/array trees for better navigation.
-    - **UI Isolation**: Scoped CSS styles (`jse-` prefix) to prevent host application conflicts.
-    - **Pure State**: UI-specific states (expansion/collapse) are separated from the exported JSON Schema.
-- **Testing**: Maintained with ~100% test coverage.
+- **Visual Editing**: Recursively build and edit deeply nested objects and arrays.
+- **Real-time Validation**: In-editor logic checking (e.g., `min <= max`) with visual feedback.
+- **Full Schema Support**: Easily manage constraints, enums, titles, and descriptions.
+- **Optimized for Large Schemas**: Collapsible nodes for easier navigation of complex trees.
+- **Isolated Styles**: Scoped CSS to ensure seamless integration into any Phoenix application.
+- **Reliable**: Maintained with 100% test coverage.
 
 ## Installation
 
