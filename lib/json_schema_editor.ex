@@ -3,51 +3,44 @@ defmodule JSONSchemaEditor do
 
   def render(assigns) do
     ~H"""
-    <div class="schema-editor-root font-sans">
-      <div class="p-6 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 transition-all duration-300">
-        <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-100 dark:border-slate-700">
-          <div class="flex items-center gap-2">
-            <span class="px-2.5 py-1 text-xs font-bold tracking-wider uppercase rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300 ring-1 ring-purple-500/20">
-              Schema Root
-            </span>
+    <div id={@id} class="json-schema-editor-host">
+      <template shadowrootmode="open">
+        <style>
+          <%= styles() %>
+        </style>
+        <div class="editor-container">
+          <div class="header">
+            <span class="badge">Schema Root</span>
+            <button class="btn btn-primary" phx-click="save" phx-target={@myself}>
+              <span>Save Changes</span>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="icon">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
+              </svg>
+            </button>
           </div>
-          <button
-            phx-click="save"
-            phx-target={@myself}
-            class="group flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg shadow-md hover:bg-indigo-500 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all active:scale-95"
-          >
-            <span>Save Changes</span>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 opacity-75 group-hover:opacity-100">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
-            </svg>
-          </button>
+          
+          <.render_node 
+            node={@schema} 
+            path={[]} 
+            myself={@myself} 
+          />
         </div>
-        
-        <.render_node 
-          node={@schema} 
-          path={[]} 
-          myself={@myself} 
-        />
-      </div>
+      </template>
     </div>
     """
   end
 
   defp render_node(assigns) do
     ~H"""
-    <div class="ml-4 mt-2 border-l-2 border-gray-200 dark:border-gray-700 pl-4">
-      <div class="flex items-center gap-2">
-        <span class="font-mono text-sm font-medium text-gray-700 dark:text-gray-300">
+    <div class="node-container">
+      <div class="node-header">
+        <span class="type-label">
           <%= type_label(@node) %>
         </span>
         
-        <!-- Type Selector -->
-        <form phx-change="change_type" phx-target={@myself} class="inline-block">
+        <form phx-change="change_type" phx-target={@myself} class="type-form">
           <input type="hidden" name="path" value={JSON.encode!(@path)} />
-          <select 
-            name="type"
-            class="block w-36 rounded-lg border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-900 dark:text-white dark:ring-slate-600 dark:focus:ring-indigo-500 shadow-sm transition-shadow cursor-pointer hover:ring-gray-400 dark:hover:ring-slate-500"
-          >
+          <select name="type" class="type-select">
             <%= for type <- ["string", "number", "integer", "boolean", "object", "array"] do %>
               <option value={type} selected={Map.get(@node, "type") == type}><%= String.capitalize(type) %></option>
             <% end %>
@@ -55,41 +48,40 @@ defmodule JSONSchemaEditor do
         </form>
       </div>
 
-      <!-- Object Properties -->
       <%= if Map.get(@node, "type") == "object" do %>
-        <div class="mt-2 space-y-2">
+        <div class="properties-list">
           <%= for {key, val} <- Map.get(@node, "properties", %{}) do %>
-            <div class="group relative">
-              <div class="flex items-center gap-2">
+            <div class="property-item">
+              <div class="property-row">
                 <button 
                   phx-click="delete_property"
                   phx-target={@myself}
                   phx-value-path={JSON.encode!(@path)}
                   phx-value-key={key}
-                  class="p-1 text-gray-400 hover:text-red-600 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors opacity-0 group-hover:opacity-100"
+                  class="btn-icon btn-delete"
                   title="Delete Property"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="icon-sm">
                     <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clip-rule="evenodd" />
                   </svg>
                 </button>
-                <div class="flex items-center gap-2 flex-1">
-                  <span class="text-sm font-semibold text-gray-600 dark:text-gray-400 min-w-[3rem]"><%= key %>:</span>
+                <div class="property-content">
+                  <span class="property-key"><%= key %>:</span>
                   <.render_node node={val} path={@path ++ ["properties", key]} myself={@myself} />
                 </div>
               </div>
             </div>
           <% end %>
           
-          <div class="mt-3 pl-2">
+          <div class="add-property-container">
             <button 
               phx-click="add_property" 
               phx-target={@myself}
               phx-value-path={JSON.encode!(@path)}
-              class="group flex items-center gap-2 text-xs font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors px-3 py-2 rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+              class="btn btn-secondary btn-sm"
             >
-              <div class="flex items-center justify-center w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 group-hover:bg-indigo-200 dark:bg-indigo-900/50 dark:text-indigo-300 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5">
+              <div class="icon-circle">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="icon-xs">
                   <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
                 </svg>
               </div>
@@ -102,63 +94,202 @@ defmodule JSONSchemaEditor do
     """
   end
 
-  defp type_label(node) do
-    Map.get(node, "type", "unknown")
-  end
+  defp styles do
+    """
+    :host {
+      display: block;
+      font-family: system-ui, -apple-system, sans-serif;
+      --primary-color: #4f46e5;
+      --primary-hover: #4338ca;
+      --bg-color: #ffffff;
+      --text-color: #1f2937;
+      --border-color: #e5e7eb;
+      --secondary-bg: #f9fafb;
+    }
 
-  def handle_event("change_type", params, socket) do
-    # Handle cases where params might be slightly different
-    %{"type" => new_type, "path" => path_json} = params
+    @media (prefers-color-scheme: dark) {
+      :host {
+        --bg-color: #1e293b;
+        --text-color: #f3f4f6;
+        --border-color: #374151;
+        --secondary-bg: #0f172a;
+      }
+    }
+
+    .editor-container {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .badge {
+      padding: 0.25rem 0.625rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      border-radius: 9999px;
+      background-color: #f3e8ff;
+      color: #7e22ce;
+      border: 1px solid rgba(168, 85, 247, 0.2);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border-radius: 0.5rem;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background-color: var(--primary-color);
+      color: white;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-primary:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .btn-secondary {
+      color: var(--primary-color);
+      background-color: transparent;
+    }
+
+    .btn-secondary:hover {
+      background-color: #eef2ff;
+    }
+
+    .icon {
+      width: 1rem;
+      height: 1rem;
+      opacity: 0.75;
+    }
+
+    .node-container {
+      margin-left: 1rem;
+      margin-top: 0.5rem;
+      border-left: 2px solid var(--border-color);
+      padding-left: 1rem;
+    }
+
+    .node-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .type-label {
+      font-family: monospace;
+      font-size: 0.875rem;
+      font-weight: 500;
+      opacity: 0.8;
+    }
+
+    .type-select {
+      display: block;
+      width: 9rem;
+      border-radius: 0.5rem;
+      border: 1px solid var(--border-color);
+      padding: 0.375rem 0.75rem;
+      background-color: transparent;
+      color: inherit;
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
     
-    path = JSON.decode!(path_json)
-    new_schema = update_schema_at(socket.assigns.schema, path, fn node -> 
-      Map.put(node, "type", new_type)
-      |> handle_type_change(new_type)
-    end)
+    .type-select:focus {
+      outline: 2px solid var(--primary-color);
+      border-color: transparent;
+    }
+
+    .properties-list {
+      margin-top: 0.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .property-row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: flex-start;
+    }
     
-    {:noreply, assign(socket, schema: new_schema)}
-  end
+    .property-content {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
 
-  def handle_event("delete_property", %{"path" => path_json, "key" => key}, socket) do
-    path = JSON.decode!(path_json)
-    new_schema = update_schema_at(socket.assigns.schema, path, fn node ->
-      props = Map.get(node, "properties", %{})
-      new_props = Map.delete(props, key)
-      Map.put(node, "properties", new_props)
-    end)
+    .property-key {
+      font-weight: 600;
+      font-size: 0.875rem;
+      min-width: 3rem;
+    }
 
-    {:noreply, assign(socket, schema: new_schema)}
-  end
+    .btn-icon {
+      padding: 0.25rem;
+      color: #9ca3af;
+      background: transparent;
+      border: none;
+      border-radius: 9999px;
+      cursor: pointer;
+    }
 
-  def handle_event("add_property", %{"path" => path_json}, socket) do
-    path = JSON.decode!(path_json)
-    # Simple prompt workaround? No, for now just add a default "new_field"
-    # In a real app we'd use a modal or inline input for the name.
-    # For MVP let's just add "new_prop_TIMESTAMP"
-    prop_name = "prop_#{System.system_time(:second)}"
+    .btn-delete:hover {
+      color: #dc2626;
+      background-color: #fef2f2;
+    }
+
+    .icon-sm {
+      width: 1rem;
+      height: 1rem;
+    }
+
+    .icon-xs {
+      width: 0.875rem;
+      height: 0.875rem;
+    }
+
+    .icon-circle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.25rem;
+      height: 1.25rem;
+      border-radius: 9999px;
+      background-color: #e0e7ff;
+      color: var(--primary-color);
+    }
     
-    new_schema = update_schema_at(socket.assigns.schema, path, fn node ->
-      props = Map.get(node, "properties", %{})
-      new_props = Map.put(props, prop_name, %{"type" => "string"})
-      Map.put(node, "properties", new_props)
-    end)
-
-    {:noreply, assign(socket, schema: new_schema)}
+    .group:hover .btn-delete {
+      opacity: 1;
+    }
+    
+    .type-form {
+      display: inline-block;
+    }
+    """
   end
-
-  def handle_event("save", _, socket) do
-    socket.assigns.on_save.(socket.assigns.schema)
-    {:noreply, socket}
-  end
-
-  defp update_schema_at(schema, [], func), do: func.(schema)
-  defp update_schema_at(schema, [head | tail], func) do
-    Map.update!(schema, head, fn val -> update_schema_at(val, tail, func) end)
-  end
-
-  defp handle_type_change(node, "object") do
-    if Map.has_key?(node, "properties"), do: node, else: Map.put(node, "properties", %{})
-  end
-  defp handle_type_change(node, _), do: node
 
 end
