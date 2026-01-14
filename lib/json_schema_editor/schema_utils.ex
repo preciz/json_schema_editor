@@ -43,4 +43,59 @@ defmodule JSONSchemaEditor.SchemaUtils do
       key
     end
   end
+
+  @doc """
+  Casts a constraint value based on the field name.
+  """
+  def cast_constraint_value(field, value) do
+    cond do
+      field in [
+        "minLength",
+        "maxLength",
+        "minItems",
+        "maxItems",
+        "minProperties",
+        "maxProperties"
+      ] ->
+        case Integer.parse(value) do
+          {int, _} -> int
+          :error -> nil
+        end
+
+      field in ["minimum", "maximum", "multipleOf"] ->
+        case Float.parse(value) do
+          {float, _} -> float
+          :error -> nil
+        end
+
+      field == "uniqueItems" ->
+        value == "true"
+
+      true ->
+        value
+    end
+  end
+
+  @doc """
+  Casts a string value to the appropriate type based on the schema type.
+  """
+  def cast_value_by_type("integer", value) do
+    case Integer.parse(value) do
+      {int, _} -> int
+      :error -> 0
+    end
+  end
+
+  def cast_value_by_type("number", value) do
+    case Float.parse(value) do
+      {float, _} -> float
+      :error -> 0.0
+    end
+  end
+
+  def cast_value_by_type("boolean", value) do
+    value == "true"
+  end
+
+  def cast_value_by_type(_type, value), do: value
 end
