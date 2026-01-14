@@ -1,31 +1,131 @@
 defmodule JSONSchemaEditor do
   use Phoenix.LiveComponent
 
+  def update(assigns, socket) do
+    socket =
+      socket
+      |> assign(:id, assigns.id)
+      |> assign(:on_save, assigns[:on_save])
+      |> assign_new(:schema, fn -> assigns[:schema] || %{"type" => "object", "properties" => %{}} end)
+
+    {:ok, socket}
+  end
+
+  # Change the type of a node at a given path
+  def handle_event("change_type", %{"path" => path_json, "type" => new_type}, socket) do
+    path = JSON.decode!(path_json)
+    
+    new_value = case new_type do
+      "object" -> %{"type" => "object", "properties" => %{}}
+      "array" -> %{"type" => "array", "items" => %{"type" => "string"}}
+      _ -> %{"type" => new_type}
+    end
+
+    schema = put_in_path(socket.assigns.schema, path, new_value)
+    {:noreply, assign(socket, :schema, schema)}
+  end
+
+  # Add a new property to an object
+  def handle_event("add_property", %{"path" => path_json}, socket) do
+    path = JSON.decode!(path_json)
+    props_path = path ++ ["properties"]
+    
+    current_props = get_in_path(socket.assigns.schema, props_path) || %{}
+    new_key = generate_unique_key(current_props, "new_field")
+    new_props = Map.put(current_props, new_key, %{"type" => "string"})
+    
+    schema = put_in_path(socket.assigns.schema, props_path, new_props)
+    {:noreply, assign(socket, :schema, schema)}
+  end
+
+  # Delete a property from an object
+  def handle_event("delete_property", %{"path" => path_json, "key" => key}, socket) do
+    path = JSON.decode!(path_json)
+    props_path = path ++ ["properties"]
+    
+    current_props = get_in_path(socket.assigns.schema, props_path) || %{}
+    new_props = Map.delete(current_props, key)
+    
+    schema = put_in_path(socket.assigns.schema, props_path, new_props)
+    {:noreply, assign(socket, :schema, schema)}
+  end
+
+  # Rename a property key
+  def handle_event("rename_property", %{"path" => path_json, "old_key" => old_key, "value" => new_key}, socket) do
+    new_key = String.trim(new_key)
+    if new_key == "" or new_key == old_key do
+      {:noreply, socket}
+    else
+      path = JSON.decode!(path_json)
+      props_path = path ++ ["properties"]
+      
+      current_props = get_in_path(socket.assigns.schema, props_path) || %{}
+      
+      # Check if new key already exists
+      if Map.has_key?(current_props, new_key) do
+        {:noreply, socket}
+      else
+        {value, remaining} = Map.pop(current_props, old_key)
+        new_props = Map.put(remaining, new_key, value)
+        
+        schema = put_in_path(socket.assigns.schema, props_path, new_props)
+        {:noreply, assign(socket, :schema, schema)}
+      end
+    end
+  end
+
+  # Save the schema
+  def handle_event("save", _params, socket) do
+    if socket.assigns[:on_save] do
+      socket.assigns.on_save.(socket.assigns.schema)
+    end
+    {:noreply, socket}
+  end
+
+  # Helper: get value at path in nested map
+  defp get_in_path(data, []), do: data
+  defp get_in_path(data, [key | rest]) when is_map(data), do: get_in_path(Map.get(data, key), rest)
+  defp get_in_path(_, _), do: nil
+
+  # Helper: put value at path in nested map
+  defp put_in_path(_data, [], value), do: value
+  defp put_in_path(data, [key | rest], value) when is_map(data) do
+    Map.put(data, key, put_in_path(Map.get(data, key, %{}), rest, value))
+  end
+
+  # Helper: generate a unique key
+  defp generate_unique_key(existing_map, base_name, counter \\ 1) do
+    key = if counter == 1, do: base_name, else: "#{base_name}_#{counter}"
+    if Map.has_key?(existing_map, key) do
+      generate_unique_key(existing_map, base_name, counter + 1)
+    else
+      key
+    end
+  end
+
   def render(assigns) do
     ~H"""
     <div id={@id} class="json-schema-editor-host">
-      <template shadowrootmode="open">
-        <style>
-          <%= styles() %>
-        </style>
-        <div class="editor-container">
-          <div class="header">
-            <span class="badge">Schema Root</span>
-            <button class="btn btn-primary" phx-click="save" phx-target={@myself}>
-              <span>Save Changes</span>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="icon">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
-              </svg>
-            </button>
-          </div>
-          
-          <.render_node 
-            node={@schema} 
-            path={[]} 
-            myself={@myself} 
-          />
+      <style>
+        <%= styles() %>
+      </style>
+      <div class="editor-container">
+        <div class="header">
+          <span class="badge">Schema Root</span>
+          <button class="btn btn-primary" phx-click="save" phx-target={@myself}>
+            <span>Save Changes</span>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="icon">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
+            </svg>
+          </button>
         </div>
-      </template>
+        
+        <.render_node 
+          node={@schema} 
+          path={[]} 
+          myself={@myself} 
+        />
+      </div>
     </div>
     """
   end
@@ -66,7 +166,16 @@ defmodule JSONSchemaEditor do
                   </svg>
                 </button>
                 <div class="property-content">
-                  <span class="property-key"><%= key %>:</span>
+                  <input 
+                    type="text" 
+                    value={key} 
+                    name="property_name"
+                    class="property-key-input"
+                    phx-blur="rename_property"
+                    phx-target={@myself}
+                    phx-value-path={JSON.encode!(@path)}
+                    phx-value-old_key={key}
+                  />
                   <.render_node node={val} path={@path ++ ["properties", key]} myself={@myself} />
                 </div>
               </div>
@@ -94,9 +203,13 @@ defmodule JSONSchemaEditor do
     """
   end
 
+  defp type_label(node) do
+    Map.get(node, "type", "unknown")
+  end
+
   defp styles do
     """
-    :host {
+    .json-schema-editor-host {
       display: block;
       font-family: system-ui, -apple-system, sans-serif;
       --primary-color: #4f46e5;
@@ -108,7 +221,7 @@ defmodule JSONSchemaEditor do
     }
 
     @media (prefers-color-scheme: dark) {
-      :host {
+      .json-schema-editor-host {
         --bg-color: #1e293b;
         --text-color: #f3f4f6;
         --border-color: #374151;
@@ -245,6 +358,30 @@ defmodule JSONSchemaEditor do
       font-weight: 600;
       font-size: 0.875rem;
       min-width: 3rem;
+    }
+
+    .property-key-input {
+      font-weight: 600;
+      font-size: 0.875rem;
+      min-width: 5rem;
+      max-width: 10rem;
+      padding: 0.25rem 0.5rem;
+      border: 1px solid transparent;
+      border-radius: 0.375rem;
+      background: transparent;
+      color: inherit;
+      font-family: inherit;
+    }
+    
+    .property-key-input:hover {
+      border-color: var(--border-color);
+      background-color: var(--secondary-bg);
+    }
+    
+    .property-key-input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      background-color: var(--bg-color);
     }
 
     .btn-icon {
