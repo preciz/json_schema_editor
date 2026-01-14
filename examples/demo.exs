@@ -27,6 +27,28 @@ defmodule Demo do
     <style>
       <%= @css %>
     </style>
+    <script>
+      window.addEventListener("click", e => {
+        const btn = e.target.closest(".jse-btn-copy");
+        if (btn) {
+          const content = btn.getAttribute("data-content");
+          if (content) {
+            navigator.clipboard.writeText(content).then(() => {
+              btn.classList.add("jse-copied");
+              const span = btn.querySelector("span");
+              if (span) {
+                const oldText = span.innerText;
+                span.innerText = "Copied!";
+                setTimeout(() => {
+                  btn.classList.remove("jse-copied");
+                  span.innerText = oldText;
+                }, 2000);
+              }
+            });
+          }
+        }
+      });
+    </script>
     <div style="height: 100vh; display: flex; flex-direction: column;">
       <div style="padding: 1rem; border-bottom: 1px solid #eee;">
         <h1>JSON Schema Editor Demo</h1>
