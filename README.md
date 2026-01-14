@@ -1,44 +1,55 @@
 # JSON Schema Editor
 
-A Phoenix LiveComponent for visually building and editing JSON Schemas.
+A robust Phoenix LiveComponent for visually building, editing, and validating JSON Schemas.
 
 ## Features
 
-- **Visual Editor**: Intuitive UI for defining JSON Schema structures.
-- **Type Support**: Strings, Numbers, Integers, Booleans, Objects, and Arrays.
-- **Nested Structures**: Full support for deeply nested objects and properties.
-- **Interactive**:
-  - Add, remove, and rename properties.
-  - Change property types dynamically.
-- **Self-Contained**: Includes necessary styles (scoped) and logic.
+- **Visual Editor**: Intuitive UI for defining complex JSON Schema structures.
+- **Recursive Depth**: Full support for deeply nested objects and array items.
+- **Logical Validation**: 
+    - Real-time checking of constraints (e.g., `minLength` vs `maxLength`, `minItems` vs `maxItems`).
+    - Visual error feedback (red borders and descriptive messages).
+    - Prevents saving if the schema is in an invalid state.
+- **Advanced Constraints**:
+    - **Strings**: minLength, maxLength, pattern.
+    - **Numbers**: minimum, maximum, multipleOf.
+    - **Arrays**: minItems, maxItems, uniqueItems.
+    - **Objects**: minProperties, maxProperties, required fields.
+- **Enum Support**: Type-safe management of enumeration values.
+- **Metadata**: Support for `title` and `description` at every node level.
+- **UX Focused**:
+    - **Collapsible Nodes**: Collapse/Expand entire object/array trees for better navigation.
+    - **UI Isolation**: Scoped CSS styles (`jse-` prefix) to prevent host application conflicts.
+    - **Pure State**: UI-specific states (expansion/collapse) are separated from the exported JSON Schema.
+- **Testing**: Maintained with ~100% test coverage.
 
 ## Installation
 
-Add `json_schema_editor_lib` to your list of dependencies in `mix.exs`:
+Add `json_schema_editor` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
   [
-    {:json_schema_editor_lib, "~> 0.1.0"}
+    {:json_schema_editor, "~> 0.1.0"}
   ]
 end
 ```
 
 ## Usage
 
-Use the `JSONSchemaEditor` component within your LiveView.
-
-### 1. Mount the schema
-
-Initialize the schema in your LiveView's `mount/3`:
+### 1. Initialize the Schema
 
 ```elixir
 def mount(_params, _session, socket) do
   schema = %{
     "type" => "object",
     "properties" => %{
-      "name" => %{"type" => "string"},
-      "age" => %{"type" => "integer"}
+      "user" => %{
+        "type" => "object",
+        "properties" => %{
+          "name" => %{"type" => "string", "minLength" => 2}
+        }
+      }
     }
   }
 
@@ -46,9 +57,7 @@ def mount(_params, _session, socket) do
 end
 ```
 
-### 2. Render the component
-
-Add the component to your HEEx template. Pass the `schema` and an `on_save` callback.
+### 2. Render the Component
 
 ```heex
 <.live_component
@@ -59,24 +68,24 @@ Add the component to your HEEx template. Pass the `schema` and an `on_save` call
 />
 ```
 
-### 3. Handle updates
-
-Handle the save event in your LiveView:
+### 3. Handle Updates
 
 ```elixir
 def handle_info({:schema_saved, updated_schema}, socket) do
-  # Save to database or perform other actions
-  IO.inspect(updated_schema, label: "Schema Saved")
+  # The schema is guaranteed to be logically consistent here
   {:noreply, assign(socket, my_schema: updated_schema)}
 end
 ```
 
-## Running the Demo
+## Development
 
-A standalone demo script is included in `examples/demo.exs`. You can run it directly:
+### Running Tests
+```bash
+mix test --cover
+```
 
+### Running the Demo
 ```bash
 elixir examples/demo.exs
 ```
-
-Then visit `http://localhost:4040` in your browser.
+Visit `http://localhost:4040` to see the editor in action with a sample schema.
