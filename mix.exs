@@ -34,7 +34,7 @@ defmodule JSONSchemaEditor.MixProject do
   defp package do
     [
       name: "json_schema_editor",
-      files: ~w(lib .formatter.exs mix.exs README.md LICENSE CHANGELOG.md),
+      files: ~w(lib assets .formatter.exs mix.exs README.md LICENSE CHANGELOG.md),
       licenses: ["MIT"],
       links: %{"GitHub" => @source_url}
     ]

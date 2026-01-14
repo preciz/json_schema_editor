@@ -20,7 +20,6 @@ defmodule JSONSchemaEditor do
   """
   use Phoenix.LiveComponent
   alias JSONSchemaEditor.SchemaUtils
-  alias JSONSchemaEditor.Styles
   alias JSONSchemaEditor.Validator
   alias JSONSchemaEditor.PrettyPrinter
   alias JSONSchemaEditor.Components
@@ -28,6 +27,12 @@ defmodule JSONSchemaEditor do
   @types ["string", "number", "integer", "boolean", "object", "array"]
   @logic_types ["anyOf", "oneOf", "allOf"]
   @formats ["email", "date-time", "date", "time", "uri", "uuid", "ipv4", "ipv6", "hostname"]
+
+  attr :id, :string, required: true
+  attr :schema, :map, required: true
+  attr :on_save, :any, default: nil
+  attr :class, :string, default: nil
+  attr :rest, :global
 
   @doc """
   Initializes the component with the given assigns.
@@ -349,10 +354,7 @@ defmodule JSONSchemaEditor do
       |> assign(:logic_types, @logic_types)
 
     ~H"""
-    <div id={@id} class="jse-host">
-      <style>
-        <%= Styles.styles() %>
-      </style>
+    <div id={@id} class={["jse-host", @class]} {@rest}>
       <div class="jse-container">
         <div class="jse-header">
           <div class="jse-tabs">
@@ -379,7 +381,6 @@ defmodule JSONSchemaEditor do
             phx-click="save"
             phx-target={@myself}
             disabled={not Enum.empty?(@validation_errors)}
-            style={if not Enum.empty?(@validation_errors), do: "opacity: 0.5; cursor: not-allowed;"}
           >
             <span>Save</span>
             <Components.icon name={:save} />
@@ -408,16 +409,8 @@ defmodule JSONSchemaEditor do
                 <span>Current Schema</span>
                 <button
                   class="jse-btn-copy"
-                  onclick="navigator.clipboard.writeText(this.getAttribute('data-content')).then(() => {
-                    this.classList.add('jse-copied');
-                    const span = this.querySelector('span');
-                    const oldText = span.innerText;
-                    span.innerText = 'Copied!';
-                    setTimeout(() => {
-                      this.classList.remove('jse-copied');
-                      span.innerText = oldText;
-                    }, 2000);
-                  })"
+                  id={"#{@id}-copy-btn"}
+                  phx-hook="JSONSchemaEditorClipboard"
                   data-content={JSON.encode!(@schema)}
                 >
                   <span>Copy to Clipboard</span>
