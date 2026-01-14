@@ -700,4 +700,17 @@ defmodule JSONSchemaEditorTest do
 
     assert socket.assigns.schema["enum"] == [0.0]
   end
+
+  test "handle_event toggle_additional_properties" do
+    socket = setup_socket(%{"type" => "object"})
+    path_json = JSON.encode!([])
+
+    # Enable Strict Mode
+    {:noreply, socket} = JSONSchemaEditor.handle_event("toggle_additional_properties", %{"path" => path_json}, socket)
+    assert socket.assigns.schema["additionalProperties"] == false
+
+    # Disable Strict Mode
+    {:noreply, socket} = JSONSchemaEditor.handle_event("toggle_additional_properties", %{"path" => path_json}, socket)
+    refute Map.has_key?(socket.assigns.schema, "additionalProperties")
+  end
 end

@@ -264,11 +264,37 @@ defmodule JSONSchemaEditor.Styles do
     }
 
     .jse-properties-list {
-      margin-top: 0.5rem;
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
+      margin-top: 0.75rem;
+      padding-left: 1.25rem;
+      border-left: 2px solid var(--border-color);
     }
+
+    .jse-object-controls {
+      margin-bottom: 0.5rem;
+      padding: 0.25rem 0.5rem;
+      background-color: #f9fafb;
+      border-radius: 0.375rem;
+      border: 1px dashed #d1d5db;
+    }
+
+    .jse-strict-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      font-size: 0.75rem;
+      color: #374151;
+      font-weight: 500;
+    }
+
+    .jse-strict-text {
+      user-select: none;
+    }
+
+    .jse-property-item {
 
     .jse-property-row {
       display: flex;

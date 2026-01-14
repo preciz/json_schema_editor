@@ -245,6 +245,18 @@ defmodule JSONSchemaEditor do
     {:noreply, socket}
   end
 
+  def handle_event("toggle_additional_properties", %{"path" => path_json}, socket) do
+    socket =
+      update_schema(socket, path_json, fn node ->
+        case Map.get(node, "additionalProperties") do
+          false -> Map.delete(node, "additionalProperties")
+          _ -> Map.put(node, "additionalProperties", false)
+        end
+      end)
+
+    {:noreply, socket}
+  end
+
   def handle_event("save", _params, socket) do
     if Enum.empty?(socket.assigns.validation_errors) and socket.assigns[:on_save] do
       socket.assigns.on_save.(socket.assigns.schema)
@@ -951,6 +963,19 @@ defmodule JSONSchemaEditor do
   defp object_properties(assigns) do
     ~H"""
     <div class="jse-properties-list">
+      <div class="jse-object-controls">
+        <label class="jse-strict-toggle" title="Disallow properties not defined below">
+          <input
+            type="checkbox"
+            checked={Map.get(@node, "additionalProperties") == false}
+            phx-click="toggle_additional_properties"
+            phx-target={@myself}
+            phx-value-path={JSON.encode!(@path)}
+          />
+          <span class="jse-strict-text">Strict Mode (additionalProperties: false)</span>
+        </label>
+      </div>
+
       <%= for {key, val} <- Map.get(@node, "properties", %{}) |> Enum.sort_by(fn {k, _v} -> k end) do %>
         <div class="jse-property-item">
           <div class="jse-property-row">
