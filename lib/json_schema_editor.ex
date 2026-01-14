@@ -284,7 +284,7 @@ defmodule JSONSchemaEditor do
 
       <%= if Map.get(@node, "type") == "object" do %>
         <div class="properties-list">
-          <%= for {key, val} <- Map.get(@node, "properties", %{}) do %>
+          <%= for {key, val} <- Map.get(@node, "properties", %{}) |> Enum.sort_by(fn {k, _v} -> k end) do %>
             <div class="property-item">
               <div class="property-row">
                 <button
