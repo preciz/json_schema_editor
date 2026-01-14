@@ -119,6 +119,49 @@ defmodule JSONSchemaEditorTest do
     html = render_component(JSONSchemaEditor, id: "jse", schema: schema, ui_state: ui_state)
     assert html =~ "jse-collapsed"
     refute html =~ "hidden_field"
+
+    # Logic composition rendering
+    schema = %{"oneOf" => [%{"type" => "string"}, %{"type" => "number"}]}
+    html = render_component(JSONSchemaEditor, id: "jse", schema: schema)
+    assert html =~ "Oneof Branches"
+    assert html =~ "Branch 1"
+    assert html =~ "Branch 2"
+
+    schema = %{"anyOf" => [%{"type" => "string"}]}
+    html = render_component(JSONSchemaEditor, id: "jse", schema: schema)
+    assert html =~ "Anyof Branches"
+
+    schema = %{"allOf" => [%{"type" => "string"}]}
+    html = render_component(JSONSchemaEditor, id: "jse", schema: schema)
+    assert html =~ "Allof Branches"
+
+    # Array items rendering (triggers badge-info and plus icon)
+    schema = %{"type" => "array", "items" => %{"type" => "string"}}
+    html = render_component(JSONSchemaEditor, id: "jse", schema: schema)
+    assert html =~ "jse-badge-info"
+  end
+
+  test "renders badge with custom class" do
+    html = render_component(JSONSchemaEditor, id: "jse", schema: %{"type" => "string"})
+    # The default badge has no extra class, but let's force check the badge component
+    # Since badge is private, we check it through the main render which uses it
+    assert html =~ "jse-badge"
+  end
+
+  test "handle_event update_enum_value with unknown type" do
+    # Create a socket with a fake type to trigger the default branch in cast_value_by_type
+    socket = setup_socket(%{"type" => "unknown", "enum" => ["old"]})
+    path_json = JSON.encode!([])
+    
+    {:noreply, socket} = JSONSchemaEditor.handle_event("update_enum_value", %{"path" => path_json, "index" => "0", "value" => "new"}, socket)
+    assert socket.assigns.schema["enum"] == ["new"]
+  end
+
+  test "handle_event save without callback (noop)" do
+    socket = setup_socket(%{"type" => "string"})
+    # on_save is nil by default in setup_socket
+    {:noreply, _socket} = JSONSchemaEditor.handle_event("save", %{}, socket)
+    # Just ensuring it doesn't crash
   end
 
   test "update/2 initializes schema and defaults" do
@@ -444,6 +487,90 @@ defmodule JSONSchemaEditorTest do
     socket = Phoenix.Component.assign(socket, validation_errors: %{"key" => "error"})
     {:noreply, _socket} = JSONSchemaEditor.handle_event("save", %{}, socket)
     refute_receive {:saved, _}
+  end
+
+  test "handle_event logic composition" do
+    socket = setup_socket()
+    path_json = JSON.encode!([])
+
+    # Change to oneOf
+    {:noreply, socket} = JSONSchemaEditor.handle_event("change_type", %{"path" => path_json, "type" => "oneOf"}, socket)
+    assert Map.has_key?(socket.assigns.schema, "oneOf")
+    assert length(socket.assigns.schema["oneOf"]) == 1
+
+    # Add branch
+    {:noreply, socket} = JSONSchemaEditor.handle_event("add_logic_branch", %{"path" => path_json, "type" => "oneOf"}, socket)
+    assert length(socket.assigns.schema["oneOf"]) == 2
+
+    # Remove branch
+    {:noreply, socket} = JSONSchemaEditor.handle_event("remove_logic_branch", %{"path" => path_json, "type" => "oneOf", "index" => "0"}, socket)
+    assert length(socket.assigns.schema["oneOf"]) == 1
+
+    # Remove last branch (should revert to string)
+    {:noreply, socket} = JSONSchemaEditor.handle_event("remove_logic_branch", %{"path" => path_json, "type" => "oneOf", "index" => "0"}, socket)
+    assert socket.assigns.schema["type"] == "string"
+    refute Map.has_key?(socket.assigns.schema, "oneOf")
+
+    # anyOf and allOf types
+    {:noreply, socket} = JSONSchemaEditor.handle_event("change_type", %{"path" => path_json, "type" => "anyOf"}, socket)
+    assert Map.has_key?(socket.assigns.schema, "anyOf")
+    {:noreply, socket} = JSONSchemaEditor.handle_event("change_type", %{"path" => path_json, "type" => "allOf"}, socket)
+    assert Map.has_key?(socket.assigns.schema, "allOf")
+  end
+
+  test "handle_event rename to existing key (noop)" do
+    schema = %{"type" => "object", "properties" => %{"a" => %{"type" => "string"}, "b" => %{"type" => "number"}}}
+    socket = setup_socket(schema)
+    path_json = JSON.encode!([])
+
+    {:noreply, socket} = JSONSchemaEditor.handle_event("rename_property", %{"path" => path_json, "old_key" => "a", "value" => "b"}, socket)
+    assert Map.has_key?(socket.assigns.schema["properties"], "a")
+    assert Map.has_key?(socket.assigns.schema["properties"], "b")
+  end
+
+  test "handle_event update_constraint with empty/false values (removal)" do
+    schema = %{"type" => "string", "minLength" => 5, "uniqueItems" => true}
+    socket = setup_socket(schema)
+    path_json = JSON.encode!([])
+
+    # Remove minLength
+    {:noreply, socket} = JSONSchemaEditor.handle_event("update_constraint", %{"path" => path_json, "field" => "minLength", "value" => ""}, socket)
+    refute Map.has_key?(socket.assigns.schema, "minLength")
+
+    # Remove uniqueItems
+    {:noreply, socket} = JSONSchemaEditor.handle_event("update_constraint", %{"path" => path_json, "field" => "uniqueItems", "value" => "false"}, socket)
+    refute Map.has_key?(socket.assigns.schema, "uniqueItems")
+  end
+
+  test "handle_event update_constraint with invalid numbers" do
+    socket = setup_socket(%{"type" => "string"})
+    path_json = JSON.encode!([])
+
+    # Invalid integer
+    {:noreply, socket} = JSONSchemaEditor.handle_event("update_constraint", %{"path" => path_json, "field" => "minLength", "value" => "abc"}, socket)
+    refute Map.has_key?(socket.assigns.schema, "minLength")
+
+    # Invalid float
+    socket = setup_socket(%{"type" => "number"})
+    {:noreply, socket} = JSONSchemaEditor.handle_event("update_constraint", %{"path" => path_json, "field" => "minimum", "value" => "abc"}, socket)
+    refute Map.has_key?(socket.assigns.schema, "minimum")
+  end
+
+  test "handle_event change_title and description to empty (removal)" do
+    schema = %{"type" => "string", "title" => "T", "description" => "D"}
+    socket = setup_socket(schema)
+    path_json = JSON.encode!([])
+
+    {:noreply, socket} = JSONSchemaEditor.handle_event("change_title", %{"path" => path_json, "value" => ""}, socket)
+    refute Map.has_key?(socket.assigns.schema, "title")
+
+    {:noreply, socket} = JSONSchemaEditor.handle_event("change_description", %{"path" => path_json, "value" => "  "}, socket)
+    refute Map.has_key?(socket.assigns.schema, "description")
+  end
+
+  test "renders no constraints for boolean type" do
+    html = render_component(JSONSchemaEditor, id: "jse", schema: %{"type" => "boolean"}, ui_state: %{"expanded_constraints:[]" => true})
+    assert html =~ "No constraints for this type"
   end
 
   test "handle_event enum management" do

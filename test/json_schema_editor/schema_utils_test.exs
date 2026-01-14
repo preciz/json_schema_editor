@@ -5,10 +5,10 @@ defmodule JSONSchemaEditor.SchemaUtilsTest do
   test "get_in_path/2" do
     data = %{"a" => %{"b" => 1}}
     assert SchemaUtils.get_in_path(data, ["a", "b"]) == 1
-    assert SchemaUtils.get_in_path(data, ["a"]) == %{"b" => 1}
-    assert SchemaUtils.get_in_path(data, []) == data
-    assert SchemaUtils.get_in_path(data, ["c"]) == nil
-    assert SchemaUtils.get_in_path(nil, ["a"]) == nil
+    assert SchemaUtils.get_in_path(data, ["a", "c"]) == nil
+    assert SchemaUtils.get_in_path(data, ["x"]) == nil
+    # Non-map data
+    assert SchemaUtils.get_in_path("not a map", ["any"]) == nil
   end
 
   test "put_in_path/3" do

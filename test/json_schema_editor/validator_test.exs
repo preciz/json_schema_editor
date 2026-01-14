@@ -85,4 +85,21 @@ defmodule JSONSchemaEditor.ValidatorTest do
     assert errors["[\"properties\",\"sub\"]:minItems"]
     assert errors["[\"items\"]:minimum"]
   end
+
+  test "validate_schema logic branches" do
+    schema = %{
+      "oneOf" => [
+        %{"type" => "string", "minLength" => 5, "maxLength" => 2}
+      ]
+    }
+
+    errors = Validator.validate_schema(schema)
+    assert errors["[\"oneOf\",0]:minLength"]
+  end
+
+  test "validate_schema with invalid child types (noop)" do
+    # When properties or items are not maps, they should be ignored by recursion
+    assert Validator.validate_schema(%{"type" => "object", "properties" => nil}) == %{}
+    assert Validator.validate_schema(%{"type" => "array", "items" => "invalid"}) == %{}
+  end
 end
