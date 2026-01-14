@@ -1,14 +1,8 @@
 defmodule JSONSchemaEditor.PrettyPrinter do
-  @moduledoc """
-  A simple, custom JSON pretty printer for the JSON Schema Editor.
-  Handles maps, lists, and primitive types with configurable indentation.
-  """
+  @moduledoc false
 
   @indent_size 2
 
-  @doc """
-  Formats a map or list as a pretty-printed JSON string.
-  """
   def format(data) do
     do_format(data, 0)
   end

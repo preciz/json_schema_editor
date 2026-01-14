@@ -1,11 +1,6 @@
 defmodule JSONSchemaEditor.SchemaUtils do
-  @moduledoc """
-  Helper functions for manipulating nested JSON Schema maps.
-  """
+  @moduledoc false
 
-  @doc """
-  Gets the value at a given path in a nested map.
-  """
   def get_in_path(data, []), do: data
 
   def get_in_path(data, [key | rest]) when is_map(data),
@@ -13,9 +8,6 @@ defmodule JSONSchemaEditor.SchemaUtils do
 
   def get_in_path(_, _), do: nil
 
-  @doc """
-  Puts a value at a given path in a nested map, creating intermediate maps if necessary.
-  """
   def put_in_path(_data, [], value), do: value
 
   def put_in_path(data, [key | rest], value) when is_map(data) or is_nil(data) do
@@ -23,17 +15,11 @@ defmodule JSONSchemaEditor.SchemaUtils do
     Map.put(data, key, put_in_path(Map.get(data, key, %{}), rest, value))
   end
 
-  @doc """
-  Updates a value at a given path in a nested map using a transformation function.
-  """
   def update_in_path(data, path, func) do
     node = get_in_path(data, path)
     put_in_path(data, path, func.(node))
   end
 
-  @doc """
-  Generates a unique key in a map by appending a counter to a base name.
-  """
   def generate_unique_key(existing_map, base_name, counter \\ 1) do
     key = if counter == 1, do: base_name, else: "#{base_name}_#{counter}"
 
@@ -44,9 +30,6 @@ defmodule JSONSchemaEditor.SchemaUtils do
     end
   end
 
-  @doc """
-  Casts a constraint value based on the field name.
-  """
   def cast_constraint_value(field, value) do
     cond do
       field in [

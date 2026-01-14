@@ -1,13 +1,7 @@
 defmodule JSONSchemaEditor.Validator do
-  @moduledoc """
-  Logic for validating the consistency of JSON Schema constraints.
-  """
+  @moduledoc false
 
-  @doc """
-  Validates a node and returns a map of errors.
-  Errors are keyed by field name.
-  """
-  def validate_node(node) do
+  defp validate_node(node) do
     %{}
     |> check_min_max(node, "minLength", "maxLength")
     |> check_min_max(node, "minimum", "maximum")

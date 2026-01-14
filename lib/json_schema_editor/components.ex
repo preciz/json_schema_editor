@@ -1,7 +1,5 @@
 defmodule JSONSchemaEditor.Components do
-  @moduledoc """
-  UI components for the JSON Schema Editor.
-  """
+  @moduledoc false
   use Phoenix.Component
 
   attr(:name, :atom, required: true)

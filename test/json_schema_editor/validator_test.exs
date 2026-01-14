@@ -3,66 +3,68 @@ defmodule JSONSchemaEditor.ValidatorTest do
   alias JSONSchemaEditor.Validator
 
   test "validate_node strings" do
-    assert Validator.validate_node(%{"type" => "string", "minLength" => 5, "maxLength" => 10}) ==
+    assert Validator.validate_schema(%{"type" => "string", "minLength" => 5, "maxLength" => 10}) ==
              %{}
 
-    assert Validator.validate_node(%{"type" => "string", "minLength" => 10, "maxLength" => 5}) ==
-             %{"minLength" => "Must be ≤ maxLength"}
+    assert Validator.validate_schema(%{"type" => "string", "minLength" => 10, "maxLength" => 5}) ==
+             %{"[]:minLength" => "Must be ≤ maxLength"}
   end
 
   test "validate_node numbers" do
-    assert Validator.validate_node(%{"type" => "number", "minimum" => 1, "maximum" => 10}) == %{}
+    assert Validator.validate_schema(%{"type" => "number", "minimum" => 1, "maximum" => 10}) ==
+             %{}
 
-    assert Validator.validate_node(%{"type" => "number", "minimum" => 10, "maximum" => 1}) == %{
-             "minimum" => "Must be ≤ maximum"
+    assert Validator.validate_schema(%{"type" => "number", "minimum" => 10, "maximum" => 1}) == %{
+             "[]:minimum" => "Must be ≤ maximum"
            }
 
-    assert Validator.validate_node(%{"type" => "number", "multipleOf" => 2}) == %{}
+    assert Validator.validate_schema(%{"type" => "number", "multipleOf" => 2}) == %{}
 
-    assert Validator.validate_node(%{"type" => "number", "multipleOf" => 0}) == %{
-             "multipleOf" => "Must be > 0"
+    assert Validator.validate_schema(%{"type" => "number", "multipleOf" => 0}) == %{
+             "[]:multipleOf" => "Must be > 0"
            }
 
-    assert Validator.validate_node(%{"type" => "number", "multipleOf" => -1}) == %{
-             "multipleOf" => "Must be > 0"
+    assert Validator.validate_schema(%{"type" => "number", "multipleOf" => -1}) == %{
+             "[]:multipleOf" => "Must be > 0"
            }
   end
 
   test "validate_node arrays" do
-    assert Validator.validate_node(%{"type" => "array", "minItems" => 1, "maxItems" => 5}) == %{}
+    assert Validator.validate_schema(%{"type" => "array", "minItems" => 1, "maxItems" => 5}) ==
+             %{}
 
-    assert Validator.validate_node(%{"type" => "array", "minItems" => 5, "maxItems" => 1}) == %{
-             "minItems" => "Must be ≤ maxItems"
+    assert Validator.validate_schema(%{"type" => "array", "minItems" => 5, "maxItems" => 1}) == %{
+             "[]:minItems" => "Must be ≤ maxItems"
            }
   end
 
   test "validate_node objects" do
-    assert Validator.validate_node(%{
+    assert Validator.validate_schema(%{
              "type" => "object",
              "minProperties" => 1,
              "maxProperties" => 5
            }) == %{}
 
-    assert Validator.validate_node(%{
+    assert Validator.validate_schema(%{
              "type" => "object",
              "minProperties" => 5,
              "maxProperties" => 1
-           }) == %{"minProperties" => "Must be ≤ maxProperties"}
+           }) == %{"[]:minProperties" => "Must be ≤ maxProperties"}
   end
 
   test "validate_node unique enum" do
-    assert Validator.validate_node(%{"type" => "string", "enum" => ["a", "b"]}) == %{}
+    assert Validator.validate_schema(%{"type" => "string", "enum" => ["a", "b"]}) == %{}
 
-    assert Validator.validate_node(%{"type" => "string", "enum" => ["a", "a"]}) == %{
-             "enum" => "Values must be unique"
+    assert Validator.validate_schema(%{"type" => "string", "enum" => ["a", "a"]}) == %{
+             "[]:enum" => "Values must be unique"
            }
   end
 
   test "validate_node format" do
-    assert Validator.validate_node(%{"type" => "string", "format" => "email"}) == %{}
+    assert Validator.validate_schema(%{"type" => "string", "format" => "email"}) == %{}
 
-    assert Validator.validate_node(%{"type" => "number", "format" => "email"}) == %{
-             "format" => "Only valid for strings"
+    assert Validator.validate_schema(%{"type" => "number", "format" => "email"}) == %{
+             "[]:format" => "Only valid for strings"
            }
   end
 

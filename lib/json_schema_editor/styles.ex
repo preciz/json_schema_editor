@@ -1,7 +1,5 @@
 defmodule JSONSchemaEditor.Styles do
-  @moduledoc """
-  CSS styles for the JSON Schema Editor.
-  """
+  @moduledoc false
 
   def styles do
     """
