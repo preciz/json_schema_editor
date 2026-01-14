@@ -376,6 +376,17 @@ defmodule JSONSchemaEditor.Styles do
       color: var(--primary-color);
     }
 
+    .jse-input-error {
+      border-color: #dc2626 !important;
+    }
+
+    .jse-error-message {
+      font-size: 0.65rem;
+      color: #dc2626;
+      font-weight: 600;
+      margin-top: 0.125rem;
+    }
+
     .jse-enum-container {
       grid-column: 1 / -1;
       margin-top: 0.5rem;

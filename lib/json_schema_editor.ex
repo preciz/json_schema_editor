@@ -2,6 +2,7 @@ defmodule JSONSchemaEditor do
   use Phoenix.LiveComponent
   alias JSONSchemaEditor.SchemaUtils
   alias JSONSchemaEditor.Styles
+  alias JSONSchemaEditor.Validator
 
   def update(assigns, socket) do
     socket =
@@ -9,8 +10,14 @@ defmodule JSONSchemaEditor do
       |> assign(assigns)
       |> assign_new(:ui_state, fn -> %{} end)
       |> assign_new(:schema, fn -> %{"type" => "object", "properties" => %{}} end)
+      |> validate_and_assign_errors()
 
     {:ok, socket}
+  end
+
+  defp validate_and_assign_errors(socket) do
+    errors = Validator.validate_schema(socket.assigns.schema)
+    assign(socket, :validation_errors, errors)
   end
 
   def handle_event("change_type", %{"path" => path_json, "type" => new_type}, socket) do
@@ -24,7 +31,13 @@ defmodule JSONSchemaEditor do
       end
 
     schema = SchemaUtils.put_in_path(socket.assigns.schema, path, new_value)
-    {:noreply, assign(socket, :schema, schema)}
+
+    socket =
+      socket
+      |> assign(:schema, schema)
+      |> validate_and_assign_errors()
+
+    {:noreply, socket}
   end
 
   def handle_event("add_property", %{"path" => path_json}, socket) do
@@ -37,7 +50,7 @@ defmodule JSONSchemaEditor do
         Map.put(props, new_key, %{"type" => "string"})
       end)
 
-    {:noreply, assign(socket, :schema, schema)}
+    {:noreply, assign(socket, :schema, schema) |> validate_and_assign_errors()}
   end
 
   def handle_event("delete_property", %{"path" => path_json, "key" => key}, socket) do
@@ -53,7 +66,7 @@ defmodule JSONSchemaEditor do
         |> Map.put("required", new_required)
       end)
 
-    {:noreply, assign(socket, :schema, schema)}
+    {:noreply, assign(socket, :schema, schema) |> validate_and_assign_errors()}
   end
 
   def handle_event("toggle_required", %{"path" => path_json, "key" => key}, socket) do
@@ -73,7 +86,7 @@ defmodule JSONSchemaEditor do
         Map.put(node, "required", new_required)
       end)
 
-    {:noreply, assign(socket, :schema, schema)}
+    {:noreply, assign(socket, :schema, schema) |> validate_and_assign_errors()}
   end
 
   def handle_event(
@@ -111,7 +124,7 @@ defmodule JSONSchemaEditor do
           end
         end)
 
-      {:noreply, assign(socket, :schema, schema)}
+      {:noreply, assign(socket, :schema, schema) |> validate_and_assign_errors()}
     end
   end
 
@@ -156,7 +169,7 @@ defmodule JSONSchemaEditor do
         end
       end)
 
-    {:noreply, assign(socket, :schema, schema)}
+    {:noreply, assign(socket, :schema, schema) |> validate_and_assign_errors()}
   end
 
   def handle_event("add_enum_value", %{"path" => path_json}, socket) do
@@ -178,7 +191,7 @@ defmodule JSONSchemaEditor do
         Map.put(node, "enum", current_enum ++ [default_value])
       end)
 
-    {:noreply, assign(socket, :schema, schema)}
+    {:noreply, assign(socket, :schema, schema) |> validate_and_assign_errors()}
   end
 
   def handle_event("remove_enum_value", %{"path" => path_json, "index" => index}, socket) do
@@ -197,7 +210,7 @@ defmodule JSONSchemaEditor do
         end
       end)
 
-    {:noreply, assign(socket, :schema, schema)}
+    {:noreply, assign(socket, :schema, schema) |> validate_and_assign_errors()}
   end
 
   def handle_event("update_enum_value", %{"path" => path_json, "index" => index, "value" => value}, socket) do
@@ -214,11 +227,11 @@ defmodule JSONSchemaEditor do
         Map.put(node, "enum", new_enum)
       end)
 
-    {:noreply, assign(socket, :schema, schema)}
+    {:noreply, assign(socket, :schema, schema) |> validate_and_assign_errors()}
   end
 
   def handle_event("save", _params, socket) do
-    if socket.assigns[:on_save] do
+    if Enum.empty?(socket.assigns.validation_errors) and socket.assigns[:on_save] do
       socket.assigns.on_save.(socket.assigns.schema)
     end
 
@@ -238,7 +251,7 @@ defmodule JSONSchemaEditor do
         end
       end)
 
-    {:noreply, assign(socket, :schema, schema)}
+    {:noreply, assign(socket, :schema, schema) |> validate_and_assign_errors()}
   end
 
     defp cast_constraint_value(field, value) do
@@ -344,9 +357,13 @@ defmodule JSONSchemaEditor do
   attr(:path, :list, required: true)
   attr(:type, :string, default: "text")
   attr(:step, :string, default: nil)
+  attr(:validation_errors, :map, required: true)
   attr(:myself, :any, required: true)
 
   defp constraint_input(assigns) do
+    error_key = "#{JSON.encode!(assigns.path)}:#{assigns.field}"
+    assigns = assign(assigns, :error, Map.get(assigns.validation_errors, error_key))
+
     ~H"""
     <div class="jse-constraint-field">
       <label class="jse-constraint-label"><%= @label %></label>
@@ -354,25 +371,39 @@ defmodule JSONSchemaEditor do
         type={@type}
         step={@step}
         value={@value}
-        class="jse-constraint-input"
+        class={["jse-constraint-input", @error && "jse-input-error"]}
         phx-blur="update_constraint"
         phx-value-path={JSON.encode!(@path)}
         phx-value-field={@field}
         phx-target={@myself}
       />
+      <%= if @error do %>
+        <div class="jse-error-message"><%= @error %></div>
+      <% end %>
     </div>
     """
   end
 
   attr(:path, :list, required: true)
   attr(:node, :map, required: true)
+  attr(:validation_errors, :map, required: true)
   attr(:myself, :any, required: true)
 
   defp enum_section(assigns) do
+    error_key = "#{JSON.encode!(assigns.path)}:enum"
+    assigns = assign(assigns, :error, Map.get(assigns.validation_errors, error_key))
+
     ~H"""
     <div class="jse-enum-container">
       <div class="jse-header" style="margin-bottom: 0.5rem; padding-bottom: 0.25rem;">
-        <span class="jse-constraint-label">Enum Values</span>
+        <div>
+          <span class="jse-constraint-label">Enum Values</span>
+          <%= if @error do %>
+            <div class="jse-error-message" style="display: inline-block; margin-left: 0.5rem;">
+              <%= @error %>
+            </div>
+          <% end %>
+        </div>
         <button
           class="jse-btn jse-btn-secondary jse-btn-sm"
           style="padding: 0.125rem 0.5rem;"
@@ -472,13 +503,25 @@ defmodule JSONSchemaEditor do
       <div class="jse-container">
         <div class="jse-header">
           <.badge>Schema Root</.badge>
-          <button class="jse-btn jse-btn-primary" phx-click="save" phx-target={@myself}>
+          <button
+            class="jse-btn jse-btn-primary"
+            phx-click="save"
+            phx-target={@myself}
+            disabled={not Enum.empty?(@validation_errors)}
+            style={if not Enum.empty?(@validation_errors), do: "opacity: 0.5; cursor: not-allowed;"}
+          >
             <span>Save Changes</span>
             <.icon name={:save} />
           </button>
         </div>
 
-        <.render_node node={@schema} path={[]} ui_state={@ui_state} myself={@myself} />
+        <.render_node
+          node={@schema}
+          path={[]}
+          ui_state={@ui_state}
+          validation_errors={@validation_errors}
+          myself={@myself}
+        />
       </div>
     </div>
     """
@@ -578,6 +621,7 @@ defmodule JSONSchemaEditor do
                   value={Map.get(@node, "minLength")}
                   path={@path}
                   type="number"
+                  validation_errors={@validation_errors}
                   myself={@myself}
                 />
                 <.constraint_input
@@ -586,6 +630,7 @@ defmodule JSONSchemaEditor do
                   value={Map.get(@node, "maxLength")}
                   path={@path}
                   type="number"
+                  validation_errors={@validation_errors}
                   myself={@myself}
                 />
                 <.constraint_input
@@ -593,6 +638,7 @@ defmodule JSONSchemaEditor do
                   field="pattern"
                   value={Map.get(@node, "pattern")}
                   path={@path}
+                  validation_errors={@validation_errors}
                   myself={@myself}
                 />
               <% type when type in ["number", "integer"] -> %>
@@ -603,6 +649,7 @@ defmodule JSONSchemaEditor do
                   path={@path}
                   type="number"
                   step="any"
+                  validation_errors={@validation_errors}
                   myself={@myself}
                 />
                 <.constraint_input
@@ -612,6 +659,7 @@ defmodule JSONSchemaEditor do
                   path={@path}
                   type="number"
                   step="any"
+                  validation_errors={@validation_errors}
                   myself={@myself}
                 />
                 <.constraint_input
@@ -621,6 +669,7 @@ defmodule JSONSchemaEditor do
                   path={@path}
                   type="number"
                   step="any"
+                  validation_errors={@validation_errors}
                   myself={@myself}
                 />
               <% "array" -> %>
@@ -630,6 +679,7 @@ defmodule JSONSchemaEditor do
                   value={Map.get(@node, "minItems")}
                   path={@path}
                   type="number"
+                  validation_errors={@validation_errors}
                   myself={@myself}
                 />
                 <.constraint_input
@@ -638,6 +688,7 @@ defmodule JSONSchemaEditor do
                   value={Map.get(@node, "maxItems")}
                   path={@path}
                   type="number"
+                  validation_errors={@validation_errors}
                   myself={@myself}
                 />
                 <div class="jse-constraint-field">
@@ -659,6 +710,7 @@ defmodule JSONSchemaEditor do
                   value={Map.get(@node, "minProperties")}
                   path={@path}
                   type="number"
+                  validation_errors={@validation_errors}
                   myself={@myself}
                 />
                 <.constraint_input
@@ -667,12 +719,18 @@ defmodule JSONSchemaEditor do
                   value={Map.get(@node, "maxProperties")}
                   path={@path}
                   type="number"
+                  validation_errors={@validation_errors}
                   myself={@myself}
                 />
               <% _ -> %>
                 <span class="jse-constraint-label">No constraints for this type</span>
             <% end %>
-            <.enum_section node={@node} path={@path} myself={@myself} />
+            <.enum_section
+              node={@node}
+              path={@path}
+              validation_errors={@validation_errors}
+              myself={@myself}
+            />
           </div>
         </div>
       <% end %>
@@ -687,6 +745,7 @@ defmodule JSONSchemaEditor do
               node={Map.get(@node, "items", %{"type" => "string"})}
               path={@path ++ ["items"]}
               ui_state={@ui_state}
+              validation_errors={@validation_errors}
               myself={@myself}
             />
           </div>
@@ -734,6 +793,7 @@ defmodule JSONSchemaEditor do
                     node={val}
                     path={@path ++ ["properties", key]}
                     ui_state={@ui_state}
+                    validation_errors={@validation_errors}
                     myself={@myself}
                   />
                 </div>

@@ -9,6 +9,7 @@ defmodule JSONSchemaEditorTest do
         id: "test",
         schema: schema,
         ui_state: %{},
+        validation_errors: %{},
         __changed__: %{},
         on_save: nil
       }
@@ -395,10 +396,17 @@ defmodule JSONSchemaEditorTest do
   test "handle_event save" do
     parent = self()
     on_save = fn schema -> send(parent, {:saved, schema}) end
-    socket = %Phoenix.LiveView.Socket{assigns: %{schema: %{"type" => "string"}, on_save: on_save}}
+    socket = setup_socket(%{"type" => "string"})
+    socket = Phoenix.Component.assign(socket, on_save: on_save)
 
+    # Success case
     {:noreply, _socket} = JSONSchemaEditor.handle_event("save", %{}, socket)
     assert_receive {:saved, %{"type" => "string"}}
+
+    # Failure case (with errors)
+    socket = Phoenix.Component.assign(socket, validation_errors: %{"key" => "error"})
+    {:noreply, _socket} = JSONSchemaEditor.handle_event("save", %{}, socket)
+    refute_receive {:saved, _}
   end
 
   test "handle_event enum management" do
