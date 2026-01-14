@@ -4,6 +4,7 @@ defmodule JSONSchemaEditor.Components do
 
   attr(:name, :atom, required: true)
   attr(:class, :string, default: nil)
+  attr(:rest, :global)
 
   def icon(%{name: :save} = assigns) do
     ~H"""
@@ -12,6 +13,7 @@ defmodule JSONSchemaEditor.Components do
       viewBox="0 0 20 20"
       fill="currentColor"
       class={["jse-icon", @class]}
+      {@rest}
     >
       <path
         fill-rule="evenodd"
@@ -29,6 +31,7 @@ defmodule JSONSchemaEditor.Components do
       viewBox="0 0 20 20"
       fill="currentColor"
       class={["jse-icon", @class]}
+      {@rest}
     >
       <path
         fill-rule="evenodd"
@@ -46,6 +49,7 @@ defmodule JSONSchemaEditor.Components do
       viewBox="0 0 20 20"
       fill="currentColor"
       class={["jse-icon", @class]}
+      {@rest}
     >
       <path
         fill-rule="evenodd"
@@ -63,6 +67,7 @@ defmodule JSONSchemaEditor.Components do
       viewBox="0 0 20 20"
       fill="currentColor"
       class={["jse-icon", @class]}
+      {@rest}
     >
       <path
         fill-rule="evenodd"
@@ -80,6 +85,7 @@ defmodule JSONSchemaEditor.Components do
       viewBox="0 0 20 20"
       fill="currentColor"
       class={["jse-icon", @class]}
+      {@rest}
     >
       <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
     </svg>
@@ -93,6 +99,7 @@ defmodule JSONSchemaEditor.Components do
       viewBox="0 0 20 20"
       fill="currentColor"
       class={["jse-icon", @class]}
+      {@rest}
     >
       <path
         fill-rule="evenodd"
@@ -105,11 +112,12 @@ defmodule JSONSchemaEditor.Components do
   end
 
   attr(:class, :string, default: nil)
+  attr(:rest, :global)
   slot(:inner_block, required: true)
 
   defp badge(assigns) do
     ~H"""
-    <span class={["jse-badge", @class]}>
+    <span class={["jse-badge", @class]} {@rest}>
       {render_slot(@inner_block)}
     </span>
     """
