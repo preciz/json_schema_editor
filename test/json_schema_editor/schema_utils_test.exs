@@ -21,8 +21,14 @@ defmodule JSONSchemaEditor.SchemaUtilsTest do
 
   test "update_in_path/3" do
     data = %{"a" => %{"b" => 1}}
-    assert SchemaUtils.update_in_path(data, ["a", "b"], fn x -> x + 1 end) == %{"a" => %{"b" => 2}}
-    assert SchemaUtils.update_in_path(data, ["a", "c"], fn _ -> 10 end) == %{"a" => %{"b" => 1, "c" => 10}}
+
+    assert SchemaUtils.update_in_path(data, ["a", "b"], fn x -> x + 1 end) == %{
+             "a" => %{"b" => 2}
+           }
+
+    assert SchemaUtils.update_in_path(data, ["a", "c"], fn _ -> 10 end) == %{
+             "a" => %{"b" => 1, "c" => 10}
+           }
   end
 
   test "generate_unique_key/3" do
