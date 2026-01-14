@@ -141,7 +141,7 @@ defmodule JSONSchemaEditorTest do
         socket
       )
 
-    assert socket.assigns.schema["expanded_description"] == true
+    assert socket.assigns.ui_state["expanded_description:#{path_json}"] == true
 
     # Toggle closed
     {:noreply, socket} =
@@ -151,7 +151,7 @@ defmodule JSONSchemaEditorTest do
         socket
       )
 
-    assert socket.assigns.schema["expanded_description"] == false
+    assert socket.assigns.ui_state["expanded_description:#{path_json}"] == false
   end
 
   test "updates array items schema" do

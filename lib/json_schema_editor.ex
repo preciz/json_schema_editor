@@ -8,6 +8,7 @@ defmodule JSONSchemaEditor do
       socket
       |> assign(:id, assigns.id)
       |> assign(:on_save, assigns[:on_save])
+      |> assign_new(:ui_state, fn -> %{} end)
       |> assign_new(:schema, fn ->
         assigns[:schema] || %{"type" => "object", "properties" => %{}}
       end)
@@ -150,15 +151,11 @@ defmodule JSONSchemaEditor do
   end
 
   def handle_event("toggle_description", %{"path" => path_json}, socket) do
-    path = JSON.decode!(path_json)
+    ui_state = socket.assigns.ui_state
+    new_expanded = !Map.get(ui_state, "expanded_description:#{path_json}", false)
+    ui_state = Map.put(ui_state, "expanded_description:#{path_json}", new_expanded)
 
-    schema =
-      SchemaUtils.update_in_path(socket.assigns.schema, path, fn node ->
-        new_expanded = !Map.get(node, "expanded_description", false)
-        Map.put(node, "expanded_description", new_expanded)
-      end)
-
-    {:noreply, assign(socket, :schema, schema)}
+    {:noreply, assign(socket, :ui_state, ui_state)}
   end
 
   def handle_event("save", _params, socket) do
@@ -189,6 +186,7 @@ defmodule JSONSchemaEditor do
         <.render_node
           node={@schema}
           path={[]}
+          ui_state={@ui_state}
           myself={@myself}
         />
       </div>
@@ -222,7 +220,7 @@ defmodule JSONSchemaEditor do
         />
 
         <div class="jse-description-container">
-          <%= if Map.get(@node, "expanded_description", false) do %>
+          <%= if Map.get(@ui_state, "expanded_description:#{JSON.encode!(@path)}", false) do %>
             <div class="jse-description-expanded">
               <textarea
                 class="jse-description-textarea"
@@ -279,6 +277,7 @@ defmodule JSONSchemaEditor do
             <.render_node
               node={Map.get(@node, "items", %{"type" => "string"})}
               path={@path ++ ["items"]}
+              ui_state={@ui_state}
               myself={@myself}
             />
           </div>
@@ -319,14 +318,18 @@ defmodule JSONSchemaEditor do
                       checked={key in Map.get(@node, "required", [])}
                       phx-click="toggle_required"
                       phx-value-path={JSON.encode!(@path)}
-                      phx-value-key={key}
-                      phx-target={@myself}
-                    />
-                    <span class="jse-required-text">Req</span>
-                  </label>
-                  <.render_node node={val} path={@path ++ ["properties", key]} myself={@myself} />
-                </div>
-              </div>
+                                          phx-value-key={key}
+                                          phx-target={@myself}
+                                        />
+                                        <span class="jse-required-text">Req</span>
+                                      </label>
+                                      <.render_node
+                                        node={val}
+                                        path={@path ++ ["properties", key]}
+                                        ui_state={@ui_state}
+                                        myself={@myself}
+                                      />
+                                    </div>              </div>
             </div>
           <% end %>
 
