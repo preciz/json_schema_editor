@@ -27,6 +27,22 @@ defmodule JSONSchemaEditorTest do
     assert html =~ "Test Schema"
   end
 
+  test "supports soft encapsulation (custom class and rest attributes)" do
+    html =
+      render_component(JSONSchemaEditor,
+        id: "jse",
+        schema: %{"type" => "object"},
+        class: "my-custom-class",
+        "data-testid": "json-editor-component",
+        style: "margin-top: 2rem;"
+      )
+
+    assert html =~ "jse-host"
+    assert html =~ "my-custom-class"
+    assert html =~ "data-testid=\"json-editor-component\""
+    assert html =~ "style=\"margin-top: 2rem;\""
+  end
+
   test "renders with different types and states" do
     # Object with properties
     schema = %{

@@ -32,11 +32,34 @@ defmodule JSONSchemaEditor do
   Initializes the component with the given assigns.
   """
   def update(assigns, socket) do
+    # Extract class and rest from assigns
+    class = Map.get(assigns, :class)
+    rest = Map.get(assigns, :rest, %{})
+
+    # Known keys that should NOT go into rest
+    known_keys = [
+      :id,
+      :schema,
+      :on_save,
+      :ui_state,
+      :active_tab,
+      :myself,
+      :flash,
+      :class,
+      :rest,
+      :socket,
+      :__changed__
+    ]
+
+    # Collect unknown keys into rest
+    unknown_keys = Map.drop(assigns, known_keys)
+    rest = Map.merge(rest, unknown_keys)
+
     socket =
       socket
-      |> assign(assigns)
-      |> assign_new(:class, fn -> nil end)
-      |> assign_new(:rest, fn -> %{} end)
+      |> assign(Map.take(assigns, [:id, :schema, :on_save, :ui_state, :active_tab, :myself, :flash]))
+      |> assign(:class, class)
+      |> assign(:rest, rest)
       |> assign_new(:ui_state, fn -> %{} end)
       |> assign_new(:schema, fn -> %{"type" => "object", "properties" => %{}} end)
       |> assign(:types, @types)
