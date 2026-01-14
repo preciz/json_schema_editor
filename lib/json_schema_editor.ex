@@ -538,25 +538,27 @@ defmodule JSONSchemaEditor do
         />
       <% end %>
 
-      <%= case Map.get(@node, "type") do %>
-        <% "array" -> %>
-          <.array_items
-            node={@node}
-            path={@path}
-            ui_state={@ui_state}
-            validation_errors={@validation_errors}
-            myself={@myself}
-          />
-        <% "object" -> %>
-          <.object_properties
-            node={@node}
-            path={@path}
-            ui_state={@ui_state}
-            validation_errors={@validation_errors}
-            myself={@myself}
-          />
-        <% _ -> %>
-          <%!-- No children --%>
+      <%= if !Map.get(@ui_state, "collapsed_node:#{JSON.encode!(@path)}", false) do %>
+        <%= case Map.get(@node, "type") do %>
+          <% "array" -> %>
+            <.array_items
+              node={@node}
+              path={@path}
+              ui_state={@ui_state}
+              validation_errors={@validation_errors}
+              myself={@myself}
+            />
+          <% "object" -> %>
+            <.object_properties
+              node={@node}
+              path={@path}
+              ui_state={@ui_state}
+              validation_errors={@validation_errors}
+              myself={@myself}
+            />
+          <% _ -> %>
+            <%!-- No children --%>
+        <% end %>
       <% end %>
     </div>
     """
@@ -571,6 +573,22 @@ defmodule JSONSchemaEditor do
   defp node_header(assigns) do
     ~H"""
     <div class="jse-node-header">
+      <%= if Map.get(@node, "type") in ["object", "array"] do %>
+        <button
+          class={[
+            "jse-btn-icon jse-node-toggle",
+            Map.get(@ui_state, "collapsed_node:#{JSON.encode!(@path)}", false) && "jse-collapsed"
+          ]}
+          phx-click="toggle_ui"
+          phx-value-type="collapsed_node"
+          phx-target={@myself}
+          phx-value-path={JSON.encode!(@path)}
+          title="Toggle Collapse"
+        >
+          <.icon name={:chevron_down} class="jse-icon-xs" />
+        </button>
+      <% end %>
+
       <form phx-change="change_type" phx-target={@myself} class="jse-type-form">
         <input type="hidden" name="path" value={JSON.encode!(@path)} />
         <select name="type" class="jse-type-select">

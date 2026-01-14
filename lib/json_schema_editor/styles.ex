@@ -376,6 +376,25 @@ defmodule JSONSchemaEditor.Styles do
       color: var(--primary-color);
     }
 
+    .jse-node-toggle {
+      margin-left: -1.25rem;
+      width: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #9ca3af;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .jse-node-toggle:hover {
+      color: var(--primary-color);
+    }
+
+    .jse-node-toggle.jse-collapsed {
+      transform: rotate(-90deg);
+    }
+
     .jse-input-error {
       border-color: #dc2626 !important;
     }
