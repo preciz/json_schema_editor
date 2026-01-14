@@ -1,5 +1,7 @@
 # JSON Schema Editor
 
+[![test](https://github.com/preciz/json_schema_editor/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/preciz/json_schema_editor/actions/workflows/test.yml)
+
 A robust Phoenix LiveComponent for visually building, editing, and validating JSON Schemas.
 
 ## Features
