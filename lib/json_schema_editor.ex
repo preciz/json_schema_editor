@@ -6,7 +6,9 @@ defmodule JSONSchemaEditor do
       socket
       |> assign(:id, assigns.id)
       |> assign(:on_save, assigns[:on_save])
-      |> assign_new(:schema, fn -> assigns[:schema] || %{"type" => "object", "properties" => %{}} end)
+      |> assign_new(:schema, fn ->
+        assigns[:schema] || %{"type" => "object", "properties" => %{}}
+      end)
 
     {:ok, socket}
   end
@@ -14,12 +16,13 @@ defmodule JSONSchemaEditor do
   # Change the type of a node at a given path
   def handle_event("change_type", %{"path" => path_json, "type" => new_type}, socket) do
     path = JSON.decode!(path_json)
-    
-    new_value = case new_type do
-      "object" -> %{"type" => "object", "properties" => %{}}
-      "array" -> %{"type" => "array", "items" => %{"type" => "string"}}
-      _ -> %{"type" => new_type}
-    end
+
+    new_value =
+      case new_type do
+        "object" -> %{"type" => "object", "properties" => %{}}
+        "array" -> %{"type" => "array", "items" => %{"type" => "string"}}
+        _ -> %{"type" => new_type}
+      end
 
     schema = put_in_path(socket.assigns.schema, path, new_value)
     {:noreply, assign(socket, :schema, schema)}
@@ -29,11 +32,11 @@ defmodule JSONSchemaEditor do
   def handle_event("add_property", %{"path" => path_json}, socket) do
     path = JSON.decode!(path_json)
     props_path = path ++ ["properties"]
-    
+
     current_props = get_in_path(socket.assigns.schema, props_path) || %{}
     new_key = generate_unique_key(current_props, "new_field")
     new_props = Map.put(current_props, new_key, %{"type" => "string"})
-    
+
     schema = put_in_path(socket.assigns.schema, props_path, new_props)
     {:noreply, assign(socket, :schema, schema)}
   end
@@ -42,32 +45,37 @@ defmodule JSONSchemaEditor do
   def handle_event("delete_property", %{"path" => path_json, "key" => key}, socket) do
     path = JSON.decode!(path_json)
     props_path = path ++ ["properties"]
-    
+
     current_props = get_in_path(socket.assigns.schema, props_path) || %{}
     new_props = Map.delete(current_props, key)
-    
+
     schema = put_in_path(socket.assigns.schema, props_path, new_props)
     {:noreply, assign(socket, :schema, schema)}
   end
 
   # Rename a property key
-  def handle_event("rename_property", %{"path" => path_json, "old_key" => old_key, "value" => new_key}, socket) do
+  def handle_event(
+        "rename_property",
+        %{"path" => path_json, "old_key" => old_key, "value" => new_key},
+        socket
+      ) do
     new_key = String.trim(new_key)
+
     if new_key == "" or new_key == old_key do
       {:noreply, socket}
     else
       path = JSON.decode!(path_json)
       props_path = path ++ ["properties"]
-      
+
       current_props = get_in_path(socket.assigns.schema, props_path) || %{}
-      
+
       # Check if new key already exists
       if Map.has_key?(current_props, new_key) do
         {:noreply, socket}
       else
         {value, remaining} = Map.pop(current_props, old_key)
         new_props = Map.put(remaining, new_key, value)
-        
+
         schema = put_in_path(socket.assigns.schema, props_path, new_props)
         {:noreply, assign(socket, :schema, schema)}
       end
@@ -79,16 +87,21 @@ defmodule JSONSchemaEditor do
     if socket.assigns[:on_save] do
       socket.assigns.on_save.(socket.assigns.schema)
     end
+
     {:noreply, socket}
   end
 
   # Helper: get value at path in nested map
   defp get_in_path(data, []), do: data
-  defp get_in_path(data, [key | rest]) when is_map(data), do: get_in_path(Map.get(data, key), rest)
+
+  defp get_in_path(data, [key | rest]) when is_map(data),
+    do: get_in_path(Map.get(data, key), rest)
+
   defp get_in_path(_, _), do: nil
 
   # Helper: put value at path in nested map
   defp put_in_path(_data, [], value), do: value
+
   defp put_in_path(data, [key | rest], value) when is_map(data) do
     Map.put(data, key, put_in_path(Map.get(data, key, %{}), rest, value))
   end
@@ -96,6 +109,7 @@ defmodule JSONSchemaEditor do
   # Helper: generate a unique key
   defp generate_unique_key(existing_map, base_name, counter \\ 1) do
     key = if counter == 1, do: base_name, else: "#{base_name}_#{counter}"
+
     if Map.has_key?(existing_map, key) do
       generate_unique_key(existing_map, base_name, counter + 1)
     else
@@ -328,7 +342,7 @@ defmodule JSONSchemaEditor do
       font-size: 0.875rem;
       cursor: pointer;
     }
-    
+
     .type-select:focus {
       outline: 2px solid var(--primary-color);
       border-color: transparent;
@@ -346,7 +360,7 @@ defmodule JSONSchemaEditor do
       gap: 0.5rem;
       align-items: flex-start;
     }
-    
+
     .property-content {
       flex: 1;
       display: flex;
@@ -372,12 +386,12 @@ defmodule JSONSchemaEditor do
       color: inherit;
       font-family: inherit;
     }
-    
+
     .property-key-input:hover {
       border-color: var(--border-color);
       background-color: var(--secondary-bg);
     }
-    
+
     .property-key-input:focus {
       outline: none;
       border-color: var(--primary-color);
@@ -418,15 +432,14 @@ defmodule JSONSchemaEditor do
       background-color: #e0e7ff;
       color: var(--primary-color);
     }
-    
+
     .group:hover .btn-delete {
       opacity: 1;
     }
-    
+
     .type-form {
       display: inline-block;
     }
     """
   end
-
 end
