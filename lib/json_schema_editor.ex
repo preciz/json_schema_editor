@@ -119,41 +119,18 @@ defmodule JSONSchemaEditor do
   end
 
   def handle_event("change_title", %{"path" => path_json, "value" => title}, socket) do
-    path = JSON.decode!(path_json)
-    title = String.trim(title)
-
-    schema =
-      SchemaUtils.update_in_path(socket.assigns.schema, path, fn node ->
-        if title == "" do
-          Map.delete(node, "title")
-        else
-          Map.put(node, "title", title)
-        end
-      end)
-
-    {:noreply, assign(socket, :schema, schema)}
+    update_node_field(socket, path_json, "title", title)
   end
 
   def handle_event("change_description", %{"path" => path_json, "value" => description}, socket) do
-    path = JSON.decode!(path_json)
-    description = String.trim(description)
-
-    schema =
-      SchemaUtils.update_in_path(socket.assigns.schema, path, fn node ->
-        if description == "" do
-          Map.delete(node, "description")
-        else
-          Map.put(node, "description", description)
-        end
-      end)
-
-    {:noreply, assign(socket, :schema, schema)}
+    update_node_field(socket, path_json, "description", description)
   end
 
   def handle_event("toggle_description", %{"path" => path_json}, socket) do
     ui_state = socket.assigns.ui_state
-    new_expanded = !Map.get(ui_state, "expanded_description:#{path_json}", false)
-    ui_state = Map.put(ui_state, "expanded_description:#{path_json}", new_expanded)
+    key = "expanded_description:#{path_json}"
+    new_expanded = !Map.get(ui_state, key, false)
+    ui_state = Map.put(ui_state, key, new_expanded)
 
     {:noreply, assign(socket, :ui_state, ui_state)}
   end
@@ -164,6 +141,22 @@ defmodule JSONSchemaEditor do
     end
 
     {:noreply, socket}
+  end
+
+  defp update_node_field(socket, path_json, field, value) do
+    path = JSON.decode!(path_json)
+    value = String.trim(value)
+
+    schema =
+      SchemaUtils.update_in_path(socket.assigns.schema, path, fn node ->
+        if value == "" do
+          Map.delete(node, field)
+        else
+          Map.put(node, field, value)
+        end
+      end)
+
+    {:noreply, assign(socket, :schema, schema)}
   end
 
   attr(:class, :string, default: nil)
@@ -235,12 +228,7 @@ defmodule JSONSchemaEditor do
           </button>
         </div>
 
-        <.render_node
-          node={@schema}
-          path={[]}
-          ui_state={@ui_state}
-          myself={@myself}
-        />
+        <.render_node node={@schema} path={[]} ui_state={@ui_state} myself={@myself} />
       </div>
     </div>
     """
@@ -364,18 +352,19 @@ defmodule JSONSchemaEditor do
                       checked={key in Map.get(@node, "required", [])}
                       phx-click="toggle_required"
                       phx-value-path={JSON.encode!(@path)}
-                                          phx-value-key={key}
-                                          phx-target={@myself}
-                                        />
-                                        <span class="jse-required-text">Req</span>
-                                      </label>
-                                      <.render_node
-                                        node={val}
-                                        path={@path ++ ["properties", key]}
-                                        ui_state={@ui_state}
-                                        myself={@myself}
-                                      />
-                                    </div>              </div>
+                      phx-value-key={key}
+                      phx-target={@myself}
+                    />
+                    <span class="jse-required-text">Req</span>
+                  </label>
+                  <.render_node
+                    node={val}
+                    path={@path ++ ["properties", key]}
+                    ui_state={@ui_state}
+                    myself={@myself}
+                  />
+                </div>
+              </div>
             </div>
           <% end %>
 
