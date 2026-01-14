@@ -1,6 +1,6 @@
 Mix.install([
   {:phoenix_playground, "~> 0.1.1"},
-  {:json_schema_editor_lib, path: Path.expand("../json_schema_editor", __DIR__)}
+  {:json_schema_editor_lib, path: Path.expand("..", __DIR__)}
 ])
 
 defmodule Demo do
