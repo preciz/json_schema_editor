@@ -135,6 +135,17 @@ defmodule JSONSchemaEditor do
     {:noreply, assign(socket, :schema, schema)}
   end
 
+  def handle_event("toggle_description", %{"path" => path_json}, socket) do
+    path = JSON.decode!(path_json)
+    node = get_in_path(socket.assigns.schema, path)
+
+    new_expanded = !Map.get(node, "expanded_description", false)
+    new_node = Map.put(node, "expanded_description", new_expanded)
+
+    schema = put_in_path(socket.assigns.schema, path, new_node)
+    {:noreply, assign(socket, :schema, schema)}
+  end
+
   def handle_event("save", _params, socket) do
     if socket.assigns[:on_save] do
       socket.assigns.on_save.(socket.assigns.schema)
@@ -210,15 +221,53 @@ defmodule JSONSchemaEditor do
           </select>
         </form>
 
-        <input
-          type="text"
-          value={Map.get(@node, "description", "")}
-          placeholder="Description..."
-          class="description-input"
-          phx-blur="change_description"
-          phx-target={@myself}
-          phx-value-path={JSON.encode!(@path)}
-        />
+        <div class="description-container">
+          <%= if Map.get(@node, "expanded_description", false) do %>
+            <div class="description-expanded">
+              <textarea
+                class="description-textarea"
+                placeholder="Description..."
+                phx-blur="change_description"
+                phx-target={@myself}
+                phx-value-path={JSON.encode!(@path)}
+              ><%= Map.get(@node, "description", "") %></textarea>
+              <button
+                class="btn-icon btn-sm"
+                phx-click="toggle_description"
+                phx-target={@myself}
+                phx-value-path={JSON.encode!(@path)}
+                title="Collapse Description"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="icon-sm">
+                  <path fill-rule="evenodd" d="M14.77 12.79a.75.75 0 01-1.06-.02L10 8.832 6.29 12.77a.75.75 0 11-1.08-1.04l4.25-4.5a.75.75 0 011.08 0l4.25 4.5a.75.75 0 01-.02 1.06z" clip-rule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          <% else %>
+            <div class="description-collapsed">
+              <input
+                type="text"
+                value={Map.get(@node, "description", "")}
+                placeholder="Description..."
+                class="description-input"
+                phx-blur="change_description"
+                phx-target={@myself}
+                phx-value-path={JSON.encode!(@path)}
+              />
+              <button
+                class="btn-icon btn-sm"
+                phx-click="toggle_description"
+                phx-target={@myself}
+                phx-value-path={JSON.encode!(@path)}
+                title="Expand Description"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="icon-sm">
+                   <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          <% end %>
+        </div>
       </div>
 
       <%= if Map.get(@node, "type") == "object" do %>
@@ -417,6 +466,17 @@ defmodule JSONSchemaEditor do
       border-color: transparent;
     }
 
+    .description-container {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .description-collapsed, .description-expanded {
+      display: flex;
+      gap: 0.5rem;
+      align-items: flex-start;
+    }
+
     .description-input {
       flex: 1;
       font-size: 0.8125rem;
@@ -429,8 +489,25 @@ defmodule JSONSchemaEditor do
       transition: opacity 0.2s, border-color 0.2s;
     }
 
-    .description-input:hover,
-    .description-input:focus {
+    .description-textarea {
+      flex: 1;
+      font-family: inherit;
+      font-size: 0.8125rem;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      background-color: var(--bg-color);
+      color: inherit;
+      min-height: 4rem;
+      resize: vertical;
+    }
+
+    .description-textarea:focus {
+      outline: 2px solid var(--primary-color);
+      border-color: transparent;
+    }
+
+    .description-input:hover, .description-input:focus {
       opacity: 1;
       border-color: var(--primary-color);
     }

@@ -122,4 +122,35 @@ defmodule JSONSchemaEditorTest do
 
     refute Map.has_key?(socket.assigns.schema, "description")
   end
+
+  test "toggles description visibility" do
+    assigns = %{
+      id: "test",
+      schema: %{"type" => "string"}
+    }
+
+    {:ok, socket} = JSONSchemaEditor.update(assigns, %Phoenix.LiveView.Socket{})
+
+    path_json = JSON.encode!([])
+
+    # Toggle open
+    {:noreply, socket} =
+      JSONSchemaEditor.handle_event(
+        "toggle_description",
+        %{"path" => path_json},
+        socket
+      )
+
+    assert socket.assigns.schema["expanded_description"] == true
+
+    # Toggle closed
+    {:noreply, socket} =
+      JSONSchemaEditor.handle_event(
+        "toggle_description",
+        %{"path" => path_json},
+        socket
+      )
+
+    assert socket.assigns.schema["expanded_description"] == false
+  end
 end
