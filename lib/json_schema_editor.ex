@@ -6,12 +6,9 @@ defmodule JSONSchemaEditor do
   def update(assigns, socket) do
     socket =
       socket
-      |> assign(:id, assigns.id)
-      |> assign(:on_save, assigns[:on_save])
+      |> assign(assigns)
       |> assign_new(:ui_state, fn -> %{} end)
-      |> assign_new(:schema, fn ->
-        assigns[:schema] || %{"type" => "object", "properties" => %{}}
-      end)
+      |> assign_new(:schema, fn -> %{"type" => "object", "properties" => %{}} end)
 
     {:ok, socket}
   end
@@ -154,7 +151,7 @@ defmodule JSONSchemaEditor do
 
     schema =
       SchemaUtils.update_in_path(socket.assigns.schema, path, fn node ->
-        if casted_value == nil or casted_value == "" do
+        if casted_value in [nil, "", false] do
           Map.delete(node, field)
         else
           Map.put(node, field, casted_value)

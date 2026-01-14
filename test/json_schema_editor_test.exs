@@ -1,222 +1,236 @@
 defmodule JSONSchemaEditorTest do
   use ExUnit.Case, async: true
+  import Phoenix.LiveViewTest
   alias JSONSchemaEditor
 
-  test "update/2 initializes schema" do
-    assigns = %{id: "test", schema: %{"type" => "object"}}
-    {:ok, socket} = JSONSchemaEditor.update(assigns, %Phoenix.LiveView.Socket{})
-    assert socket.assigns.schema == %{"type" => "object"}
+  defp setup_socket(schema \\ %{"type" => "object", "properties" => %{}}) do
+    %Phoenix.LiveView.Socket{
+      assigns: %{
+        id: "test",
+        schema: schema,
+        ui_state: %{},
+        __changed__: %{},
+        on_save: nil
+      }
+    }
   end
 
-  test "initializes default schema" do
+  test "renders the component" do
+    html = render_component(JSONSchemaEditor, id: "jse", schema: %{"type" => "object", "title" => "Test Schema"})
+    assert html =~ "jse-container"
+    assert html =~ "Test Schema"
+    assert html =~ "Schema Root"
+  end
+
+  test "renders with different types and states" do
+    # Object with properties
+    schema = %{
+      "type" => "object",
+      "properties" => %{"name" => %{"type" => "string"}},
+      "required" => ["name"]
+    }
+    html = render_component(JSONSchemaEditor, id: "jse", schema: schema)
+    assert html =~ "name"
+    assert html =~ "Req"
+
+    # String with expanded constraints
+    path_json = JSON.encode!([])
+    ui_state = %{"expanded_constraints:#{path_json}" => true}
+    html = render_component(JSONSchemaEditor, id: "jse", schema: %{"type" => "string"}, ui_state: ui_state)
+    assert html =~ "Min Length"
+    assert html =~ "Pattern"
+
+    # Number with expanded constraints
+    html = render_component(JSONSchemaEditor, id: "jse", schema: %{"type" => "number"}, ui_state: ui_state)
+    assert html =~ "Minimum"
+    assert html =~ "Multiple Of"
+
+    # Array with expanded constraints
+    html = render_component(JSONSchemaEditor, id: "jse", schema: %{"type" => "array"}, ui_state: ui_state)
+    assert html =~ "Min Items"
+    assert html =~ "Unique Items"
+
+    # Object with expanded constraints
+    html = render_component(JSONSchemaEditor, id: "jse", schema: %{"type" => "object"}, ui_state: ui_state)
+    assert html =~ "Min Props"
+
+    # Expanded description
+    ui_state = %{"expanded_description:#{path_json}" => true}
+    html = render_component(JSONSchemaEditor, id: "jse", schema: %{"type" => "string", "description" => "Long desc"}, ui_state: ui_state)
+    assert html =~ "textarea"
+    assert html =~ "Long desc"
+  end
+
+  test "update/2 initializes schema and defaults" do
     assigns = %{id: "test"}
     {:ok, socket} = JSONSchemaEditor.update(assigns, %Phoenix.LiveView.Socket{})
     assert socket.assigns.schema == %{"type" => "object", "properties" => %{}}
+    assert socket.assigns.ui_state == %{}
+
+    assigns = %{id: "test", schema: %{"type" => "string"}}
+    {:ok, socket} = JSONSchemaEditor.update(assigns, %Phoenix.LiveView.Socket{})
+    assert socket.assigns.schema == %{"type" => "string"}
   end
 
-  test "updates title" do
-    assigns = %{
-      id: "test",
-      schema: %{"type" => "string"}
-    }
-
-    {:ok, socket} = JSONSchemaEditor.update(assigns, %Phoenix.LiveView.Socket{})
-
+  test "handle_event change_type" do
+    socket = setup_socket()
     path_json = JSON.encode!([])
 
-    {:noreply, socket} =
-      JSONSchemaEditor.handle_event(
-        "change_title",
-        %{"path" => path_json, "value" => "  User Name  "},
-        socket
-      )
+    # To object
+    {:noreply, socket} = JSONSchemaEditor.handle_event("change_type", %{"path" => path_json, "type" => "object"}, socket)
+    assert socket.assigns.schema["type"] == "object"
+    assert is_map(socket.assigns.schema["properties"])
 
-    assert socket.assigns.schema["title"] == "User Name"
+    # To array
+    {:noreply, socket} = JSONSchemaEditor.handle_event("change_type", %{"path" => path_json, "type" => "array"}, socket)
+    assert socket.assigns.schema["type"] == "array"
+    assert socket.assigns.schema["items"] == %{"type" => "string"}
+
+    # To string
+    {:noreply, socket} = JSONSchemaEditor.handle_event("change_type", %{"path" => path_json, "type" => "string"}, socket)
+    assert socket.assigns.schema == %{"type" => "string"}
   end
 
-  test "toggles required field" do
-    assigns = %{
-      id: "test",
-      schema: %{
-        "type" => "object",
-        "properties" => %{"name" => %{"type" => "string"}}
-      }
-    }
-
-    {:ok, socket} = JSONSchemaEditor.update(assigns, %Phoenix.LiveView.Socket{})
-
-    # Toggle on
+  test "handle_event add_property" do
+    socket = setup_socket()
     path_json = JSON.encode!([])
 
-    {:noreply, socket} =
-      JSONSchemaEditor.handle_event(
-        "toggle_required",
-        %{"path" => path_json, "key" => "name"},
-        socket
-      )
+    {:noreply, socket} = JSONSchemaEditor.handle_event("add_property", %{"path" => path_json}, socket)
+    assert Map.has_key?(socket.assigns.schema["properties"], "new_field")
+    
+    # Add another
+    {:noreply, socket} = JSONSchemaEditor.handle_event("add_property", %{"path" => path_json}, socket)
+    assert Map.has_key?(socket.assigns.schema["properties"], "new_field_2")
+  end
 
+  test "handle_event delete_property" do
+    schema = %{
+      "type" => "object",
+      "properties" => %{"name" => %{"type" => "string"}},
+      "required" => ["name"]
+    }
+    socket = setup_socket(schema)
+    path_json = JSON.encode!([])
+
+    {:noreply, socket} = JSONSchemaEditor.handle_event("delete_property", %{"path" => path_json, "key" => "name"}, socket)
+    assert socket.assigns.schema["properties"] == %{}
+    assert socket.assigns.schema["required"] == []
+  end
+
+  test "handle_event toggle_required" do
+    schema = %{"type" => "object", "properties" => %{"name" => %{"type" => "string"}}}
+    socket = setup_socket(schema)
+    path_json = JSON.encode!([])
+
+    # On
+    {:noreply, socket} = JSONSchemaEditor.handle_event("toggle_required", %{"path" => path_json, "key" => "name"}, socket)
     assert socket.assigns.schema["required"] == ["name"]
 
-    # Toggle off
-    {:noreply, socket} =
-      JSONSchemaEditor.handle_event(
-        "toggle_required",
-        %{"path" => path_json, "key" => "name"},
-        socket
-      )
-
+    # Off
+    {:noreply, socket} = JSONSchemaEditor.handle_event("toggle_required", %{"path" => path_json, "key" => "name"}, socket)
     assert socket.assigns.schema["required"] == []
   end
 
-  test "renaming property updates required list" do
-    assigns = %{
-      id: "test",
-      schema: %{
-        "type" => "object",
-        "properties" => %{"old_name" => %{"type" => "string"}},
-        "required" => ["old_name"]
-      }
+  test "handle_event rename_property" do
+    schema = %{
+      "type" => "object",
+      "properties" => %{"a" => %{"type" => "string"}},
+      "required" => ["a"]
     }
-
-    {:ok, socket} = JSONSchemaEditor.update(assigns, %Phoenix.LiveView.Socket{})
-
+    socket = setup_socket(schema)
     path_json = JSON.encode!([])
 
-    {:noreply, socket} =
-      JSONSchemaEditor.handle_event(
-        "rename_property",
-        %{"path" => path_json, "old_key" => "old_name", "value" => "new_name"},
-        socket
-      )
+    # Normal rename
+    {:noreply, socket} = JSONSchemaEditor.handle_event("rename_property", %{"path" => path_json, "old_key" => "a", "value" => "b"}, socket)
+    assert Map.has_key?(socket.assigns.schema["properties"], "b")
+    refute Map.has_key?(socket.assigns.schema["properties"], "a")
+    assert socket.assigns.schema["required"] == ["b"]
 
-    assert socket.assigns.schema["properties"]["new_name"]
-    refute socket.assigns.schema["properties"]["old_name"]
-    assert socket.assigns.schema["required"] == ["new_name"]
+    # Rename to existing (no-op)
+    socket = setup_socket(%{"type" => "object", "properties" => %{"a" => %{}, "b" => %{}}})
+    {:noreply, socket} = JSONSchemaEditor.handle_event("rename_property", %{"path" => path_json, "old_key" => "a", "value" => "b"}, socket)
+    assert Map.has_key?(socket.assigns.schema["properties"], "a")
+
+    # Rename to empty (no-op)
+    {:noreply, socket} = JSONSchemaEditor.handle_event("rename_property", %{"path" => path_json, "old_key" => "a", "value" => " "}, socket)
+    assert Map.has_key?(socket.assigns.schema["properties"], "a")
   end
 
-  test "deleting property removes from required list" do
-    assigns = %{
-      id: "test",
-      schema: %{
-        "type" => "object",
-        "properties" => %{"name" => %{"type" => "string"}},
-        "required" => ["name"]
-      }
-    }
-
-    {:ok, socket} = JSONSchemaEditor.update(assigns, %Phoenix.LiveView.Socket{})
-
+  test "handle_event change_title and change_description" do
+    socket = setup_socket()
     path_json = JSON.encode!([])
 
-    {:noreply, socket} =
-      JSONSchemaEditor.handle_event(
-        "delete_property",
-        %{"path" => path_json, "key" => "name"},
-        socket
-      )
+    {:noreply, socket} = JSONSchemaEditor.handle_event("change_title", %{"path" => path_json, "value" => "Hello"}, socket)
+    assert socket.assigns.schema["title"] == "Hello"
 
-    refute socket.assigns.schema["properties"]["name"]
-    assert socket.assigns.schema["required"] == []
+    {:noreply, socket} = JSONSchemaEditor.handle_event("change_description", %{"path" => path_json, "value" => "World"}, socket)
+    assert socket.assigns.schema["description"] == "World"
+
+    # Clearing
+    {:noreply, socket} = JSONSchemaEditor.handle_event("change_title", %{"path" => path_json, "value" => ""}, socket)
+    refute Map.has_key?(socket.assigns.schema, "title")
   end
 
-  test "updates description" do
-    assigns = %{
-      id: "test",
-      schema: %{"type" => "string"}
-    }
-
-    {:ok, socket} = JSONSchemaEditor.update(assigns, %Phoenix.LiveView.Socket{})
-
+  test "handle_event toggle visibility flags" do
+    socket = setup_socket()
     path_json = JSON.encode!([])
 
-    {:noreply, socket} =
-      JSONSchemaEditor.handle_event(
-        "change_description",
-        %{"path" => path_json, "value" => "  A nice field  "},
-        socket
-      )
+    {:noreply, socket} = JSONSchemaEditor.handle_event("toggle_description", %{"path" => path_json}, socket)
+    assert socket.assigns.ui_state["expanded_description:#{path_json}"]
 
-    assert socket.assigns.schema["description"] == "A nice field"
-
-    # Clear description
-    {:noreply, socket} =
-      JSONSchemaEditor.handle_event(
-        "change_description",
-        %{"path" => path_json, "value" => ""},
-        socket
-      )
-
-    refute Map.has_key?(socket.assigns.schema, "description")
+    {:noreply, socket} = JSONSchemaEditor.handle_event("toggle_constraints", %{"path" => path_json}, socket)
+    assert socket.assigns.ui_state["expanded_constraints:#{path_json}"]
   end
 
-  test "toggles description visibility" do
-    assigns = %{
-      id: "test",
-      schema: %{"type" => "string"}
-    }
-
-    {:ok, socket} = JSONSchemaEditor.update(assigns, %Phoenix.LiveView.Socket{})
-
+  test "handle_event update_constraint" do
+    socket = setup_socket(%{"type" => "string"})
     path_json = JSON.encode!([])
 
-    # Toggle open
-    {:noreply, socket} =
-      JSONSchemaEditor.handle_event(
-        "toggle_description",
-        %{"path" => path_json},
-        socket
-      )
+    # Integer
+    {:noreply, socket} = JSONSchemaEditor.handle_event("update_constraint", %{"path" => path_json, "field" => "minLength", "value" => "10"}, socket)
+    assert socket.assigns.schema["minLength"] == 10
 
-    assert socket.assigns.ui_state["expanded_description:#{path_json}"] == true
+    # Float
+    socket = setup_socket(%{"type" => "number"})
+    {:noreply, socket} = JSONSchemaEditor.handle_event("update_constraint", %{"path" => path_json, "field" => "minimum", "value" => "1.5"}, socket)
+    assert socket.assigns.schema["minimum"] == 1.5
 
-    # Toggle closed
-    {:noreply, socket} =
-      JSONSchemaEditor.handle_event(
-        "toggle_description",
-        %{"path" => path_json},
-        socket
-      )
+    # Boolean
+    socket = setup_socket(%{"type" => "array"})
+    {:noreply, socket} = JSONSchemaEditor.handle_event("update_constraint", %{"path" => path_json, "field" => "uniqueItems", "value" => "true"}, socket)
+    assert socket.assigns.schema["uniqueItems"] == true
 
-    assert socket.assigns.ui_state["expanded_description:#{path_json}"] == false
-  end
+    # Clearing
+    {:noreply, socket} = JSONSchemaEditor.handle_event("update_constraint", %{"path" => path_json, "field" => "uniqueItems", "value" => ""}, socket)
+    refute Map.has_key?(socket.assigns.schema, "uniqueItems")
 
-  test "updates validation constraints" do
-    socket = %Phoenix.LiveView.Socket{
-      assigns: %{
-        schema: %{"type" => "string"},
-        id: "test",
-        ui_state: %{},
-        __changed__: %{}
-      }
-    }
+    # Unknown field (default case in cast)
+    {:noreply, socket} = JSONSchemaEditor.handle_event("update_constraint", %{"path" => path_json, "field" => "unknown", "value" => "foo"}, socket)
+    assert socket.assigns.schema["unknown"] == "foo"
 
-    path_json = JSON.encode!([])
-
-    {:noreply, socket} =
-      JSONSchemaEditor.handle_event(
-        "update_constraint",
-        %{"path" => path_json, "field" => "minLength", "value" => "5"},
-        socket
-      )
-
-    assert socket.assigns.schema["minLength"] == 5
-
-    {:noreply, socket} =
-      JSONSchemaEditor.handle_event(
-        "update_constraint",
-        %{"path" => path_json, "field" => "pattern", "value" => "^[a-z]+$"},
-        socket
-      )
-
-    assert socket.assigns.schema["pattern"] == "^[a-z]+$"
-
-    {:noreply, socket} =
-      JSONSchemaEditor.handle_event(
-        "update_constraint",
-        %{"path" => path_json, "field" => "minLength", "value" => ""},
-        socket
-      )
-
+    # Invalid number (Integer.parse failure)
+    {:noreply, socket} = JSONSchemaEditor.handle_event("update_constraint", %{"path" => path_json, "field" => "minLength", "value" => "abc"}, socket)
     refute Map.has_key?(socket.assigns.schema, "minLength")
+
+    # Invalid float (Float.parse failure)
+    {:noreply, socket} = JSONSchemaEditor.handle_event("update_constraint", %{"path" => path_json, "field" => "minimum", "value" => "abc"}, socket)
+    refute Map.has_key?(socket.assigns.schema, "minimum")
+  end
+
+  test "handle_event rename_property edge cases" do
+    socket = setup_socket(%{"type" => "object", "properties" => %{"a" => %{}}})
+    path_json = JSON.encode!([])
+
+    # Rename to same key (should be no-reply socket unchanged)
+    {:noreply, ^socket} = JSONSchemaEditor.handle_event("rename_property", %{"path" => path_json, "old_key" => "a", "value" => "a"}, socket)
+  end
+
+  test "handle_event save" do
+    parent = self()
+    on_save = fn schema -> send(parent, {:saved, schema}) end
+    socket = %Phoenix.LiveView.Socket{assigns: %{schema: %{"type" => "string"}, on_save: on_save}}
+    
+    {:noreply, _socket} = JSONSchemaEditor.handle_event("save", %{}, socket)
+    assert_receive {:saved, %{"type" => "string"}}
   end
 end
