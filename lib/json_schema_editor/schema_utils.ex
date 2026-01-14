@@ -1,0 +1,38 @@
+defmodule JSONSchemaEditor.SchemaUtils do
+  @moduledoc """
+  Helper functions for manipulating nested JSON Schema maps.
+  """
+
+  @doc """
+  Gets the value at a given path in a nested map.
+  """
+  def get_in_path(data, []), do: data
+
+  def get_in_path(data, [key | rest]) when is_map(data),
+    do: get_in_path(Map.get(data, key), rest)
+
+  def get_in_path(_, _), do: nil
+
+  @doc """
+  Puts a value at a given path in a nested map, creating intermediate maps if necessary.
+  """
+  def put_in_path(_data, [], value), do: value
+
+  def put_in_path(data, [key | rest], value) when is_map(data) or is_nil(data) do
+    data = data || %{}
+    Map.put(data, key, put_in_path(Map.get(data, key, %{}), rest, value))
+  end
+
+  @doc """
+  Generates a unique key in a map by appending a counter to a base name.
+  """
+  def generate_unique_key(existing_map, base_name, counter \\ 1) do
+    key = if counter == 1, do: base_name, else: "#{base_name}_#{counter}"
+
+    if Map.has_key?(existing_map, key) do
+      generate_unique_key(existing_map, base_name, counter + 1)
+    else
+      key
+    end
+  end
+end
