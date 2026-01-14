@@ -27,36 +27,11 @@ end
 
 ### Asset Integration
 
-This library uses Tailwind CSS and a small JavaScript hook for clipboard functionality.
+This library uses a small CSS file for styling and a JavaScript hook for clipboard functionality.
 
 #### 1. Configure CSS
 
-**For Tailwind v4:**
-Add the following to your `app.css`:
-
-```css
-@import "tailwindcss";
-@import "../../deps/json_schema_editor/assets/css/json_schema_editor.css";
-
-/* Ensure Tailwind scans the library for classes */
-@source "../../deps/json_schema_editor/lib/**/*.ex";
-```
-
-**For Tailwind v3:**
-Update your `tailwind.config.js`:
-
-```javascript
-module.exports = {
-  content: [
-    "./js/**/*.js",
-    "../lib/*_web/**/*.*ex",
-    "../deps/json_schema_editor/lib/**/*.ex" // Add this line
-  ],
-  // ...
-}
-```
-
-And import the CSS in your `app.css`:
+Import the library's CSS in your `assets/css/app.css` (or equivalent):
 
 ```css
 @import "../../deps/json_schema_editor/assets/css/json_schema_editor.css";
