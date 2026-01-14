@@ -26,23 +26,86 @@ defmodule JSONSchemaEditor.Styles do
     }
 
     .jse-container {
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      border: 1px solid var(--border-color);
-      border-radius: 0.75rem;
-      padding: 1.5rem;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-      transition: all 0.3s;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
     }
 
-    .jse-header {
+    @media (min-width: 1024px) {
+      .jse-main-layout {
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        gap: 2rem;
+        align-items: start;
+      }
+    }
+
+    .jse-preview-panel {
+      position: sticky;
+      top: 1rem;
+      background-color: #1e293b;
+      border-radius: 0.75rem;
+      border: 1px solid #334155;
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 2rem);
+    }
+
+    .jse-preview-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 1.5rem;
-      padding-bottom: 1rem;
-      border-bottom: 1px solid var(--border-color);
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #334155;
+      color: #f8fafc;
+      font-weight: 600;
+      font-size: 0.875rem;
     }
+
+    .jse-preview-content {
+      padding: 1rem;
+      overflow: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.75rem;
+      line-height: 1.5;
+      color: #e2e8f0;
+    }
+
+    .jse-code-block {
+      white-space: pre-wrap;
+      word-break: break-all;
+      margin: 0;
+    }
+
+    .jse-btn-copy {
+      background-color: #334155;
+      color: #f8fafc;
+      border: 1px solid #475569;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.375rem;
+      font-size: 0.75rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      transition: all 0.2s;
+    }
+
+    .jse-btn-copy:hover {
+      background-color: #475569;
+    }
+
+    .jse-btn-copy:active {
+      transform: scale(0.95);
+    }
+
+    .jse-btn-copy.jse-copied {
+      background-color: #059669;
+      border-color: #10b981;
+    }
+
+    .jse-header {
+
 
     .jse-badge {
       padding: 0.25rem 0.625rem;

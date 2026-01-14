@@ -516,15 +516,44 @@ defmodule JSONSchemaEditor do
           </button>
         </div>
 
-        <.render_node
-          node={@schema}
-          path={[]}
-          ui_state={@ui_state}
-          validation_errors={@validation_errors}
-          types={@types}
-          logic_types={@logic_types}
-          myself={@myself}
-        />
+        <div class="jse-main-layout">
+          <div class="jse-editor-pane">
+            <.render_node
+              node={@schema}
+              path={[]}
+              ui_state={@ui_state}
+              validation_errors={@validation_errors}
+              types={@types}
+              logic_types={@logic_types}
+              myself={@myself}
+            />
+          </div>
+
+          <div class="jse-preview-panel">
+            <div class="jse-preview-header">
+              <span>JSON Schema Preview</span>
+              <button
+                class="jse-btn-copy"
+                onclick={"navigator.clipboard.writeText(this.getAttribute('data-content')).then(() => { 
+                  this.classList.add('jse-copied'); 
+                  const span = this.querySelector('span');
+                  const oldText = span.innerText;
+                  span.innerText = 'Copied!';
+                  setTimeout(() => { 
+                    this.classList.remove('jse-copied'); 
+                    span.innerText = oldText;
+                  }, 2000); 
+                })"}
+                data-content={JSON.encode!(@schema)}
+              >
+                <span>Copy</span>
+              </button>
+            </div>
+            <div class="jse-preview-content">
+              <pre class="jse-code-block"><code><%= JSON.encode!(@schema) %></code></pre>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     """

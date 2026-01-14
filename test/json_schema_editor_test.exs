@@ -118,7 +118,13 @@ defmodule JSONSchemaEditorTest do
     ui_state = %{"collapsed_node:#{path_json}" => true}
     html = render_component(JSONSchemaEditor, id: "jse", schema: schema, ui_state: ui_state)
     assert html =~ "jse-collapsed"
-    refute html =~ "hidden_field"
+    
+    # Check that it's hidden in the editor pane specifically
+    # The editor pane uses jse-editor-pane class
+    [editor_pane | _] = String.split(html, "jse-preview-panel")
+    refute editor_pane =~ "hidden_field"
+    # But it IS in the preview
+    assert html =~ "hidden_field"
 
     # Logic composition rendering
     schema = %{"oneOf" => [%{"type" => "string"}, %{"type" => "number"}]}
@@ -139,6 +145,11 @@ defmodule JSONSchemaEditorTest do
     schema = %{"type" => "array", "items" => %{"type" => "string"}}
     html = render_component(JSONSchemaEditor, id: "jse", schema: schema)
     assert html =~ "jse-badge-info"
+
+    # Preview panel rendering
+    assert html =~ "JSON Schema Preview"
+    assert html =~ "jse-code-block"
+    assert html =~ "jse-btn-copy"
   end
 
   test "renders badge with custom class" do
