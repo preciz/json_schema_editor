@@ -1,8 +1,10 @@
-defmodule JsonSchemaEditorTest do
-  use ExUnit.Case
-  doctest JsonSchemaEditor
+defmodule JSONSchemaEditorTest do
+  use ExUnit.Case, async: true
+  alias JSONSchemaEditor
 
-  test "greets the world" do
-    assert JsonSchemaEditor.hello() == :world
+  test "update/2 initializes schema" do
+    assigns = %{id: "test", schema: %{"type" => "object"}}
+    {:ok, socket} = JSONSchemaEditor.update(assigns, %Phoenix.LiveView.Socket{})
+    assert socket.assigns.schema == %{"type" => "object"}
   end
 end

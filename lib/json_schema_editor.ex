@@ -13,7 +13,6 @@ defmodule JSONSchemaEditor do
     {:ok, socket}
   end
 
-  # Change the type of a node at a given path
   def handle_event("change_type", %{"path" => path_json, "type" => new_type}, socket) do
     path = JSON.decode!(path_json)
 
@@ -28,7 +27,6 @@ defmodule JSONSchemaEditor do
     {:noreply, assign(socket, :schema, schema)}
   end
 
-  # Add a new property to an object
   def handle_event("add_property", %{"path" => path_json}, socket) do
     path = JSON.decode!(path_json)
     props_path = path ++ ["properties"]
@@ -41,7 +39,6 @@ defmodule JSONSchemaEditor do
     {:noreply, assign(socket, :schema, schema)}
   end
 
-  # Delete a property from an object
   def handle_event("delete_property", %{"path" => path_json, "key" => key}, socket) do
     path = JSON.decode!(path_json)
     props_path = path ++ ["properties"]
@@ -53,7 +50,6 @@ defmodule JSONSchemaEditor do
     {:noreply, assign(socket, :schema, schema)}
   end
 
-  # Rename a property key
   def handle_event(
         "rename_property",
         %{"path" => path_json, "old_key" => old_key, "value" => new_key},
@@ -82,7 +78,6 @@ defmodule JSONSchemaEditor do
     end
   end
 
-  # Save the schema
   def handle_event("save", _params, socket) do
     if socket.assigns[:on_save] do
       socket.assigns.on_save.(socket.assigns.schema)
@@ -91,7 +86,6 @@ defmodule JSONSchemaEditor do
     {:noreply, socket}
   end
 
-  # Helper: get value at path in nested map
   defp get_in_path(data, []), do: data
 
   defp get_in_path(data, [key | rest]) when is_map(data),
@@ -99,14 +93,12 @@ defmodule JSONSchemaEditor do
 
   defp get_in_path(_, _), do: nil
 
-  # Helper: put value at path in nested map
   defp put_in_path(_data, [], value), do: value
 
   defp put_in_path(data, [key | rest], value) when is_map(data) do
     Map.put(data, key, put_in_path(Map.get(data, key, %{}), rest, value))
   end
 
-  # Helper: generate a unique key
   defp generate_unique_key(existing_map, base_name, counter \\ 1) do
     key = if counter == 1, do: base_name, else: "#{base_name}_#{counter}"
 
