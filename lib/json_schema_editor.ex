@@ -206,22 +206,34 @@ defmodule JSONSchemaEditor do
 
   defp render_node(assigns) do
     ~H"""
-    <div class="node-container">
-      <div class="node-header">
-        <span class="type-label">
-          <%= type_label(@node) %>
-        </span>
 
-        <form phx-change="change_type" phx-target={@myself} class="type-form">
-          <input type="hidden" name="path" value={JSON.encode!(@path)} />
-          <select name="type" class="type-select">
-            <%= for type <- ["string", "number", "integer", "boolean", "object", "array"] do %>
-              <option value={type} selected={Map.get(@node, "type") == type}><%= String.capitalize(type) %></option>
-            <% end %>
-          </select>
-        </form>
+      <div class="node-container">
 
-        <div class="description-container">
+        <div class="node-header">
+
+          <form phx-change="change_type" phx-target={@myself} class="type-form">
+
+            <input type="hidden" name="path" value={JSON.encode!(@path)} />
+
+            <select name="type" class="type-select">
+
+              <%= for type <- ["string", "number", "integer", "boolean", "object", "array"] do %>
+
+                <option value={type} selected={Map.get(@node, "type") == type}>
+
+                  <%= String.capitalize(type) %>
+
+                </option>
+
+              <% end %>
+
+            </select>
+
+          </form>
+
+
+
+          <div class="description-container">
           <%= if Map.get(@node, "expanded_description", false) do %>
             <div class="description-expanded">
               <textarea
@@ -335,10 +347,6 @@ defmodule JSONSchemaEditor do
     """
   end
 
-  defp type_label(node) do
-    Map.get(node, "type", "unknown")
-  end
-
   defp styles do
     """
     .json-schema-editor-host {
@@ -440,13 +448,6 @@ defmodule JSONSchemaEditor do
       display: flex;
       align-items: center;
       gap: 0.5rem;
-    }
-
-    .type-label {
-      font-family: monospace;
-      font-size: 0.875rem;
-      font-weight: 500;
-      opacity: 0.8;
     }
 
     .type-select {
