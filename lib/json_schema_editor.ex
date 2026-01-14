@@ -50,13 +50,21 @@ defmodule JSONSchemaEditor do
     socket =
       update_schema(socket, path_json, fn node ->
         # Clean up existing conflicting keys
-        base_node = Map.drop(node, ["type", "properties", "required", "items", "anyOf", "oneOf", "allOf"])
+        base_node =
+          Map.drop(node, ["type", "properties", "required", "items", "anyOf", "oneOf", "allOf"])
 
         case new_type do
-          "object" -> Map.put(base_node, "type", "object") |> Map.put("properties", %{})
-          "array" -> Map.put(base_node, "type", "array") |> Map.put("items", %{"type" => "string"})
-          logic when logic in @logic_types -> Map.put(base_node, logic, [%{"type" => "string"}])
-          _ -> Map.put(base_node, "type", new_type)
+          "object" ->
+            Map.put(base_node, "type", "object") |> Map.put("properties", %{})
+
+          "array" ->
+            Map.put(base_node, "type", "array") |> Map.put("items", %{"type" => "string"})
+
+          logic when logic in @logic_types ->
+            Map.put(base_node, logic, [%{"type" => "string"}])
+
+          _ ->
+            Map.put(base_node, "type", new_type)
         end
       end)
 
@@ -247,7 +255,11 @@ defmodule JSONSchemaEditor do
     {:noreply, socket}
   end
 
-  def handle_event("remove_logic_branch", %{"path" => path_json, "type" => logic_type, "index" => index}, socket) do
+  def handle_event(
+        "remove_logic_branch",
+        %{"path" => path_json, "type" => logic_type, "index" => index},
+        socket
+      ) do
     index = String.to_integer(index)
 
     socket =
@@ -527,9 +539,9 @@ defmodule JSONSchemaEditor do
           <div class="jse-title-badge-container">
             <.badge>Schema Editor</.badge>
           </div>
-          
+
           <div class="jse-tabs">
-            <button 
+            <button
               class={["jse-tab-btn", @active_tab == :editor && "active"]}
               phx-click="switch_tab"
               phx-value-tab="editor"
@@ -537,7 +549,7 @@ defmodule JSONSchemaEditor do
             >
               Visual Editor
             </button>
-            <button 
+            <button
               class={["jse-tab-btn", @active_tab == :preview && "active"]}
               phx-click="switch_tab"
               phx-value-tab="preview"
@@ -580,15 +592,15 @@ defmodule JSONSchemaEditor do
                 <span>Current Schema</span>
                 <button
                   class="jse-btn-copy"
-                  onclick={"navigator.clipboard.writeText(this.getAttribute('data-content')).then(() => { 
-                    this.classList.add('jse-copied'); 
+                  onclick={"navigator.clipboard.writeText(this.getAttribute('data-content')).then(() => {
+                    this.classList.add('jse-copied');
                     const span = this.querySelector('span');
                     const oldText = span.innerText;
                     span.innerText = 'Copied!';
-                    setTimeout(() => { 
-                      this.classList.remove('jse-copied'); 
+                    setTimeout(() => {
+                      this.classList.remove('jse-copied');
                       span.innerText = oldText;
-                    }, 2000); 
+                    }, 2000);
                   })"}
                   data-content={JSON.encode!(@schema)}
                 >

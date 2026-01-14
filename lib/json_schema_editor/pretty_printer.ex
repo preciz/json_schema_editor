@@ -16,10 +16,11 @@ defmodule JSONSchemaEditor.PrettyPrinter do
     else
       indent = String.duplicate(" ", level * @indent_size)
       inner_indent = String.duplicate(" ", (level + 1) * @indent_size)
-      
-      entries = 
+
+      entries =
         data
-        |> Enum.sort_by(fn {k, _v} -> k end) # Sort keys for consistent output
+        # Sort keys for consistent output
+        |> Enum.sort_by(fn {k, _v} -> k end)
         |> Enum.map(fn {k, v} ->
           "#{inner_indent}\"#{k}\": #{do_format(v, level + 1)}"
         end)
@@ -36,7 +37,7 @@ defmodule JSONSchemaEditor.PrettyPrinter do
       indent = String.duplicate(" ", level * @indent_size)
       inner_indent = String.duplicate(" ", (level + 1) * @indent_size)
 
-      items = 
+      items =
         data
         |> Enum.map(fn item ->
           "#{inner_indent}#{do_format(item, level + 1)}"

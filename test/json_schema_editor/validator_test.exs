@@ -60,7 +60,7 @@ defmodule JSONSchemaEditor.ValidatorTest do
 
   test "validate_node format" do
     assert Validator.validate_node(%{"type" => "string", "format" => "email"}) == %{}
-    
+
     assert Validator.validate_node(%{"type" => "number", "format" => "email"}) == %{
              "format" => "Only valid for strings"
            }

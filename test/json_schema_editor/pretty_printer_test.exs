@@ -8,17 +8,21 @@ defmodule JSONSchemaEditor.PrettyPrinterTest do
 
   test "formats simple map" do
     data = %{"a" => 1, "b" => "two"}
-    expected = """
-    {
-      "a": 1,
-      "b": "two"
-    }
-    """ |> String.trim()
-    
+
+    expected =
+      """
+      {
+        "a": 1,
+        "b": "two"
+      }
+      """
+      |> String.trim()
+
     # We trim expected to match potential whitespace handling, 
     # but let's check exact output if possible.
     # The implementation adds indentation.
-    assert String.replace(PrettyPrinter.format(data), ~r/\s+/, "") == String.replace(expected, ~r/\s+/, "")
+    assert String.replace(PrettyPrinter.format(data), ~r/\s+/, "") ==
+             String.replace(expected, ~r/\s+/, "")
   end
 
   test "formats empty list" do
@@ -42,6 +46,7 @@ defmodule JSONSchemaEditor.PrettyPrinterTest do
         %{"nested" => true}
       ]
     }
+
     result = PrettyPrinter.format(data)
     assert result =~ "\"list\": ["
     assert result =~ "\"nested\": true"

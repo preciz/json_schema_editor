@@ -8,27 +8,27 @@ defmodule JSONSchemaEditor.Styles do
     .jse-host {
       display: block;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-      
+
       /* Light Mode Palette */
       --jse-bg: #ffffff;
       --jse-bg-secondary: #f3f4f6; /* Gray 100 */
       --jse-bg-tertiary: #e5e7eb;  /* Gray 200 */
-      
+
       --jse-text-primary: #111827; /* Gray 900 */
       --jse-text-secondary: #4b5563; /* Gray 600 */
       --jse-text-tertiary: #9ca3af; /* Gray 400 */
-      
+
       --jse-border: #e5e7eb; /* Gray 200 */
       --jse-border-focus: #6366f1; /* Indigo 500 */
-      
+
       --jse-primary: #4f46e5; /* Indigo 600 */
       --jse-primary-hover: #4338ca; /* Indigo 700 */
       --jse-primary-text: #ffffff;
-      
+
       --jse-danger: #dc2626; /* Red 600 */
       --jse-danger-bg: #fef2f2; /* Red 50 */
       --jse-danger-border: #fecaca; /* Red 200 */
-      
+
       --jse-success: #059669; /* Emerald 600 */
       --jse-success-bg: #ecfdf5; /* Emerald 50 */
 
@@ -43,21 +43,21 @@ defmodule JSONSchemaEditor.Styles do
         --jse-bg: #111827; /* Gray 900 */
         --jse-bg-secondary: #1f2937; /* Gray 800 */
         --jse-bg-tertiary: #374151;  /* Gray 700 */
-        
+
         --jse-text-primary: #f9fafb; /* Gray 50 */
         --jse-text-secondary: #d1d5db; /* Gray 300 */
         --jse-text-tertiary: #9ca3af; /* Gray 400 */
-        
+
         --jse-border: #374151; /* Gray 700 */
         --jse-border-focus: #818cf8; /* Indigo 400 */
-        
+
         --jse-primary: #6366f1; /* Indigo 500 */
         --jse-primary-hover: #818cf8; /* Indigo 400 */
-        
+
         --jse-danger: #ef4444; /* Red 500 */
         --jse-danger-bg: #450a0a; /* Red 950 */
         --jse-danger-border: #7f1d1d; /* Red 900 */
-        
+
         --jse-success: #10b981; /* Emerald 500 */
         --jse-success-bg: #064e3b; /* Emerald 900 */
       }
@@ -227,7 +227,7 @@ defmodule JSONSchemaEditor.Styles do
     .jse-node-container:hover > .jse-node-header .jse-title-input {
       border-color: var(--jse-border);
     }
-    
+
     .jse-node-header {
       display: flex;
       align-items: center;
@@ -257,7 +257,7 @@ defmodule JSONSchemaEditor.Styles do
       color: var(--jse-primary);
       border-color: var(--jse-primary);
     }
-    
+
     .jse-node-toggle.jse-collapsed {
        transform: translateX(-50%) rotate(-90deg);
     }
@@ -276,7 +276,7 @@ defmodule JSONSchemaEditor.Styles do
     .jse-type-select:hover {
       background-color: var(--jse-bg-tertiary);
     }
-    
+
     .jse-type-select:focus {
       outline: none;
       box-shadow: 0 0 0 2px var(--jse-primary);
@@ -298,7 +298,7 @@ defmodule JSONSchemaEditor.Styles do
       border-color: var(--jse-border);
       background-color: var(--jse-bg);
     }
-    
+
     .jse-title-input:focus {
       border-color: var(--jse-border-focus);
       outline: none;
@@ -331,7 +331,7 @@ defmodule JSONSchemaEditor.Styles do
       border-color: var(--jse-border);
       color: var(--jse-text-primary);
     }
-    
+
     .jse-description-input:focus {
       border-color: var(--jse-border-focus);
       outline: none;
@@ -407,11 +407,11 @@ defmodule JSONSchemaEditor.Styles do
       font-size: 0.75rem;
       color: var(--jse-danger);
     }
-    
+
     .jse-btn-toggle-constraints {
        color: var(--jse-text-tertiary);
     }
-    
+
     .jse-btn-toggle-constraints.jse-active {
       color: var(--jse-primary);
       background-color: var(--jse-bg-secondary);
@@ -450,7 +450,7 @@ defmodule JSONSchemaEditor.Styles do
       width: auto;
       min-width: 3rem;
     }
-    
+
     .jse-enum-input:focus {
       outline: none;
     }
@@ -519,7 +519,7 @@ defmodule JSONSchemaEditor.Styles do
       background-color: var(--jse-bg);
       border-color: var(--jse-border-focus);
     }
-    
+
     .jse-required-checkbox-label {
       display: flex;
       align-items: center;
@@ -530,7 +530,7 @@ defmodule JSONSchemaEditor.Styles do
       cursor: pointer;
       text-transform: uppercase;
     }
-    
+
     .jse-required-checkbox-label:hover {
       color: var(--jse-text-primary);
     }
@@ -543,24 +543,24 @@ defmodule JSONSchemaEditor.Styles do
       padding: 1rem;
       margin-top: 1rem;
     }
-    
+
     .jse-logic-header, .jse-array-items-header {
       margin-bottom: 1rem;
     }
-    
+
     .jse-logic-content {
       display: flex;
       flex-direction: column;
       gap: 1rem;
     }
-    
+
     .jse-logic-branch {
       background-color: var(--jse-bg);
       border: 1px solid var(--jse-border);
       border-radius: var(--jse-radius);
       padding: 1rem;
     }
-    
+
     .jse-logic-branch-header {
       display: flex;
       justify-content: space-between;
@@ -569,7 +569,7 @@ defmodule JSONSchemaEditor.Styles do
       border-bottom: 1px dashed var(--jse-border);
       margin-bottom: 0.5rem;
     }
-    
+
     .jse-logic-branch-label {
       font-size: 0.75rem;
       font-weight: 700;
@@ -602,7 +602,7 @@ defmodule JSONSchemaEditor.Styles do
       overflow: auto;
       max-height: 80vh;
     }
-    
+
     .jse-code-block {
       margin: 0;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -627,7 +627,7 @@ defmodule JSONSchemaEditor.Styles do
       background-color: var(--jse-bg-secondary);
       color: var(--jse-text-primary);
     }
-    
+
     .jse-btn-copy.jse-copied {
       background-color: var(--jse-success);
       border-color: var(--jse-success);
@@ -639,17 +639,17 @@ defmodule JSONSchemaEditor.Styles do
       width: 1.25rem;
       height: 1.25rem;
     }
-    
+
     .jse-icon-sm {
       width: 1rem;
       height: 1rem;
     }
-    
+
     .jse-icon-xs {
       width: 0.875rem;
       height: 0.875rem;
     }
-    
+
     .jse-icon-circle {
       display: flex;
       align-items: center;
@@ -660,7 +660,7 @@ defmodule JSONSchemaEditor.Styles do
       background-color: var(--jse-bg-tertiary);
       color: var(--jse-text-secondary);
     }
-    
+
     .jse-icon-circle-logic {
       background-color: var(--jse-danger-bg);
       color: var(--jse-danger);
