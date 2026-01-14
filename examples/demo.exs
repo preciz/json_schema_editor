@@ -42,4 +42,12 @@ defmodule Demo do
   end
 end
 
-PhoenixPlayground.start(live: Demo, port: 4040)
+css_path = Path.expand("../assets/css/json_schema_editor.css", __DIR__)
+css_content = File.read!(css_path)
+
+PhoenixPlayground.start(
+  live: Demo,
+  port: 4040,
+  child_specs: [],
+  styles: css_content
+)

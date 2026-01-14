@@ -166,7 +166,7 @@ defmodule JSONSchemaEditorTest do
   end
 
   test "renders badge with custom class" do
-    html = render_component(JSONSchemaEditor, id: "jse", schema: %{"type" => "string"})
+    html = render_component(JSONSchemaEditor, id: "jse", schema: %{"type" => "array"})
     # The default badge has no extra class, but let's force check the badge component
     # Since badge is private, we check it through the main render which uses it
     assert html =~ "jse-badge"

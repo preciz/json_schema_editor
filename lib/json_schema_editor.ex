@@ -28,12 +28,6 @@ defmodule JSONSchemaEditor do
   @logic_types ["anyOf", "oneOf", "allOf"]
   @formats ["email", "date-time", "date", "time", "uri", "uuid", "ipv4", "ipv6", "hostname"]
 
-  attr :id, :string, required: true
-  attr :schema, :map, required: true
-  attr :on_save, :any, default: nil
-  attr :class, :string, default: nil
-  attr :rest, :global
-
   @doc """
   Initializes the component with the given assigns.
   """
@@ -41,6 +35,8 @@ defmodule JSONSchemaEditor do
     socket =
       socket
       |> assign(assigns)
+      |> assign_new(:class, fn -> nil end)
+      |> assign_new(:rest, fn -> %{} end)
       |> assign_new(:ui_state, fn -> %{} end)
       |> assign_new(:schema, fn -> %{"type" => "object", "properties" => %{}} end)
       |> assign(:types, @types)
