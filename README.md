@@ -9,7 +9,7 @@ A robust Phoenix LiveComponent for visually building, editing, and validating JS
 - **Full Schema Support**: Easily manage constraints, enums, titles, and descriptions.
 - **Optimized for Large Schemas**: Collapsible nodes for easier navigation of complex trees.
 - **Isolated Styles**: Scoped CSS to ensure seamless integration into any Phoenix application.
-- **Reliable**: Maintained with 100% test coverage.
+- **Lightweight**: The only dependency is `phoenix_live_view`.
 
 ## Installation
 
