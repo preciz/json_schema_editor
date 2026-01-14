@@ -282,6 +282,21 @@ defmodule JSONSchemaEditor do
         </div>
       </div>
 
+      <%= if Map.get(@node, "type") == "array" do %>
+        <div class="array-items-container">
+          <div class="array-items-header">
+            <span class="badge badge-info">Array Items</span>
+          </div>
+          <div class="array-items-content">
+            <.render_node
+              node={Map.get(@node, "items", %{"type" => "string"})}
+              path={@path ++ ["items"]}
+              myself={@myself}
+            />
+          </div>
+        </div>
+      <% end %>
+
       <%= if Map.get(@node, "type") == "object" do %>
         <div class="properties-list">
           <%= for {key, val} <- Map.get(@node, "properties", %{}) |> Enum.sort_by(fn {k, _v} -> k end) do %>
@@ -397,6 +412,12 @@ defmodule JSONSchemaEditor do
       background-color: #f3e8ff;
       color: #7e22ce;
       border: 1px solid rgba(168, 85, 247, 0.2);
+    }
+
+    .badge-info {
+      background-color: #e0f2fe;
+      color: #0369a1;
+      border: 1px solid rgba(14, 165, 233, 0.2);
     }
 
     .btn {
@@ -516,6 +537,18 @@ defmodule JSONSchemaEditor do
     .description-input:focus {
       outline: none;
       opacity: 1;
+    }
+
+    .array-items-container {
+      margin-top: 0.75rem;
+      padding: 1rem;
+      background-color: var(--secondary-bg);
+      border-radius: 0.75rem;
+      border: 1px dashed var(--border-color);
+    }
+
+    .array-items-header {
+      margin-bottom: 0.75rem;
     }
 
     .properties-list {
