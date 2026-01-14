@@ -16,11 +16,17 @@ defmodule Demo do
       }
     }
 
-    {:ok, assign(socket, my_schema: schema)}
+    css_path = Path.expand("../assets/css/json_schema_editor.css", __DIR__)
+    css_content = File.read!(css_path)
+
+    {:ok, assign(socket, my_schema: schema, css: css_content)}
   end
 
   def render(assigns) do
     ~H"""
+    <style>
+      <%= @css %>
+    </style>
     <div style="height: 100vh; display: flex; flex-direction: column;">
       <div style="padding: 1rem; border-bottom: 1px solid #eee;">
         <h1>JSON Schema Editor Demo</h1>
@@ -42,12 +48,4 @@ defmodule Demo do
   end
 end
 
-css_path = Path.expand("../assets/css/json_schema_editor.css", __DIR__)
-css_content = File.read!(css_path)
-
-PhoenixPlayground.start(
-  live: Demo,
-  port: 4040,
-  child_specs: [],
-  styles: css_content
-)
+PhoenixPlayground.start(live: Demo, port: 4040)
