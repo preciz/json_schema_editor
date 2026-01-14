@@ -132,7 +132,11 @@ defmodule JSONSchemaEditor do
     {:noreply, assign(socket, :ui_state, ui_state)}
   end
 
-  def handle_event("update_constraint", %{"path" => path_json, "field" => field, "value" => value}, socket) do
+  def handle_event(
+        "update_constraint",
+        %{"path" => path_json, "field" => field, "value" => value},
+        socket
+      ) do
     casted_value = cast_constraint_value(field, value)
 
     socket =
@@ -185,7 +189,11 @@ defmodule JSONSchemaEditor do
     {:noreply, socket}
   end
 
-  def handle_event("update_enum_value", %{"path" => path_json, "index" => index, "value" => value}, socket) do
+  def handle_event(
+        "update_enum_value",
+        %{"path" => path_json, "index" => index, "value" => value},
+        socket
+      ) do
     index = String.to_integer(index)
 
     socket =
@@ -230,93 +238,57 @@ defmodule JSONSchemaEditor do
     end)
   end
 
-    defp cast_constraint_value(field, value) do
+  defp cast_constraint_value(field, value) do
+    cond do
+      field in [
+        "minLength",
+        "maxLength",
+        "minItems",
+        "maxItems",
+        "minProperties",
+        "maxProperties"
+      ] ->
+        case Integer.parse(value) do
+          {int, _} -> int
+          :error -> nil
+        end
 
-      cond do
+      field in ["minimum", "maximum", "multipleOf"] ->
+        case Float.parse(value) do
+          {float, _} -> float
+          :error -> nil
+        end
 
-        field in ["minLength", "maxLength", "minItems", "maxItems", "minProperties", "maxProperties"] ->
+      field == "uniqueItems" ->
+        value == "true"
 
-          case Integer.parse(value) do
-
-            {int, _} -> int
-
-            :error -> nil
-
-          end
-
-  
-
-        field in ["minimum", "maximum", "multipleOf"] ->
-
-          case Float.parse(value) do
-
-            {float, _} -> float
-
-            :error -> nil
-
-          end
-
-  
-
-        field == "uniqueItems" ->
-
-          value == "true"
-
-  
-
-        true ->
-
-          value
-
-      end
-
+      true ->
+        value
     end
+  end
 
-  
-
-    defp cast_value_by_type("integer", value) do
-
-      case Integer.parse(value) do
-
-        {int, _} -> int
-
-        :error -> 0
-
-      end
-
+  defp cast_value_by_type("integer", value) do
+    case Integer.parse(value) do
+      {int, _} -> int
+      :error -> 0
     end
+  end
 
-  
-
-    defp cast_value_by_type("number", value) do
-
-      case Float.parse(value) do
-
-        {float, _} -> float
-
-        :error -> 0.0
-
-      end
-
+  defp cast_value_by_type("number", value) do
+    case Float.parse(value) do
+      {float, _} -> float
+      :error -> 0.0
     end
+  end
 
-  
+  defp cast_value_by_type("boolean", value) do
+    value == "true"
+  end
 
-    defp cast_value_by_type("boolean", value) do
+  defp cast_value_by_type(_type, value), do: value
 
-      value == "true"
+  attr(:class, :string, default: nil)
 
-    end
-
-  
-
-    defp cast_value_by_type(_type, value), do: value
-
-  
-
-    attr(:class, :string, default: nil)
-
-  
   slot(:inner_block, required: true)
 
   defp badge(assigns) do

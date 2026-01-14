@@ -87,26 +87,40 @@ defmodule JSONSchemaEditorTest do
     assert html =~ "Min Props"
 
     # Expanded description
-        ui_state = %{"expanded_description:#{path_json}" => true}
-        html = render_component(JSONSchemaEditor, id: "jse", schema: %{"type" => "string", "description" => "Long desc"}, ui_state: ui_state)
-        assert html =~ "textarea"
-        assert html =~ "Long desc"
-    
-        # Enum section
-        ui_state = %{"expanded_constraints:#{path_json}" => true}
-        html = render_component(JSONSchemaEditor, id: "jse", schema: %{"type" => "string", "enum" => ["A", "B"]}, ui_state: ui_state)
-            assert html =~ "Enum Values"
-            assert html =~ "value=\"A\""
-            assert html =~ "value=\"B\""
-        
-            # Collapsed node
-            schema = %{"type" => "object", "properties" => %{"hidden_field" => %{"type" => "string"}}}
-            ui_state = %{"collapsed_node:#{path_json}" => true}
-            html = render_component(JSONSchemaEditor, id: "jse", schema: schema, ui_state: ui_state)
-            assert html =~ "jse-collapsed"
-            refute html =~ "hidden_field"
-          end
-        
+    ui_state = %{"expanded_description:#{path_json}" => true}
+
+    html =
+      render_component(JSONSchemaEditor,
+        id: "jse",
+        schema: %{"type" => "string", "description" => "Long desc"},
+        ui_state: ui_state
+      )
+
+    assert html =~ "textarea"
+    assert html =~ "Long desc"
+
+    # Enum section
+    ui_state = %{"expanded_constraints:#{path_json}" => true}
+
+    html =
+      render_component(JSONSchemaEditor,
+        id: "jse",
+        schema: %{"type" => "string", "enum" => ["A", "B"]},
+        ui_state: ui_state
+      )
+
+    assert html =~ "Enum Values"
+    assert html =~ "value=\"A\""
+    assert html =~ "value=\"B\""
+
+    # Collapsed node
+    schema = %{"type" => "object", "properties" => %{"hidden_field" => %{"type" => "string"}}}
+    ui_state = %{"collapsed_node:#{path_json}" => true}
+    html = render_component(JSONSchemaEditor, id: "jse", schema: schema, ui_state: ui_state)
+    assert html =~ "jse-collapsed"
+    refute html =~ "hidden_field"
+  end
+
   test "update/2 initializes schema and defaults" do
     assigns = %{id: "test"}
     {:ok, socket} = JSONSchemaEditor.update(assigns, %Phoenix.LiveView.Socket{})
@@ -297,17 +311,29 @@ defmodule JSONSchemaEditorTest do
     path_json = JSON.encode!([])
 
     {:noreply, socket} =
-      JSONSchemaEditor.handle_event("toggle_ui", %{"path" => path_json, "type" => "expanded_description"}, socket)
+      JSONSchemaEditor.handle_event(
+        "toggle_ui",
+        %{"path" => path_json, "type" => "expanded_description"},
+        socket
+      )
 
     assert socket.assigns.ui_state["expanded_description:#{path_json}"]
 
     {:noreply, socket} =
-      JSONSchemaEditor.handle_event("toggle_ui", %{"path" => path_json, "type" => "expanded_constraints"}, socket)
+      JSONSchemaEditor.handle_event(
+        "toggle_ui",
+        %{"path" => path_json, "type" => "expanded_constraints"},
+        socket
+      )
 
     assert socket.assigns.ui_state["expanded_constraints:#{path_json}"]
 
     {:noreply, socket} =
-      JSONSchemaEditor.handle_event("toggle_ui", %{"path" => path_json, "type" => "collapsed_node"}, socket)
+      JSONSchemaEditor.handle_event(
+        "toggle_ui",
+        %{"path" => path_json, "type" => "collapsed_node"},
+        socket
+      )
 
     assert socket.assigns.ui_state["collapsed_node:#{path_json}"]
   end

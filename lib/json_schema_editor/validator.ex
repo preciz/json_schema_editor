@@ -8,7 +8,7 @@ defmodule JSONSchemaEditor.Validator do
   Errors are keyed by field name.
   """
   def validate_node(node) do
-    %{} 
+    %{}
     |> check_min_max(node, "minLength", "maxLength")
     |> check_min_max(node, "minimum", "maximum")
     |> check_min_max(node, "minItems", "maxItems")
