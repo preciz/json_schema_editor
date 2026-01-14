@@ -135,6 +135,35 @@ defmodule JSONSchemaEditor do
     {:noreply, assign(socket, :ui_state, ui_state)}
   end
 
+  def handle_event("toggle_constraints", %{"path" => path_json}, socket) do
+    ui_state = socket.assigns.ui_state
+    key = "expanded_constraints:#{path_json}"
+    new_expanded = !Map.get(ui_state, key, false)
+    ui_state = Map.put(ui_state, key, new_expanded)
+
+    {:noreply, assign(socket, :ui_state, ui_state)}
+  end
+
+  def handle_event(
+        "update_constraint",
+        %{"path" => path_json, "field" => field, "value" => value},
+        socket
+      ) do
+    path = JSON.decode!(path_json)
+    casted_value = cast_constraint_value(field, value)
+
+    schema =
+      SchemaUtils.update_in_path(socket.assigns.schema, path, fn node ->
+        if casted_value == nil or casted_value == "" do
+          Map.delete(node, field)
+        else
+          Map.put(node, field, casted_value)
+        end
+      end)
+
+    {:noreply, assign(socket, :schema, schema)}
+  end
+
   def handle_event("save", _params, socket) do
     if socket.assigns[:on_save] do
       socket.assigns.on_save.(socket.assigns.schema)
@@ -159,6 +188,35 @@ defmodule JSONSchemaEditor do
     {:noreply, assign(socket, :schema, schema)}
   end
 
+  defp cast_constraint_value(field, value) do
+    cond do
+      field in [
+        "minLength",
+        "maxLength",
+        "minItems",
+        "maxItems",
+        "minProperties",
+        "maxProperties"
+      ] ->
+        case Integer.parse(value) do
+          {int, _} -> int
+          :error -> nil
+        end
+
+      field in ["minimum", "maximum", "multipleOf"] ->
+        case Float.parse(value) do
+          {float, _} -> float
+          :error -> nil
+        end
+
+      field == "uniqueItems" ->
+        value == "true"
+
+      true ->
+        value
+    end
+  end
+
   attr(:class, :string, default: nil)
   slot(:inner_block, required: true)
 
@@ -167,6 +225,32 @@ defmodule JSONSchemaEditor do
     <span class={["jse-badge", @class]}>
       <%= render_slot(@inner_block) %>
     </span>
+    """
+  end
+
+  attr(:label, :string, required: true)
+  attr(:field, :string, required: true)
+  attr(:value, :any, required: true)
+  attr(:path, :list, required: true)
+  attr(:type, :string, default: "text")
+  attr(:step, :string, default: nil)
+  attr(:myself, :any, required: true)
+
+  defp constraint_input(assigns) do
+    ~H"""
+    <div class="jse-constraint-field">
+      <label class="jse-constraint-label"><%= @label %></label>
+      <input
+        type={@type}
+        step={@step}
+        value={@value}
+        class="jse-constraint-input"
+        phx-blur="update_constraint"
+        phx-value-path={JSON.encode!(@path)}
+        phx-value-field={@field}
+        phx-target={@myself}
+      />
+    </div>
     """
   end
 
@@ -200,7 +284,7 @@ defmodule JSONSchemaEditor do
   defp icon(%{name: :trash} = assigns) do
     ~H"""
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class={["jse-icon", @class]}>
-      <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clip-rule="evenodd" />
+      <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clip-rule="evenodd" />
     </svg>
     """
   end
@@ -209,6 +293,15 @@ defmodule JSONSchemaEditor do
     ~H"""
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class={["jse-icon", @class]}>
       <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+    </svg>
+    """
+  end
+
+  defp icon(%{name: :adjustments} = assigns) do
+    ~H"""
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class={["jse-icon", @class]}>
+      <path fill-rule="evenodd" d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5A.75.75 0 012 10z" clip-rule="evenodd" />
+      <path d="M12.75 8a.75.75 0 01.75.75v2.5a.75.75 0 01-1.5 0v-2.5a.75.75 0 01.75-.75zM7.75 13a.75.75 0 01.75.75v2.5a.75.75 0 01-1.5 0v-2.5a.75.75 0 01.75-.75zM17.75 3a.75.75 0 01.75.75v2.5a.75.75 0 01-1.5 0v-2.5A.75.75 0 0117.75 3z" />
     </svg>
     """
   end
@@ -302,7 +395,129 @@ defmodule JSONSchemaEditor do
             </div>
           <% end %>
         </div>
+
+        <button
+          class={[
+            "jse-btn-icon jse-btn-toggle-constraints",
+            Map.get(@ui_state, "expanded_constraints:#{JSON.encode!(@path)}", false) && "jse-active"
+          ]}
+          phx-click="toggle_constraints"
+          phx-target={@myself}
+          phx-value-path={JSON.encode!(@path)}
+          title="Toggle Constraints"
+        >
+          <.icon name={:adjustments} class="jse-icon-sm" />
+        </button>
       </div>
+
+      <%= if Map.get(@ui_state, "expanded_constraints:#{JSON.encode!(@path)}", false) do %>
+        <div class="jse-constraints-container">
+          <div class="jse-constraints-grid">
+            <%= case Map.get(@node, "type") do %>
+              <% "string" -> %>
+                <.constraint_input
+                  label="Min Length"
+                  field="minLength"
+                  value={Map.get(@node, "minLength")}
+                  path={@path}
+                  type="number"
+                  myself={@myself}
+                />
+                <.constraint_input
+                  label="Max Length"
+                  field="maxLength"
+                  value={Map.get(@node, "maxLength")}
+                  path={@path}
+                  type="number"
+                  myself={@myself}
+                />
+                <.constraint_input
+                  label="Pattern"
+                  field="pattern"
+                  value={Map.get(@node, "pattern")}
+                  path={@path}
+                  myself={@myself}
+                />
+              <% type when type in ["number", "integer"] -> %>
+                <.constraint_input
+                  label="Minimum"
+                  field="minimum"
+                  value={Map.get(@node, "minimum")}
+                  path={@path}
+                  type="number"
+                  step="any"
+                  myself={@myself}
+                />
+                <.constraint_input
+                  label="Maximum"
+                  field="maximum"
+                  value={Map.get(@node, "maximum")}
+                  path={@path}
+                  type="number"
+                  step="any"
+                  myself={@myself}
+                />
+                <.constraint_input
+                  label="Multiple Of"
+                  field="multipleOf"
+                  value={Map.get(@node, "multipleOf")}
+                  path={@path}
+                  type="number"
+                  step="any"
+                  myself={@myself}
+                />
+              <% "array" -> %>
+                <.constraint_input
+                  label="Min Items"
+                  field="minItems"
+                  value={Map.get(@node, "minItems")}
+                  path={@path}
+                  type="number"
+                  myself={@myself}
+                />
+                <.constraint_input
+                  label="Max Items"
+                  field="maxItems"
+                  value={Map.get(@node, "maxItems")}
+                  path={@path}
+                  type="number"
+                  myself={@myself}
+                />
+                <div class="jse-constraint-field">
+                  <label class="jse-constraint-label">Unique Items</label>
+                  <input
+                    type="checkbox"
+                    checked={Map.get(@node, "uniqueItems") == true}
+                    phx-click="update_constraint"
+                    phx-value-path={JSON.encode!(@path)}
+                    phx-value-field="uniqueItems"
+                    phx-value-value={(!Map.get(@node, "uniqueItems", false)) |> to_string()}
+                    phx-target={@myself}
+                  />
+                </div>
+              <% "object" -> %>
+                <.constraint_input
+                  label="Min Props"
+                  field="minProperties"
+                  value={Map.get(@node, "minProperties")}
+                  path={@path}
+                  type="number"
+                  myself={@myself}
+                />
+                <.constraint_input
+                  label="Max Props"
+                  field="maxProperties"
+                  value={Map.get(@node, "maxProperties")}
+                  path={@path}
+                  type="number"
+                  myself={@myself}
+                />
+              <% _ -> %>
+                <span class="jse-constraint-label">No constraints for this type</span>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
 
       <%= if Map.get(@node, "type") == "array" do %>
         <div class="jse-array-items-container">

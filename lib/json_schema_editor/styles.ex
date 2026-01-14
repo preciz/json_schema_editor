@@ -324,6 +324,57 @@ defmodule JSONSchemaEditor.Styles do
       font-size: 0.7rem;
       text-transform: uppercase;
     }
+
+    .jse-constraints-container {
+      margin-top: 0.5rem;
+      margin-bottom: 0.5rem;
+      padding: 0.75rem;
+      background-color: var(--secondary-bg);
+      border-radius: 0.5rem;
+      border: 1px solid var(--border-color);
+    }
+
+    .jse-constraints-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .jse-constraint-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .jse-constraint-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #6b7280;
+      text-transform: uppercase;
+    }
+
+    .jse-constraint-input {
+      font-size: 0.8125rem;
+      padding: 0.25rem 0.5rem;
+      border: 1px solid var(--border-color);
+      border-radius: 0.375rem;
+      background-color: var(--bg-color);
+      color: inherit;
+    }
+
+    .jse-constraint-input:focus {
+      outline: 2px solid var(--primary-color);
+      border-color: transparent;
+    }
+
+    .jse-btn-toggle-constraints {
+      color: #9ca3af;
+      transition: color 0.2s;
+    }
+
+    .jse-btn-toggle-constraints.jse-active {
+      color: var(--primary-color);
+    }
     """
   end
 end
