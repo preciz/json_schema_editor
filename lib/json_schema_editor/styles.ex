@@ -105,7 +105,13 @@ defmodule JSONSchemaEditor.Styles do
     }
 
     .jse-header {
-
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border-color);
+    }
 
     .jse-badge {
       padding: 0.25rem 0.625rem;
@@ -358,6 +364,11 @@ defmodule JSONSchemaEditor.Styles do
     }
 
     .jse-property-item {
+      padding: 0.5rem;
+      background-color: var(--bg-color);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+    }
 
     .jse-property-row {
       display: flex;
