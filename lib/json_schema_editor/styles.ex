@@ -71,6 +71,7 @@ defmodule JSONSchemaEditor.Styles do
       color: var(--jse-text-primary);
       background-color: var(--jse-bg);
       min-height: 100vh;
+      padding: 0 1rem;
     }
 
     /* Header & Tabs */
