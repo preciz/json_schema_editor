@@ -224,7 +224,11 @@ defmodule JSONSchemaEditorTest do
     # Test with existing schema
     assigns = %{id: "test", schema: %{"type" => "string"}}
     {:ok, socket} = JSONSchemaEditor.update(assigns, %Phoenix.LiveView.Socket{})
-    assert socket.assigns.schema == %{"type" => "string", "$schema" => "https://json-schema.org/draft-07/schema"}
+
+    assert socket.assigns.schema == %{
+             "type" => "string",
+             "$schema" => "https://json-schema.org/draft-07/schema"
+           }
   end
 
   test "handle_event change_type" do

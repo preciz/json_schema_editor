@@ -27,7 +27,7 @@ defmodule JSONSchemaEditor.MixProject do
 
   defp description do
     """
-    A robust Phoenix LiveComponent for visually building, editing, and validating JSON Schemas.
+    A Phoenix LiveComponent for visually building, editing, and validating JSON Schemas.
     """
   end
 

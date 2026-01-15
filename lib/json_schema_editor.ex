@@ -57,7 +57,9 @@ defmodule JSONSchemaEditor do
 
     socket =
       socket
-      |> assign(Map.take(assigns, [:id, :schema, :on_save, :ui_state, :active_tab, :myself, :flash]))
+      |> assign(
+        Map.take(assigns, [:id, :schema, :on_save, :ui_state, :active_tab, :myself, :flash])
+      )
       |> assign(:class, class)
       |> assign(:rest, rest)
       |> assign_new(:ui_state, fn -> %{} end)
