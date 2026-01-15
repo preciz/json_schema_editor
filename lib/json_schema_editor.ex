@@ -370,6 +370,24 @@ defmodule JSONSchemaEditor do
     {:noreply, socket}
   end
 
+  def handle_event("add_contains", %{"path" => path_json}, socket) do
+    socket =
+      update_schema(socket, path_json, fn node ->
+        Map.put(node, "contains", %{"type" => "string"})
+      end)
+
+    {:noreply, socket}
+  end
+
+  def handle_event("remove_contains", %{"path" => path_json}, socket) do
+    socket =
+      update_schema(socket, path_json, fn node ->
+        Map.delete(node, "contains")
+      end)
+
+    {:noreply, socket}
+  end
+
   def handle_event("save", _params, socket) do
     if Enum.empty?(socket.assigns.validation_errors) and socket.assigns[:on_save] do
       socket.assigns.on_save.(socket.assigns.schema)

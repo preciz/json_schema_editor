@@ -298,6 +298,16 @@ defmodule JSONSchemaEditor.Components do
                 formats={@formats}
                 myself={@myself}
               />
+              <.array_contains
+                node={@node}
+                path={@path}
+                ui_state={@ui_state}
+                validation_errors={@validation_errors}
+                types={@types}
+                logic_types={@logic_types}
+                formats={@formats}
+                myself={@myself}
+              />
             <% "object" -> %>
               <.object_properties
                 node={@node}
@@ -559,6 +569,24 @@ defmodule JSONSchemaEditor.Components do
               validation_errors={@validation_errors}
               myself={@myself}
             />
+            <.constraint_input
+              label="Min Contains"
+              field="minContains"
+              value={Map.get(@node, "minContains")}
+              path={@path}
+              type="number"
+              validation_errors={@validation_errors}
+              myself={@myself}
+            />
+            <.constraint_input
+              label="Max Contains"
+              field="maxContains"
+              value={Map.get(@node, "maxContains")}
+              path={@path}
+              type="number"
+              validation_errors={@validation_errors}
+              myself={@myself}
+            />
             <div class="jse-constraint-field">
               <label class="jse-constraint-label">Unique Items</label>
               <input
@@ -695,6 +723,59 @@ defmodule JSONSchemaEditor.Components do
           formats={@formats}
           myself={@myself}
         />
+      </div>
+    </div>
+    """
+  end
+
+  attr(:node, :map, required: true)
+  attr(:path, :list, required: true)
+  attr(:ui_state, :map, required: true)
+  attr(:validation_errors, :map, required: true)
+  attr(:types, :list, required: true)
+  attr(:logic_types, :list, required: true)
+  attr(:formats, :list, default: [])
+  attr(:myself, :any, required: true)
+
+  defp array_contains(assigns) do
+    ~H"""
+    <div class="jse-array-items-container">
+      <div class="jse-array-items-header">
+        <.badge class="jse-badge-info">Contains</.badge>
+        <%= if Map.has_key?(@node, "contains") do %>
+          <button
+            class="jse-btn-icon jse-btn-delete"
+            phx-click="remove_contains"
+            phx-target={@myself}
+            phx-value-path={JSON.encode!(@path)}
+            title="Remove Contains Schema"
+          >
+            <.icon name={:trash} class="jse-icon-xs" />
+          </button>
+        <% end %>
+      </div>
+      <div class="jse-array-items-content">
+        <%= if Map.has_key?(@node, "contains") do %>
+          <.render_node
+            node={Map.get(@node, "contains")}
+            path={@path ++ ["contains"]}
+            ui_state={@ui_state}
+            validation_errors={@validation_errors}
+            types={@types}
+            logic_types={@logic_types}
+            formats={@formats}
+            myself={@myself}
+          />
+        <% else %>
+          <button
+            class="jse-btn jse-btn-secondary jse-btn-sm"
+            phx-click="add_contains"
+            phx-target={@myself}
+            phx-value-path={JSON.encode!(@path)}
+          >
+            <.icon name={:plus} class="jse-icon-xs" /> Add Contains Schema
+          </button>
+        <% end %>
       </div>
     </div>
     """

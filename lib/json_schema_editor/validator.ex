@@ -6,6 +6,7 @@ defmodule JSONSchemaEditor.Validator do
     |> check_min_max(node, "minLength", "maxLength")
     |> check_min_max(node, "minimum", "maximum")
     |> check_min_max(node, "minItems", "maxItems")
+    |> check_min_max(node, "minContains", "maxContains")
     |> check_min_max(node, "minProperties", "maxProperties")
     |> check_positive(node, "multipleOf")
     |> check_unique_enum(node)
@@ -86,6 +87,16 @@ defmodule JSONSchemaEditor.Validator do
           %{}
       end
 
+    # Recurse into contains
+    contains_errors =
+      case Map.get(schema, "contains") do
+        contains_schema when is_map(contains_schema) ->
+          validate_schema(contains_schema, path ++ ["contains"])
+
+        _ ->
+          %{}
+      end
+
     # Recurse into logic branches
     logic_errors =
       Enum.reduce(["anyOf", "oneOf", "allOf"], %{}, fn key, acc ->
@@ -108,6 +119,7 @@ defmodule JSONSchemaEditor.Validator do
     base_errors
     |> Map.merge(prop_errors)
     |> Map.merge(item_errors)
+    |> Map.merge(contains_errors)
     |> Map.merge(logic_errors)
   end
 end
