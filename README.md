@@ -12,7 +12,7 @@ A Phoenix LiveComponent for visually building, editing, and validating JSON Sche
 - **Tabbed Interface**: Switch between a visual editor and a live JSON preview.
 - **Logical Composition**: Support for `oneOf`, `anyOf`, and `allOf` composition types.
 - **Real-time Validation**: In-editor logic checking (e.g., `min <= max`) with immediate visual feedback.
-- **Full Draft 07 Support**: Includes constraints (minimum, pattern, etc.), enums, constants, and $schema management.
+- **Draft 07 Support**: Includes constraints (minimum, pattern, etc.), enums, constants, and $schema management.
 - **Copy to Clipboard**: One-click export of the generated schema.
 - **Lightweight**: Zero external JS dependencies (uses native Phoenix hooks), only requires `phoenix_live_view`.
 
