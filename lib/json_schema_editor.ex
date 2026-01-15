@@ -252,6 +252,21 @@ defmodule JSONSchemaEditor do
     {:noreply, socket}
   end
 
+  def handle_event("update_const", %{"path" => path_json, "value" => value}, socket) do
+    socket =
+      update_schema(socket, path_json, fn node ->
+        if value == "" do
+          Map.delete(node, "const")
+        else
+          type = Map.get(node, "type", "string")
+          casted_value = SchemaUtils.cast_value_by_type(type, value)
+          Map.put(node, "const", casted_value)
+        end
+      end)
+
+    {:noreply, socket}
+  end
+
   def handle_event("add_enum_value", %{"path" => path_json}, socket) do
     socket =
       update_schema(socket, path_json, fn node ->

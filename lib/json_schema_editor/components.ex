@@ -156,6 +156,29 @@ defmodule JSONSchemaEditor.Components do
     """
   end
 
+  attr(:node, :map, required: true)
+  attr(:path, :list, required: true)
+  attr(:type, :string, default: "text")
+  attr(:step, :string, default: nil)
+  attr(:myself, :any, required: true)
+
+  defp const_input(assigns) do
+    ~H"""
+    <div class="jse-constraint-field">
+      <label class="jse-constraint-label">Const</label>
+      <input
+        type={@type}
+        step={@step}
+        value={Map.get(@node, "const")}
+        class="jse-constraint-input"
+        phx-blur="update_const"
+        phx-value-path={JSON.encode!(@path)}
+        phx-target={@myself}
+      />
+    </div>
+    """
+  end
+
   attr(:path, :list, required: true)
   attr(:node, :map, required: true)
   attr(:validation_errors, :map, required: true)
@@ -428,6 +451,7 @@ defmodule JSONSchemaEditor.Components do
       <div class="jse-constraints-grid">
         <%= case Map.get(@node, "type") do %>
           <% "string" -> %>
+            <.const_input node={@node} path={@path} type="text" myself={@myself} />
             <.constraint_input
               label="Min Length"
               field="minLength"
@@ -471,6 +495,7 @@ defmodule JSONSchemaEditor.Components do
               </select>
             </div>
           <% type when type in ["number", "integer"] -> %>
+            <.const_input node={@node} path={@path} type="number" step="any" myself={@myself} />
             <.constraint_input
               label="Minimum"
               field="minimum"
@@ -501,6 +526,20 @@ defmodule JSONSchemaEditor.Components do
               validation_errors={@validation_errors}
               myself={@myself}
             />
+          <% "boolean" -> %>
+            <div class="jse-constraint-field">
+              <label class="jse-constraint-label">Const</label>
+              <select
+                class="jse-constraint-input"
+                phx-change="update_const"
+                phx-target={@myself}
+              >
+                <input type="hidden" name="path" value={JSON.encode!(@path)} />
+                <option value="">None</option>
+                <option value="true" selected={Map.get(@node, "const") == true}>true</option>
+                <option value="false" selected={Map.get(@node, "const") == false}>false</option>
+              </select>
+            </div>
           <% "array" -> %>
             <.constraint_input
               label="Min Items"

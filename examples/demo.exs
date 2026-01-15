@@ -161,10 +161,27 @@ defmodule Demo do
         },
         "accountType" => %{
           "title" => "Account Type",
-          "description" => "User account type with validation",
+          "description" => "User account type",
           "type" => "string",
-          "enum" => ["free", "premium", "enterprise"],
-          "const" => "free"
+          "enum" => ["free", "premium", "enterprise"]
+        },
+        "systemInfo" => %{
+          "title" => "System Information",
+          "type" => "object",
+          "properties" => %{
+            "apiVersion" => %{
+              "title" => "API Version",
+              "type" => "string",
+              "const" => "1.0",
+              "description" => "Fixed API version"
+            },
+            "termsAccepted" => %{
+              "title" => "Terms Accepted",
+              "type" => "boolean",
+              "const" => true,
+              "description" => "Must be true"
+            }
+          }
         }
       },
       "required" => ["userInfo", "contact"]

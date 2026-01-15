@@ -704,7 +704,7 @@ defmodule JSONSchemaEditorTest do
     refute Map.has_key?(socket.assigns.schema, "description")
   end
 
-  test "renders no constraints for boolean type" do
+  test "renders const constraint for boolean type" do
     html =
       render_component(JSONSchemaEditor,
         id: "jse",
@@ -712,7 +712,8 @@ defmodule JSONSchemaEditorTest do
         ui_state: %{"expanded_constraints:[]" => true}
       )
 
-    assert html =~ "No constraints for this type"
+    assert html =~ "Const"
+    refute html =~ "No constraints for this type"
   end
 
   test "handle_event enum management" do
