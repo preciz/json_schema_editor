@@ -2,7 +2,7 @@
 
 [![test](https://github.com/preciz/json_schema_editor/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/preciz/json_schema_editor/actions/workflows/test.yml)
 
-A robust Phoenix LiveComponent for visually building, editing, and validating JSON Schemas.
+A Phoenix LiveComponent for visually building, editing, and validating JSON Schemas.
 
 ![JSON Schema Editor Screenshot](screenshot.png)
 
@@ -10,9 +10,6 @@ A robust Phoenix LiveComponent for visually building, editing, and validating JS
 
 - **Visual Editing**: Recursively build and edit deeply nested objects and arrays.
 - **Real-time Validation**: In-editor logic checking (e.g., `min <= max`) with visual feedback.
-- **Full Schema Support**: Easily manage constraints, enums, titles, and descriptions.
-- **Optimized for Large Schemas**: Collapsible nodes for easier navigation of complex trees.
-- **Isolated Styles**: Scoped CSS to ensure seamless integration into any Phoenix application.
 - **Lightweight**: The only dependency is `phoenix_live_view`.
 
 ## Installation
