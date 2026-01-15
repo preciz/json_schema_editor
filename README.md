@@ -14,7 +14,7 @@ A Phoenix LiveComponent for visually building, editing, and validating JSON Sche
 
 ## Installation
 
-The package can be installed by adding `json_schema_editor` to your list of dependencies in `mix.exs`:
+#### 1. Add `json_schema_editor` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
@@ -24,11 +24,9 @@ def deps do
 end
 ```
 
-### Asset Integration
+#### 2. Add `json_schema_editor` to your list of dependencies in `mix.exs`:
 
 This library uses a small CSS file for styling and a JavaScript hook for clipboard functionality.
-
-#### 1. Configure CSS
 
 Import the library's CSS in your `assets/css/app.css` (or equivalent):
 
@@ -36,7 +34,7 @@ Import the library's CSS in your `assets/css/app.css` (or equivalent):
 @import "../../deps/json_schema_editor/assets/css/json_schema_editor.css";
 ```
 
-#### 2. Configure JavaScript Hooks
+#### 3. Configure JavaScript Hooks (Clipboard Support):
 
 In your `assets/js/app.js`, import and register the hook:
 
