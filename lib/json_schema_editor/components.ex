@@ -6,7 +6,7 @@ defmodule JSONSchemaEditor.Components do
   attr(:class, :string, default: nil)
   attr(:rest, :global)
 
-  def icon(%{name: :save} = assigns) do
+  def icon(assigns) do
     ~H"""
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -15,99 +15,75 @@ defmodule JSONSchemaEditor.Components do
       class={["jse-icon", @class]}
       {@rest}
     >
-      <path
-        fill-rule="evenodd"
-        d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z"
-        clip-rule="evenodd"
-      />
+      {svg_path(@name)}
     </svg>
     """
   end
 
-  def icon(%{name: :chevron_up} = assigns) do
+  defp svg_path(:save) do
+    assigns = %{}
+
     ~H"""
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 20 20"
-      fill="currentColor"
-      class={["jse-icon", @class]}
-      {@rest}
-    >
-      <path
-        fill-rule="evenodd"
-        d="M14.77 12.79a.75.75 0 01-1.06-.02L10 8.832 6.29 12.77a.75.75 0 11-1.08-1.04l4.25-4.5a.75.75 0 011.08 0l4.25 4.5a.75.75 0 01-.02 1.06z"
-        clip-rule="evenodd"
-      />
-    </svg>
+    <path
+      fill-rule="evenodd"
+      d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z"
+      clip-rule="evenodd"
+    />
     """
   end
 
-  def icon(%{name: :chevron_down} = assigns) do
+  defp svg_path(:chevron_up) do
+    assigns = %{}
+
     ~H"""
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 20 20"
-      fill="currentColor"
-      class={["jse-icon", @class]}
-      {@rest}
-    >
-      <path
-        fill-rule="evenodd"
-        d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-        clip-rule="evenodd"
-      />
-    </svg>
+    <path
+      fill-rule="evenodd"
+      d="M14.77 12.79a.75.75 0 01-1.06-.02L10 8.832 6.29 12.77a.75.75 0 11-1.08-1.04l4.25-4.5a.75.75 0 011.08 0l4.25 4.5a.75.75 0 01-.02 1.06z"
+      clip-rule="evenodd"
+    />
     """
   end
 
-  def icon(%{name: :trash} = assigns) do
+  defp svg_path(:chevron_down) do
+    assigns = %{}
+
     ~H"""
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 20 20"
-      fill="currentColor"
-      class={["jse-icon", @class]}
-      {@rest}
-    >
-      <path
-        fill-rule="evenodd"
-        d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z"
-        clip-rule="evenodd"
-      />
-    </svg>
+    <path
+      fill-rule="evenodd"
+      d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+      clip-rule="evenodd"
+    />
     """
   end
 
-  def icon(%{name: :plus} = assigns) do
+  defp svg_path(:trash) do
+    assigns = %{}
+
     ~H"""
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 20 20"
-      fill="currentColor"
-      class={["jse-icon", @class]}
-      {@rest}
-    >
-      <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-    </svg>
+    <path
+      fill-rule="evenodd"
+      d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z"
+      clip-rule="evenodd"
+    />
     """
   end
 
-  def icon(%{name: :adjustments} = assigns) do
+  defp svg_path(:plus) do
+    assigns = %{}
+
     ~H"""
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 20 20"
-      fill="currentColor"
-      class={["jse-icon", @class]}
-      {@rest}
-    >
-      <path
-        fill-rule="evenodd"
-        d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5A.75.75 0 012 10z"
-        clip-rule="evenodd"
-      />
+    <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+    """
+  end
+
+  defp svg_path(:adjustments) do
+    assigns = %{}
+
+    ~H"""
+    <g fill-rule="evenodd" clip-rule="evenodd">
+      <path d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5A.75.75 0 012 10z" />
       <path d="M12.75 8a.75.75 0 01.75.75v2.5a.75.75 0 01-1.5 0v-2.5a.75.75 0 01.75-.75zM7.75 13a.75.75 0 01.75.75v2.5a.75.75 0 01-1.5 0v-2.5a.75.75 0 01.75-.75zM17.75 3a.75.75 0 01.75.75v2.5a.75.75 0 01-1.5 0v-2.5A.75.75 0 0117.75 3z" />
-    </svg>
+    </g>
     """
   end
 
@@ -194,9 +170,7 @@ defmodule JSONSchemaEditor.Components do
         <div>
           <span class="jse-constraint-label">Enum Values</span>
           <%= if @error do %>
-            <div class="jse-error-message jse-enum-error">
-              {@error}
-            </div>
+            <div class="jse-error-message jse-enum-error">{@error}</div>
           <% end %>
         </div>
         <button
@@ -247,7 +221,6 @@ defmodule JSONSchemaEditor.Components do
 
   def render_node(assigns) do
     logic_key = Enum.find(assigns.logic_types, &Map.has_key?(assigns.node, &1))
-
     assigns = assign(assigns, :logic_key, logic_key)
 
     ~H"""
@@ -462,131 +435,66 @@ defmodule JSONSchemaEditor.Components do
         <%= case Map.get(@node, "type") do %>
           <% "string" -> %>
             <.const_input node={@node} path={@path} type="text" myself={@myself} />
-            <.constraint_input
-              label="Min Length"
-              field="minLength"
-              value={Map.get(@node, "minLength")}
-              path={@path}
-              type="number"
-              validation_errors={@validation_errors}
-              myself={@myself}
-            />
-            <.constraint_input
-              label="Max Length"
-              field="maxLength"
-              value={Map.get(@node, "maxLength")}
-              path={@path}
-              type="number"
-              validation_errors={@validation_errors}
-              myself={@myself}
-            />
-            <.constraint_input
-              label="Pattern"
-              field="pattern"
-              value={Map.get(@node, "pattern")}
-              path={@path}
-              validation_errors={@validation_errors}
-              myself={@myself}
-            />
+            <%= for {label, field, type} <- [{"Min Length", "minLength", "number"}, {"Max Length", "maxLength", "number"}, {"Pattern", "pattern", "text"}] do %>
+              <.constraint_input
+                label={label}
+                field={field}
+                value={Map.get(@node, field)}
+                path={@path}
+                type={type}
+                validation_errors={@validation_errors}
+                myself={@myself}
+              />
+            <% end %>
             <div class="jse-constraint-field">
               <label class="jse-constraint-label">Format</label>
-              <select
-                class="jse-constraint-input"
-                phx-change="change_format"
-                phx-target={@myself}
-              >
+              <select class="jse-constraint-input" phx-change="change_format" phx-target={@myself}>
                 <input type="hidden" name="path" value={JSON.encode!(@path)} />
                 <option value="">None</option>
                 <%= for fmt <- @formats do %>
-                  <option value={fmt} selected={Map.get(@node, "format") == fmt}>
-                    {fmt}
-                  </option>
+                  <option value={fmt} selected={Map.get(@node, "format") == fmt}>{fmt}</option>
                 <% end %>
               </select>
             </div>
           <% type when type in ["number", "integer"] -> %>
             <.const_input node={@node} path={@path} type="number" step="any" myself={@myself} />
-            <.constraint_input
-              label="Minimum"
-              field="minimum"
-              value={Map.get(@node, "minimum")}
-              path={@path}
-              type="number"
-              step="any"
-              validation_errors={@validation_errors}
-              myself={@myself}
-            />
-            <.constraint_input
-              label="Maximum"
-              field="maximum"
-              value={Map.get(@node, "maximum")}
-              path={@path}
-              type="number"
-              step="any"
-              validation_errors={@validation_errors}
-              myself={@myself}
-            />
-            <.constraint_input
-              label="Multiple Of"
-              field="multipleOf"
-              value={Map.get(@node, "multipleOf")}
-              path={@path}
-              type="number"
-              step="any"
-              validation_errors={@validation_errors}
-              myself={@myself}
-            />
+            <%= for {label, field} <- [{"Minimum", "minimum"}, {"Maximum", "maximum"}, {"Multiple Of", "multipleOf"}] do %>
+              <.constraint_input
+                label={label}
+                field={field}
+                value={Map.get(@node, field)}
+                path={@path}
+                type="number"
+                step="any"
+                validation_errors={@validation_errors}
+                myself={@myself}
+              />
+            <% end %>
           <% "boolean" -> %>
             <div class="jse-constraint-field">
               <label class="jse-constraint-label">Const</label>
-              <select
-                class="jse-constraint-input"
-                phx-change="update_const"
-                phx-target={@myself}
-              >
+              <select class="jse-constraint-input" phx-change="update_const" phx-target={@myself}>
                 <input type="hidden" name="path" value={JSON.encode!(@path)} />
                 <option value="">None</option>
-                <option value="true" selected={Map.get(@node, "const") == true}>true</option>
-                <option value="false" selected={Map.get(@node, "const") == false}>false</option>
+                <%= for val <- [true, false] do %>
+                  <option value={to_string(val)} selected={Map.get(@node, "const") == val}>
+                    {to_string(val)}
+                  </option>
+                <% end %>
               </select>
             </div>
           <% "array" -> %>
-            <.constraint_input
-              label="Min Items"
-              field="minItems"
-              value={Map.get(@node, "minItems")}
-              path={@path}
-              type="number"
-              validation_errors={@validation_errors}
-              myself={@myself}
-            />
-            <.constraint_input
-              label="Max Items"
-              field="maxItems"
-              value={Map.get(@node, "maxItems")}
-              path={@path}
-              type="number"
-              validation_errors={@validation_errors}
-              myself={@myself}
-            />
-            <.constraint_input
-              label="Min Contains"
-              field="minContains"
-              value={Map.get(@node, "minContains")}
-              path={@path}
-              type="number"
-              validation_errors={@validation_errors}
-              myself={@myself}
-            />
-            <.constraint_input
-              label="Max Contains"
-              field="maxContains"
-              value={Map.get(@node, "maxContains")}
-              path={@path}
-              type="number"
-              validation_errors={@validation_errors}
-              myself={@myself}
-            />
+            <%= for {label, field} <- [{"Min Items", "minItems"}, {"Max Items", "maxItems"}, {"Min Contains", "minContains"}, {"Max Contains", "maxContains"}] do %>
+              <.constraint_input
+                label={label}
+                field={field}
+                value={Map.get(@node, field)}
+                path={@path}
+                type="number"
+                validation_errors={@validation_errors}
+                myself={@myself}
+              />
+            <% end %>
             <div class="jse-constraint-field">
               <label class="jse-constraint-label">Unique Items</label>
               <input
@@ -600,24 +508,17 @@ defmodule JSONSchemaEditor.Components do
               />
             </div>
           <% "object" -> %>
-            <.constraint_input
-              label="Min Props"
-              field="minProperties"
-              value={Map.get(@node, "minProperties")}
-              path={@path}
-              type="number"
-              validation_errors={@validation_errors}
-              myself={@myself}
-            />
-            <.constraint_input
-              label="Max Props"
-              field="maxProperties"
-              value={Map.get(@node, "maxProperties")}
-              path={@path}
-              type="number"
-              validation_errors={@validation_errors}
-              myself={@myself}
-            />
+            <%= for {label, field} <- [{"Min Props", "minProperties"}, {"Max Props", "maxProperties"}] do %>
+              <.constraint_input
+                label={label}
+                field={field}
+                value={Map.get(@node, field)}
+                path={@path}
+                type="number"
+                validation_errors={@validation_errors}
+                myself={@myself}
+              />
+            <% end %>
           <% _ -> %>
             <span class="jse-constraint-label">No constraints for this type</span>
         <% end %>

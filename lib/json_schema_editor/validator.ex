@@ -3,11 +3,13 @@ defmodule JSONSchemaEditor.Validator do
 
   defp validate_node(node) do
     %{}
-    |> check_min_max(node, "minLength", "maxLength")
-    |> check_min_max(node, "minimum", "maximum")
-    |> check_min_max(node, "minItems", "maxItems")
-    |> check_min_max(node, "minContains", "maxContains")
-    |> check_min_max(node, "minProperties", "maxProperties")
+    |> check_min_max(node, [
+      {"minLength", "maxLength"},
+      {"minimum", "maximum"},
+      {"minItems", "maxItems"},
+      {"minContains", "maxContains"},
+      {"minProperties", "maxProperties"}
+    ])
     |> check_positive(node, "multipleOf")
     |> check_unique_enum(node)
     |> check_format_type(node)
@@ -21,15 +23,17 @@ defmodule JSONSchemaEditor.Validator do
     end
   end
 
-  defp check_min_max(errors, node, min_key, max_key) do
-    min = Map.get(node, min_key)
-    max = Map.get(node, max_key)
+  defp check_min_max(errors, node, keys) do
+    Enum.reduce(keys, errors, fn {min_key, max_key}, acc ->
+      min = Map.get(node, min_key)
+      max = Map.get(node, max_key)
 
-    if not is_nil(min) and not is_nil(max) and min > max do
-      Map.put(errors, min_key, "Must be ≤ #{max_key}")
-    else
-      errors
-    end
+      if not is_nil(min) and not is_nil(max) and min > max do
+        Map.put(acc, min_key, "Must be ≤ #{max_key}")
+      else
+        acc
+      end
+    end)
   end
 
   defp check_positive(errors, node, key) do
@@ -57,69 +61,49 @@ defmodule JSONSchemaEditor.Validator do
   indexed by path_json and field.
   """
   def validate_schema(schema, path \\ []) do
-    node_errors = validate_node(schema)
     path_json = JSON.encode!(path)
 
     base_errors =
-      Enum.into(node_errors, %{}, fn {field, msg} ->
-        {"#{path_json}:#{field}", msg}
-      end)
+      validate_node(schema)
+      |> Enum.into(%{}, fn {field, msg} -> {"#{path_json}:#{field}", msg} end)
 
     # Recurse into properties
     prop_errors =
       case Map.get(schema, "properties") do
         props when is_map(props) ->
-          Enum.reduce(props, %{}, fn {key, val}, acc ->
-            Map.merge(acc, validate_schema(val, path ++ ["properties", key]))
+          Enum.reduce(props, %{}, fn {k, v}, acc ->
+            Map.merge(acc, validate_schema(v, path ++ ["properties", k]))
           end)
 
         _ ->
           %{}
       end
 
-    # Recurse into items
-    item_errors =
-      case Map.get(schema, "items") do
-        item when is_map(item) ->
-          validate_schema(item, path ++ ["items"])
-
-        _ ->
-          %{}
-      end
-
-    # Recurse into contains
-    contains_errors =
-      case Map.get(schema, "contains") do
-        contains_schema when is_map(contains_schema) ->
-          validate_schema(contains_schema, path ++ ["contains"])
-
-        _ ->
-          %{}
-      end
-
-    # Recurse into logic branches
-    logic_errors =
-      Enum.reduce(["anyOf", "oneOf", "allOf"], %{}, fn key, acc ->
-        case Map.get(schema, key) do
-          branches when is_list(branches) ->
-            branch_errors =
+    # Recurse into other sub-schemas (items, contains, logic branches)
+    other_errors =
+      [{"items", nil}, {"contains", nil}]
+      |> Enum.concat(Enum.map(["anyOf", "oneOf", "allOf"], fn k -> {k, :list} end))
+      |> Enum.reduce(%{}, fn
+        {key, :list}, acc ->
+          case Map.get(schema, key) do
+            branches when is_list(branches) ->
               branches
               |> Enum.with_index()
-              |> Enum.reduce(%{}, fn {branch, idx}, b_acc ->
+              |> Enum.reduce(acc, fn {branch, idx}, b_acc ->
                 Map.merge(b_acc, validate_schema(branch, path ++ [key, idx]))
               end)
 
-            Map.merge(acc, branch_errors)
+            _ ->
+              acc
+          end
 
-          _ ->
-            acc
-        end
+        {key, _}, acc ->
+          case Map.get(schema, key) do
+            sub when is_map(sub) -> Map.merge(acc, validate_schema(sub, path ++ [key]))
+            _ -> acc
+          end
       end)
 
-    base_errors
-    |> Map.merge(prop_errors)
-    |> Map.merge(item_errors)
-    |> Map.merge(contains_errors)
-    |> Map.merge(logic_errors)
+    base_errors |> Map.merge(prop_errors) |> Map.merge(other_errors)
   end
 end

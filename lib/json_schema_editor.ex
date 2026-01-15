@@ -32,45 +32,20 @@ defmodule JSONSchemaEditor do
   Initializes the component with the given assigns.
   """
   def update(assigns, socket) do
-    # Extract class and rest from assigns
-    class = Map.get(assigns, :class)
-    rest = Map.get(assigns, :rest, %{})
-
-    # Known keys that should NOT go into rest
-    known_keys = [
-      :id,
-      :schema,
-      :on_save,
-      :ui_state,
-      :active_tab,
-      :myself,
-      :flash,
-      :class,
-      :rest,
-      :socket,
-      :__changed__
-    ]
-
-    # Collect unknown keys into rest
-    unknown_keys = Map.drop(assigns, known_keys)
-    rest = Map.merge(rest, unknown_keys)
+    # Keys that should be assigned directly to socket.assigns
+    known_keys = [:id, :schema, :on_save, :ui_state, :active_tab, :myself, :class]
+    {known_assigns, rest} = Map.split(assigns, known_keys)
 
     socket =
       socket
-      |> assign(
-        Map.take(assigns, [:id, :schema, :on_save, :ui_state, :active_tab, :myself, :flash])
-      )
-      |> assign(:class, class)
-      |> assign(:rest, rest)
+      |> assign(known_assigns)
+      |> assign_new(:class, fn -> nil end)
+      |> assign(:rest, Map.merge(Map.get(socket.assigns, :rest, %{}), rest))
       |> assign_new(:ui_state, fn -> %{} end)
       |> assign_new(:schema, fn -> %{} end)
-      |> update(:schema, fn s ->
-        Map.put_new(s, "$schema", "https://json-schema.org/draft-07/schema")
-      end)
-      |> assign(:types, @types)
-      |> assign(:formats, @formats)
+      |> update(:schema, &Map.put_new(&1, "$schema", "https://json-schema.org/draft-07/schema"))
+      |> assign(types: @types, formats: @formats, logic_types: @logic_types)
       |> assign_new(:active_tab, fn -> :editor end)
-      |> assign(:logic_types, @logic_types)
       |> validate_and_assign_errors()
 
     {:ok, socket}
@@ -115,21 +90,14 @@ defmodule JSONSchemaEditor do
     socket =
       update_schema(socket, path_json, fn node ->
         # Clean up existing conflicting keys
-        base_node =
+        base =
           Map.drop(node, ["type", "properties", "required", "items", "anyOf", "oneOf", "allOf"])
 
         case new_type do
-          "object" ->
-            Map.put(base_node, "type", "object") |> Map.put("properties", %{})
-
-          "array" ->
-            Map.put(base_node, "type", "array") |> Map.put("items", %{"type" => "string"})
-
-          logic when logic in @logic_types ->
-            Map.put(base_node, logic, [%{"type" => "string"}])
-
-          _ ->
-            Map.put(base_node, "type", new_type)
+          "object" -> Map.merge(base, %{"type" => "object", "properties" => %{}})
+          "array" -> Map.merge(base, %{"type" => "array", "items" => %{"type" => "string"}})
+          logic when logic in @logic_types -> Map.put(base, logic, [%{"type" => "string"}])
+          _ -> Map.put(base, "type", new_type)
         end
       end)
 
@@ -217,39 +185,24 @@ defmodule JSONSchemaEditor do
   end
 
   def handle_event("change_title", %{"path" => path_json, "value" => title}, socket) do
-    {:noreply, update_node_field(socket, path_json, "title", title)}
+    {:noreply, update_node_field(socket, path_json, "title", String.trim(title))}
   end
 
   def handle_event("change_description", %{"path" => path_json, "value" => description}, socket) do
-    {:noreply, update_node_field(socket, path_json, "description", description)}
+    {:noreply, update_node_field(socket, path_json, "description", String.trim(description))}
   end
 
   def handle_event("toggle_ui", %{"path" => path_json, "type" => type}, socket) do
-    ui_state = socket.assigns.ui_state
-    key = "#{type}:#{path_json}"
-    new_expanded = !Map.get(ui_state, key, false)
-    ui_state = Map.put(ui_state, key, new_expanded)
-
+    ui_state = Map.update(socket.assigns.ui_state, "#{type}:#{path_json}", true, &(!&1))
     {:noreply, assign(socket, :ui_state, ui_state)}
   end
 
   def handle_event(
         "update_constraint",
-        %{"path" => path_json, "field" => field, "value" => value},
+        %{"path" => path_json, "field" => f, "value" => v},
         socket
       ) do
-    casted_value = SchemaUtils.cast_constraint_value(field, value)
-
-    socket =
-      update_schema(socket, path_json, fn node ->
-        if casted_value in [nil, "", false] do
-          Map.delete(node, field)
-        else
-          Map.put(node, field, casted_value)
-        end
-      end)
-
-    {:noreply, socket}
+    {:noreply, update_node_field(socket, path_json, f, SchemaUtils.cast_value(f, v))}
   end
 
   def handle_event("update_const", %{"path" => path_json, "value" => value}, socket) do
@@ -258,9 +211,7 @@ defmodule JSONSchemaEditor do
         if value == "" do
           Map.delete(node, "const")
         else
-          type = Map.get(node, "type", "string")
-          casted_value = SchemaUtils.cast_value_by_type(type, value)
-          Map.put(node, "const", casted_value)
+          Map.put(node, "const", SchemaUtils.cast_value(Map.get(node, "type", "string"), value))
         end
       end)
 
@@ -316,7 +267,7 @@ defmodule JSONSchemaEditor do
       update_schema(socket, path_json, fn node ->
         current_enum = Map.get(node, "enum", [])
         type = Map.get(node, "type", "string")
-        casted_value = SchemaUtils.cast_value_by_type(type, value)
+        casted_value = SchemaUtils.cast_value(type, value)
 
         new_enum = List.replace_at(current_enum, index, casted_value)
         Map.put(node, "enum", new_enum)
@@ -406,10 +357,8 @@ defmodule JSONSchemaEditor do
   end
 
   defp update_node_field(socket, path_json, field, value) do
-    value = String.trim(value)
-
     update_schema(socket, path_json, fn node ->
-      if value == "" do
+      if value in [nil, "", false] do
         Map.delete(node, field)
       else
         Map.put(node, field, value)

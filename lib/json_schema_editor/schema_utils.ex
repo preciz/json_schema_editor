@@ -30,9 +30,10 @@ defmodule JSONSchemaEditor.SchemaUtils do
     end
   end
 
-  def cast_constraint_value(field, value) do
+  def cast_value(type_or_field, value) do
     cond do
-      field in [
+      type_or_field in [
+        "integer",
         "minLength",
         "maxLength",
         "minItems",
@@ -41,44 +42,26 @@ defmodule JSONSchemaEditor.SchemaUtils do
         "maxProperties"
       ] ->
         case Integer.parse(value) do
-          {int, _} -> int
-          :error -> nil
+          {int, _} ->
+            int
+
+          :error ->
+            if String.contains?(type_or_field, "min") or String.contains?(type_or_field, "max"),
+              do: nil,
+              else: 0
         end
 
-      field in ["minimum", "maximum", "multipleOf"] ->
+      type_or_field in ["number", "minimum", "maximum", "multipleOf"] ->
         case Float.parse(value) do
           {float, _} -> float
-          :error -> nil
+          :error -> if type_or_field == "number", do: 0.0, else: nil
         end
 
-      field == "uniqueItems" ->
+      type_or_field in ["boolean", "uniqueItems"] ->
         value == "true"
 
       true ->
         value
     end
   end
-
-  @doc """
-  Casts a string value to the appropriate type based on the schema type.
-  """
-  def cast_value_by_type("integer", value) do
-    case Integer.parse(value) do
-      {int, _} -> int
-      :error -> 0
-    end
-  end
-
-  def cast_value_by_type("number", value) do
-    case Float.parse(value) do
-      {float, _} -> float
-      :error -> 0.0
-    end
-  end
-
-  def cast_value_by_type("boolean", value) do
-    value == "true"
-  end
-
-  def cast_value_by_type(_type, value), do: value
 end
