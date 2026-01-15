@@ -9,8 +9,12 @@ A Phoenix LiveComponent for visually building, editing, and validating JSON Sche
 ## Features
 
 - **Visual Editing**: Recursively build and edit deeply nested objects and arrays.
-- **Real-time Validation**: In-editor logic checking (e.g., `min <= max`) with visual feedback.
-- **Lightweight**: The only dependency is `phoenix_live_view`.
+- **Tabbed Interface**: Switch between a visual editor and a live JSON preview.
+- **Logical Composition**: Support for `oneOf`, `anyOf`, and `allOf` composition types.
+- **Real-time Validation**: In-editor logic checking (e.g., `min <= max`) with immediate visual feedback.
+- **Full Draft 07 Support**: Includes constraints (minimum, pattern, etc.), enums, constants, and $schema management.
+- **Copy to Clipboard**: One-click export of the generated schema.
+- **Lightweight**: Zero external JS dependencies (uses native Phoenix hooks), only requires `phoenix_live_view`.
 
 ## Installation
 
@@ -48,6 +52,7 @@ let liveSocket = new LiveSocket("/live", Socket, {
 
 ## Usage
 
+The editor supports JSON Schema Draft 07. It automatically injects the `$schema` URI if not provided.
 
 ### 1. Initialize the Schema
 
