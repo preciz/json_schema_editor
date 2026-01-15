@@ -165,8 +165,6 @@ defmodule JSONSchemaEditorTest do
     assert html =~ "jse-badge"
   end
 
-
-
   test "handle_event save without callback (noop)" do
     socket = setup_socket(%{"type" => "string"})
     # on_save is nil by default in setup_socket
@@ -594,8 +592,6 @@ defmodule JSONSchemaEditorTest do
     assert Map.has_key?(socket.assigns.schema["properties"], "b")
   end
 
-
-
   test "handle_event change_title and description to empty (removal)" do
     schema = %{"type" => "string", "title" => "T", "description" => "D"}
     socket = setup_socket(schema)
@@ -887,7 +883,7 @@ defmodule JSONSchemaEditorTest do
     # State 1: No contains (Show Add button)
     schema = %{"type" => "array"}
     html = render_component(JSONSchemaEditor, id: "jse", schema: schema)
-    
+
     assert html =~ "Add Contains Schema"
     refute html =~ "Remove Contains Schema"
 
@@ -897,6 +893,7 @@ defmodule JSONSchemaEditorTest do
 
     refute html =~ "Add Contains Schema"
     assert html =~ "Remove Contains Schema"
-    assert html =~ "phx-click=\"remove_contains\"" # Check for delete button presence
+    # Check for delete button presence
+    assert html =~ "phx-click=\"remove_contains\""
   end
 end

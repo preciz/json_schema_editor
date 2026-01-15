@@ -20,71 +20,46 @@ defmodule JSONSchemaEditor.Components do
     """
   end
 
-  defp svg_path(:save) do
+  defp svg_path(name) do
     assigns = %{}
 
-    ~H"""
-    <path
-      fill-rule="evenodd"
-      d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z"
-      clip-rule="evenodd"
-    />
-    """
-  end
+    case name do
+      :save ->
+        ~H(<path
+  fill-rule="evenodd"
+  d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z"
+  clip-rule="evenodd"
+/>)
 
-  defp svg_path(:chevron_up) do
-    assigns = %{}
+      :chevron_up ->
+        ~H(<path
+  fill-rule="evenodd"
+  d="M14.77 12.79a.75.75 0 01-1.06-.02L10 8.832 6.29 12.77a.75.75 0 11-1.08-1.04l4.25-4.5a.75.75 0 011.08 0l4.25 4.5a.75.75 0 01-.02 1.06z"
+  clip-rule="evenodd"
+/>)
 
-    ~H"""
-    <path
-      fill-rule="evenodd"
-      d="M14.77 12.79a.75.75 0 01-1.06-.02L10 8.832 6.29 12.77a.75.75 0 11-1.08-1.04l4.25-4.5a.75.75 0 011.08 0l4.25 4.5a.75.75 0 01-.02 1.06z"
-      clip-rule="evenodd"
-    />
-    """
-  end
+      :chevron_down ->
+        ~H(<path
+  fill-rule="evenodd"
+  d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25 4.5a.75.75 0 01.02-1.06z"
+  clip-rule="evenodd"
+/>)
 
-  defp svg_path(:chevron_down) do
-    assigns = %{}
+      :trash ->
+        ~H(<path
+  fill-rule="evenodd"
+  d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z"
+  clip-rule="evenodd"
+/>)
 
-    ~H"""
-    <path
-      fill-rule="evenodd"
-      d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-      clip-rule="evenodd"
-    />
-    """
-  end
+      :plus ->
+        ~H(<path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />)
 
-  defp svg_path(:trash) do
-    assigns = %{}
-
-    ~H"""
-    <path
-      fill-rule="evenodd"
-      d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z"
-      clip-rule="evenodd"
-    />
-    """
-  end
-
-  defp svg_path(:plus) do
-    assigns = %{}
-
-    ~H"""
-    <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-    """
-  end
-
-  defp svg_path(:adjustments) do
-    assigns = %{}
-
-    ~H"""
-    <g fill-rule="evenodd" clip-rule="evenodd">
-      <path d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5A.75.75 0 012 10z" />
-      <path d="M12.75 8a.75.75 0 01.75.75v2.5a.75.75 0 01-1.5 0v-2.5a.75.75 0 01.75-.75zM7.75 13a.75.75 0 01.75.75v2.5a.75.75 0 01-1.5 0v-2.5a.75.75 0 01.75-.75zM17.75 3a.75.75 0 01.75.75v2.5a.75.75 0 01-1.5 0v-2.5A.75.75 0 0117.75 3z" />
-    </g>
-    """
+      :adjustments ->
+        ~H(<g fill-rule="evenodd" clip-rule="evenodd">
+  <path d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5A.75.75 0 012 10z" /><path d="M12.75 8a.75.75 0 01.75.75v2.5a.75.75 0 01-1.5 0v-2.5a.75.75 0 01.75-.75zM7.75 13a.75.75 0 01.75.75v2.5a.75.75 0 01-1.5 0v-2.5a.75.75 0 01.75-.75zM17.75 3a.75.75 0 01.75.75v2.5a.75.75 0 01-1.5 0v-2.5A.75.75 0 0117.75 3z" />
+</g>)
+    end
   end
 
   attr(:class, :string, default: nil)
@@ -93,9 +68,7 @@ defmodule JSONSchemaEditor.Components do
 
   defp badge(assigns) do
     ~H"""
-    <span class={["jse-badge", @class]} {@rest}>
-      {render_slot(@inner_block)}
-    </span>
+    <span class={["jse-badge", @class]} {@rest}>{render_slot(@inner_block)}</span>
     """
   end
 
@@ -234,7 +207,6 @@ defmodule JSONSchemaEditor.Components do
         logic_types={@logic_types}
         myself={@myself}
       />
-
       <%= if !Map.get(@ui_state, "collapsed_node:#{JSON.encode!(@path)}", false) do %>
         <%= if Map.get(@ui_state, "expanded_constraints:#{JSON.encode!(@path)}", false) do %>
           <.constraint_grid
@@ -245,7 +217,6 @@ defmodule JSONSchemaEditor.Components do
             myself={@myself}
           />
         <% end %>
-
         <%= if @logic_key do %>
           <.logic_branches
             node={@node}
@@ -328,7 +299,6 @@ defmodule JSONSchemaEditor.Components do
           <.icon name={:chevron_down} class="jse-icon-xs" />
         </button>
       <% end %>
-
       <form phx-change="change_type" phx-target={@myself} class="jse-type-form">
         <input type="hidden" name="path" value={JSON.encode!(@path)} />
         <select name="type" class="jse-type-select">
@@ -348,7 +318,6 @@ defmodule JSONSchemaEditor.Components do
           </optgroup>
         </select>
       </form>
-
       <input
         type="text"
         value={Map.get(@node, "title", "")}
@@ -358,30 +327,18 @@ defmodule JSONSchemaEditor.Components do
         phx-target={@myself}
         phx-value-path={JSON.encode!(@path)}
       />
-
       <div class="jse-description-container">
-        <%= if Map.get(@ui_state, "expanded_description:#{JSON.encode!(@path)}", false) do %>
-          <div class="jse-description-expanded">
+        <% expanded = Map.get(@ui_state, "expanded_description:#{JSON.encode!(@path)}", false) %>
+        <div class={if expanded, do: "jse-description-expanded", else: "jse-description-collapsed"}>
+          <%= if expanded do %>
             <textarea
               class="jse-description-textarea"
               placeholder="Description..."
               phx-blur="change_description"
               phx-target={@myself}
               phx-value-path={JSON.encode!(@path)}
-            ><%= Map.get(@node, "description", "") %></textarea>
-            <button
-              class="jse-btn-icon jse-btn-sm"
-              phx-click="toggle_ui"
-              phx-value-type="expanded_description"
-              phx-target={@myself}
-              phx-value-path={JSON.encode!(@path)}
-              title="Collapse Description"
-            >
-              <.icon name={:chevron_up} class="jse-icon-sm" />
-            </button>
-          </div>
-        <% else %>
-          <div class="jse-description-collapsed">
+            >{Map.get(@node, "description", "")}</textarea>
+          <% else %>
             <input
               type="text"
               value={Map.get(@node, "description", "")}
@@ -391,20 +348,19 @@ defmodule JSONSchemaEditor.Components do
               phx-target={@myself}
               phx-value-path={JSON.encode!(@path)}
             />
-            <button
-              class="jse-btn-icon jse-btn-sm"
-              phx-click="toggle_ui"
-              phx-value-type="expanded_description"
-              phx-target={@myself}
-              phx-value-path={JSON.encode!(@path)}
-              title="Expand Description"
-            >
-              <.icon name={:chevron_down} class="jse-icon-sm" />
-            </button>
-          </div>
-        <% end %>
+          <% end %>
+          <button
+            class="jse-btn-icon jse-btn-sm"
+            phx-click="toggle_ui"
+            phx-value-type="expanded_description"
+            phx-target={@myself}
+            phx-value-path={JSON.encode!(@path)}
+            title={if expanded, do: "Collapse Description", else: "Expand Description"}
+          >
+            <.icon name={if(expanded, do: :chevron_up, else: :chevron_down)} class="jse-icon-sm" />
+          </button>
+        </div>
       </div>
-
       <button
         class={[
           "jse-btn-icon jse-btn-toggle-constraints",
@@ -422,6 +378,33 @@ defmodule JSONSchemaEditor.Components do
     """
   end
 
+  defp constraints_config("string"),
+    do: [
+      {"Min Length", "minLength", "number"},
+      {"Max Length", "maxLength", "number"},
+      {"Pattern", "pattern", "text"}
+    ]
+
+  defp constraints_config(t) when t in ["number", "integer"],
+    do: [
+      {"Minimum", "minimum", "number"},
+      {"Maximum", "maximum", "number"},
+      {"Multiple Of", "multipleOf", "number"}
+    ]
+
+  defp constraints_config("array"),
+    do: [
+      {"Min Items", "minItems", "number"},
+      {"Max Items", "maxItems", "number"},
+      {"Min Contains", "minContains", "number"},
+      {"Max Contains", "maxContains", "number"}
+    ]
+
+  defp constraints_config("object"),
+    do: [{"Min Props", "minProperties", "number"}, {"Max Props", "maxProperties", "number"}]
+
+  defp constraints_config(_), do: []
+
   attr(:node, :map, required: true)
   attr(:path, :list, required: true)
   attr(:validation_errors, :map, required: true)
@@ -429,98 +412,75 @@ defmodule JSONSchemaEditor.Components do
   attr(:myself, :any, required: true)
 
   defp constraint_grid(assigns) do
+    type = Map.get(assigns.node, "type")
+    assigns = assign(assigns, :type, type)
+
     ~H"""
     <div class="jse-constraints-container">
       <div class="jse-constraints-grid">
-        <%= case Map.get(@node, "type") do %>
-          <% "string" -> %>
-            <.const_input node={@node} path={@path} type="text" myself={@myself} />
-            <%= for {label, field, type} <- [{"Min Length", "minLength", "number"}, {"Max Length", "maxLength", "number"}, {"Pattern", "pattern", "text"}] do %>
-              <.constraint_input
-                label={label}
-                field={field}
-                value={Map.get(@node, field)}
-                path={@path}
-                type={type}
-                validation_errors={@validation_errors}
-                myself={@myself}
-              />
-            <% end %>
-            <div class="jse-constraint-field">
-              <label class="jse-constraint-label">Format</label>
-              <select class="jse-constraint-input" phx-change="change_format" phx-target={@myself}>
-                <input type="hidden" name="path" value={JSON.encode!(@path)} />
-                <option value="">None</option>
-                <%= for fmt <- @formats do %>
-                  <option value={fmt} selected={Map.get(@node, "format") == fmt}>{fmt}</option>
-                <% end %>
-              </select>
-            </div>
-          <% type when type in ["number", "integer"] -> %>
-            <.const_input node={@node} path={@path} type="number" step="any" myself={@myself} />
-            <%= for {label, field} <- [{"Minimum", "minimum"}, {"Maximum", "maximum"}, {"Multiple Of", "multipleOf"}] do %>
-              <.constraint_input
-                label={label}
-                field={field}
-                value={Map.get(@node, field)}
-                path={@path}
-                type="number"
-                step="any"
-                validation_errors={@validation_errors}
-                myself={@myself}
-              />
-            <% end %>
-          <% "boolean" -> %>
-            <div class="jse-constraint-field">
-              <label class="jse-constraint-label">Const</label>
-              <select class="jse-constraint-input" phx-change="update_const" phx-target={@myself}>
-                <input type="hidden" name="path" value={JSON.encode!(@path)} />
-                <option value="">None</option>
-                <%= for val <- [true, false] do %>
-                  <option value={to_string(val)} selected={Map.get(@node, "const") == val}>
-                    {to_string(val)}
-                  </option>
-                <% end %>
-              </select>
-            </div>
-          <% "array" -> %>
-            <%= for {label, field} <- [{"Min Items", "minItems"}, {"Max Items", "maxItems"}, {"Min Contains", "minContains"}, {"Max Contains", "maxContains"}] do %>
-              <.constraint_input
-                label={label}
-                field={field}
-                value={Map.get(@node, field)}
-                path={@path}
-                type="number"
-                validation_errors={@validation_errors}
-                myself={@myself}
-              />
-            <% end %>
-            <div class="jse-constraint-field">
-              <label class="jse-constraint-label">Unique Items</label>
-              <input
-                type="checkbox"
-                checked={Map.get(@node, "uniqueItems") == true}
-                phx-click="update_constraint"
-                phx-value-path={JSON.encode!(@path)}
-                phx-value-field="uniqueItems"
-                phx-value-value={!Map.get(@node, "uniqueItems", false) |> to_string()}
-                phx-target={@myself}
-              />
-            </div>
-          <% "object" -> %>
-            <%= for {label, field} <- [{"Min Props", "minProperties"}, {"Max Props", "maxProperties"}] do %>
-              <.constraint_input
-                label={label}
-                field={field}
-                value={Map.get(@node, field)}
-                path={@path}
-                type="number"
-                validation_errors={@validation_errors}
-                myself={@myself}
-              />
-            <% end %>
-          <% _ -> %>
-            <span class="jse-constraint-label">No constraints for this type</span>
+        <%= if @type in ["string", "number", "integer"] do %>
+          <.const_input
+            node={@node}
+            path={@path}
+            type={if @type == "string", do: "text", else: "number"}
+            step="any"
+            myself={@myself}
+          />
+        <% end %>
+        <%= for {label, field, type} <- constraints_config(@type) do %>
+          <.constraint_input
+            label={label}
+            field={field}
+            value={Map.get(@node, field)}
+            path={@path}
+            type={type}
+            step="any"
+            validation_errors={@validation_errors}
+            myself={@myself}
+          />
+        <% end %>
+        <%= if @type == "string" do %>
+          <div class="jse-constraint-field">
+            <label class="jse-constraint-label">Format</label>
+            <select class="jse-constraint-input" phx-change="change_format" phx-target={@myself}>
+              <input type="hidden" name="path" value={JSON.encode!(@path)} />
+              <option value="">None</option>
+              <%= for fmt <- @formats do %>
+                <option value={fmt} selected={Map.get(@node, "format") == fmt}>{fmt}</option>
+              <% end %>
+            </select>
+          </div>
+        <% end %>
+        <%= if @type == "boolean" do %>
+          <div class="jse-constraint-field">
+            <label class="jse-constraint-label">Const</label>
+            <select class="jse-constraint-input" phx-change="update_const" phx-target={@myself}>
+              <input type="hidden" name="path" value={JSON.encode!(@path)} />
+              <option value="">None</option>
+              <%= for val <- [true, false] do %>
+                <option value={to_string(val)} selected={Map.get(@node, "const") == val}>
+                  {to_string(val)}
+                </option>
+              <% end %>
+            </select>
+          </div>
+        <% end %>
+        <%= if @type == "array" do %>
+          <div class="jse-constraint-field">
+            <label class="jse-constraint-label">Unique Items</label>
+            <input
+              type="checkbox"
+              checked={Map.get(@node, "uniqueItems") == true}
+              phx-click="update_constraint"
+              phx-value-path={JSON.encode!(@path)}
+              phx-value-field="uniqueItems"
+              phx-value-value={!Map.get(@node, "uniqueItems", false) |> to_string()}
+              phx-target={@myself}
+            />
+          </div>
+        <% end %>
+        <%= if !(@type in ["string", "number", "integer", "boolean", "array", "object"]) do %>
+          <span class="jse-constraint-label">No constraints for this type</span>
         <% end %>
         <.enum_section
           node={@node}
@@ -578,7 +538,6 @@ defmodule JSONSchemaEditor.Components do
             />
           </div>
         <% end %>
-
         <div class="jse-add-property-container">
           <button
             phx-click="add_logic_branch"
@@ -706,7 +665,6 @@ defmodule JSONSchemaEditor.Components do
           <span class="jse-strict-text">Strict Mode (additionalProperties: false)</span>
         </label>
       </div>
-
       <%= for {key, val} <- Map.get(@node, "properties", %{}) |> Enum.sort_by(fn {k, _v} -> k end) do %>
         <div class="jse-property-item">
           <div class="jse-property-row">
@@ -756,7 +714,6 @@ defmodule JSONSchemaEditor.Components do
           </div>
         </div>
       <% end %>
-
       <div class="jse-add-property-container">
         <button
           phx-click="add_property"
@@ -764,9 +721,7 @@ defmodule JSONSchemaEditor.Components do
           phx-value-path={JSON.encode!(@path)}
           class="jse-btn jse-btn-secondary jse-btn-sm"
         >
-          <div class="jse-icon-circle">
-            <.icon name={:plus} class="jse-icon-xs" />
-          </div>
+          <div class="jse-icon-circle"><.icon name={:plus} class="jse-icon-xs" /></div>
           Add Property
         </button>
       </div>

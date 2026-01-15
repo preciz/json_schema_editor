@@ -23,45 +23,31 @@ defmodule JSONSchemaEditor.SchemaUtils do
   def generate_unique_key(existing_map, base_name, counter \\ 1) do
     key = if counter == 1, do: base_name, else: "#{base_name}_#{counter}"
 
-    if Map.has_key?(existing_map, key) do
-      generate_unique_key(existing_map, base_name, counter + 1)
-    else
-      key
+    if Map.has_key?(existing_map, key),
+      do: generate_unique_key(existing_map, base_name, counter + 1),
+      else: key
+  end
+
+  def cast_value(field, value)
+      when field in ~w(integer minLength maxLength minItems maxItems minProperties maxProperties) do
+    case Integer.parse(value) do
+      {int, _} ->
+        int
+
+      :error ->
+        if "min" in String.split(field, ~r/[A-Z]/) or "max" in String.split(field, ~r/[A-Z]/),
+          do: nil,
+          else: 0
     end
   end
 
-  def cast_value(type_or_field, value) do
-    cond do
-      type_or_field in [
-        "integer",
-        "minLength",
-        "maxLength",
-        "minItems",
-        "maxItems",
-        "minProperties",
-        "maxProperties"
-      ] ->
-        case Integer.parse(value) do
-          {int, _} ->
-            int
-
-          :error ->
-            if String.contains?(type_or_field, "min") or String.contains?(type_or_field, "max"),
-              do: nil,
-              else: 0
-        end
-
-      type_or_field in ["number", "minimum", "maximum", "multipleOf"] ->
-        case Float.parse(value) do
-          {float, _} -> float
-          :error -> if type_or_field == "number", do: 0.0, else: nil
-        end
-
-      type_or_field in ["boolean", "uniqueItems"] ->
-        value == "true"
-
-      true ->
-        value
+  def cast_value(field, value) when field in ~w(number minimum maximum multipleOf) do
+    case Float.parse(value) do
+      {float, _} -> float
+      :error -> if field == "number", do: 0.0, else: nil
     end
   end
+
+  def cast_value(field, value) when field in ~w(boolean uniqueItems), do: value == "true"
+  def cast_value(_field, value), do: value
 end
