@@ -196,6 +196,11 @@ defmodule Demo do
   def render(assigns) do
     ~H"""
     <style>
+      body {
+        margin: 0;
+      }
+    </style>
+    <style>
       <%= @css %>
     </style>
     <script>
@@ -220,19 +225,12 @@ defmodule Demo do
         }
       });
     </script>
-    <div style="height: 100vh; display: flex; flex-direction: column;">
-      <div style="padding: 1rem; border-bottom: 1px solid #eee;">
-        <h1>JSON Schema Editor Demo</h1>
-      </div>
-      <div style="flex: 1; padding: 2rem; overflow: auto;">
-        <.live_component
-          module={JSONSchemaEditor}
-          id="editor"
-          schema={@my_schema}
-          on_save={fn updated_json -> send(self(), {:schema_updated, updated_json}) end}
-        />
-      </div>
-    </div>
+    <.live_component
+      module={JSONSchemaEditor}
+      id="editor"
+      schema={@my_schema}
+      on_save={fn updated_json -> send(self(), {:schema_updated, updated_json}) end}
+    />
     """
   end
 
