@@ -6,13 +6,29 @@ defmodule JSONSchemaEditor.SchemaUtils do
   def get_in_path(data, [key | rest]) when is_map(data),
     do: get_in_path(Map.get(data, key), rest)
 
+  def get_in_path(data, [key | rest]) when is_list(data) and is_integer(key),
+    do: get_in_path(Enum.at(data, key), rest)
+
   def get_in_path(_, _), do: nil
 
   def put_in_path(_data, [], value), do: value
 
-  def put_in_path(data, [key | rest], value) when is_map(data) or is_nil(data) do
-    data = data || %{}
-    Map.put(data, key, put_in_path(Map.get(data, key, %{}), rest, value))
+  def put_in_path(data, [key | rest], value)
+      when is_integer(key) and (is_list(data) or is_nil(data)) do
+    data = data || []
+    current = Enum.at(data, key)
+    new_child = put_in_path(current, rest, value)
+
+    if key < length(data) do
+      List.replace_at(data, key, new_child)
+    else
+      data ++ [new_child]
+    end
+  end
+
+  def put_in_path(data, [key | rest], value) do
+    data = if is_map(data), do: data, else: %{}
+    Map.put(data, key, put_in_path(Map.get(data, key), rest, value))
   end
 
   def update_in_path(data, path, func) do

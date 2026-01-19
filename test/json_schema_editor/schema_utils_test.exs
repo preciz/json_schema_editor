@@ -10,6 +10,13 @@ defmodule JSONSchemaEditor.SchemaUtilsTest do
       assert SchemaUtils.get_in_path(data, ["x"]) == nil
       assert SchemaUtils.get_in_path("not a map", ["any"]) == nil
     end
+
+    test "retrieves value from list at index" do
+      data = %{"list" => [%{"a" => 1}, %{"b" => 2}]}
+      assert SchemaUtils.get_in_path(data, ["list", 0]) == %{"a" => 1}
+      assert SchemaUtils.get_in_path(data, ["list", 1, "b"]) == 2
+      assert SchemaUtils.get_in_path(data, ["list", 2]) == nil
+    end
   end
 
   describe "put_in_path/3" do
@@ -19,6 +26,17 @@ defmodule JSONSchemaEditor.SchemaUtilsTest do
       assert SchemaUtils.put_in_path(data, ["a", "c"], 3) == %{"a" => %{"b" => 1, "c" => 3}}
       assert SchemaUtils.put_in_path(nil, ["a", "b"], 1) == %{"a" => %{"b" => 1}}
       assert SchemaUtils.put_in_path(data, [], %{"new" => "root"}) == %{"new" => "root"}
+    end
+
+    test "puts value in list at index" do
+      data = %{"list" => ["a", "b"]}
+      assert SchemaUtils.put_in_path(data, ["list", 1], "c") == %{"list" => ["a", "c"]}
+
+      # Appending
+      assert SchemaUtils.put_in_path(data, ["list", 2], "d") == %{"list" => ["a", "b", "d"]}
+
+      # Creating list from nil
+      assert SchemaUtils.put_in_path(nil, [0], "item") == ["item"]
     end
   end
 

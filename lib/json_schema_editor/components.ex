@@ -665,7 +665,7 @@ defmodule JSONSchemaEditor.Components do
           <span class="jse-strict-text">Strict Mode (additionalProperties: false)</span>
         </label>
       </div>
-      <%= for {key, val} <- Map.get(@node, "properties", %{}) |> Enum.sort_by(fn {k, _v} -> k end) do %>
+      <%= for {key, val} <- Map.get(@node, "properties", %{}) do %>
         <div class="jse-property-item">
           <div class="jse-property-row">
             <button
