@@ -12,6 +12,7 @@ defmodule JSONSchemaEditor.ImportTest do
         validation_errors: %{},
         show_import_modal: false,
         import_error: nil,
+        import_mode: :schema,
         __changed__: %{},
         on_save: nil
       }
@@ -30,17 +31,49 @@ defmodule JSONSchemaEditor.ImportTest do
     # Open modal
     {:noreply, socket} = JSONSchemaEditor.handle_event("open_import_modal", %{}, socket)
     assert socket.assigns.show_import_modal == true
+    assert socket.assigns.import_mode == :schema
 
     # Render modal content
-    # Note: render_component re-initializes, so we can't inspect the result of handle_event directly via render_component
-    # But we can check that if show_import_modal is true, the modal renders
     html = render_component(JSONSchemaEditor, id: "jse", schema: %{}, show_import_modal: true)
     assert html =~ "Import Schema"
+    assert html =~ "Generate from JSON"
     assert html =~ "Paste your JSON Schema here..."
-    assert html =~ "jse-modal-overlay"
 
     # Close modal
     {:noreply, socket} = JSONSchemaEditor.handle_event("close_import_modal", %{}, socket)
+    assert socket.assigns.show_import_modal == false
+    assert socket.assigns.import_error == nil
+  end
+
+  test "switches import mode" do
+    socket = setup_socket()
+
+    {:noreply, socket} =
+      JSONSchemaEditor.handle_event("set_import_mode", %{"mode" => "json"}, socket)
+
+    assert socket.assigns.import_mode == :json
+
+    {:noreply, socket} =
+      JSONSchemaEditor.handle_event("set_import_mode", %{"mode" => "schema"}, socket)
+
+    assert socket.assigns.import_mode == :schema
+  end
+
+  test "generates schema from valid json" do
+    socket = setup_socket()
+    socket = Phoenix.Component.assign(socket, import_mode: :json)
+    json_data = ~s({"name": "Alice", "age": 30})
+
+    {:noreply, socket} =
+      JSONSchemaEditor.handle_event(
+        "import_schema",
+        %{"schema_text" => json_data},
+        socket
+      )
+
+    assert socket.assigns.schema["type"] == "object"
+    assert socket.assigns.schema["properties"]["name"]["type"] == "string"
+    assert socket.assigns.schema["properties"]["age"]["type"] == "integer"
     assert socket.assigns.show_import_modal == false
     assert socket.assigns.import_error == nil
   end

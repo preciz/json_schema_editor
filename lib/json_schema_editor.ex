@@ -24,7 +24,7 @@ defmodule JSONSchemaEditor do
       />
   """
   use Phoenix.LiveComponent
-  alias JSONSchemaEditor.{SchemaUtils, Validator, PrettyPrinter, Components}
+  alias JSONSchemaEditor.{SchemaUtils, Validator, PrettyPrinter, Components, SchemaGenerator}
 
   @types ~w(string number integer boolean object array)
   @logic_types ~w(anyOf oneOf allOf)
@@ -40,7 +40,8 @@ defmodule JSONSchemaEditor do
       :myself,
       :class,
       :show_import_modal,
-      :import_error
+      :import_error,
+      :import_mode
     ]
 
     {known_assigns, rest} = Map.split(assigns, known_keys)
@@ -57,6 +58,7 @@ defmodule JSONSchemaEditor do
       |> assign_new(:active_tab, fn -> :editor end)
       |> assign_new(:show_import_modal, fn -> false end)
       |> assign_new(:import_error, fn -> nil end)
+      |> assign_new(:import_mode, fn -> :schema end)
       |> validate_and_assign_errors()
 
     {:ok, socket}
@@ -69,25 +71,36 @@ defmodule JSONSchemaEditor do
     do: {:noreply, assign(socket, :active_tab, String.to_existing_atom(tab))}
 
   def handle_event("open_import_modal", _, socket),
-    do: {:noreply, assign(socket, :show_import_modal, true)}
+    do: {:noreply, assign(socket, :show_import_modal, true) |> assign(:import_mode, :schema)}
 
   def handle_event("close_import_modal", _, socket),
     do: {:noreply, assign(socket, :show_import_modal, false) |> assign(:import_error, nil)}
 
+  def handle_event("set_import_mode", %{"mode" => mode}, socket),
+    do: {:noreply, assign(socket, :import_mode, String.to_existing_atom(mode))}
+
   def handle_event("import_schema", %{"schema_text" => text}, socket) do
     case JSON.decode(text) do
-      {:ok, schema} when is_map(schema) ->
-        socket =
-          socket
-          |> assign(:schema, schema)
-          |> assign(:show_import_modal, false)
-          |> assign(:import_error, nil)
-          |> validate_and_assign_errors()
+      {:ok, data} ->
+        schema =
+          if socket.assigns.import_mode == :json do
+            SchemaGenerator.generate(data)
+          else
+            data
+          end
 
-        {:noreply, socket}
+        if is_map(schema) do
+          socket =
+            socket
+            |> assign(:schema, schema)
+            |> assign(:show_import_modal, false)
+            |> assign(:import_error, nil)
+            |> validate_and_assign_errors()
 
-      {:ok, _} ->
-        {:noreply, assign(socket, :import_error, "Invalid schema: Must be a JSON object")}
+          {:noreply, socket}
+        else
+          {:noreply, assign(socket, :import_error, "Invalid schema: Must be a JSON object")}
+        end
 
       {:error, _} ->
         {:noreply, assign(socket, :import_error, "Invalid JSON")}
@@ -374,7 +387,26 @@ defmodule JSONSchemaEditor do
         <div class="jse-modal-overlay">
           <div class="jse-modal">
             <div class="jse-modal-header">
-              <h3 class="jse-modal-title">Import Schema</h3>
+              <div class="jse-tabs">
+                <button
+                  type="button"
+                  class={["jse-tab-btn", @import_mode == :schema && "active"]}
+                  phx-click="set_import_mode"
+                  phx-value-mode="schema"
+                  phx-target={@myself}
+                >
+                  Import Schema
+                </button>
+                <button
+                  type="button"
+                  class={["jse-tab-btn", @import_mode == :json && "active"]}
+                  phx-click="set_import_mode"
+                  phx-value-mode="json"
+                  phx-target={@myself}
+                >
+                  Generate from JSON
+                </button>
+              </div>
               <button class="jse-btn-icon" phx-click="close_import_modal" phx-target={@myself}>
                 <Components.icon name={:close} class="jse-icon-sm" />
               </button>
@@ -387,7 +419,11 @@ defmodule JSONSchemaEditor do
                 <textarea
                   name="schema_text"
                   class="jse-modal-textarea"
-                  placeholder="Paste your JSON Schema here..."
+                  placeholder={
+                    if @import_mode == :schema,
+                      do: "Paste your JSON Schema here...",
+                      else: "Paste a JSON object to generate a schema..."
+                  }
                   autofocus
                 ></textarea>
               </div>
@@ -401,7 +437,7 @@ defmodule JSONSchemaEditor do
                   Cancel
                 </button>
                 <button type="submit" class="jse-btn jse-btn-primary">
-                  Import
+                  {if @import_mode == :schema, do: "Import", else: "Generate"}
                 </button>
               </div>
             </form>
