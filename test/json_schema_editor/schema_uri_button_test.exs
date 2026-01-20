@@ -3,7 +3,7 @@ defmodule JSONSchemaEditor.SchemaUriButtonTest do
   import Phoenix.LiveViewTest
   alias JSONSchemaEditor
 
-  defp setup_socket(schema \\ %{}) do
+  defp setup_socket(schema) do
     %Phoenix.LiveView.Socket{
       assigns: %{
         id: "test",
