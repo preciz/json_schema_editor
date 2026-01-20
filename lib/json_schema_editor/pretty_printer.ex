@@ -4,7 +4,9 @@ defmodule JSONSchemaEditor.PrettyPrinter do
   @indent_size 2
 
   def format(data) do
-    do_format(data, 0)
+    data
+    |> do_format(0)
+    |> Phoenix.HTML.raw()
   end
 
   defp do_format(data, level) when is_map(data) do
@@ -19,7 +21,8 @@ defmodule JSONSchemaEditor.PrettyPrinter do
         # Sort keys for consistent output
         |> Enum.sort_by(fn {k, _v} -> k end)
         |> Enum.map(fn {k, v} ->
-          "#{inner_indent}\"#{k}\": #{do_format(v, level + 1)}"
+          key_html = ~s(<span class="jse-key">#{encode_string(k)}</span>)
+          "#{inner_indent}#{key_html}: #{do_format(v, level + 1)}"
         end)
         |> Enum.join(",\n")
 
@@ -46,21 +49,30 @@ defmodule JSONSchemaEditor.PrettyPrinter do
   end
 
   defp do_format(data, _level) when is_binary(data) do
-    "\"#{data}\""
+    ~s(<span class="jse-string">#{encode_string(data)}</span>)
   end
 
   defp do_format(data, _level) when is_boolean(data) do
-    to_string(data)
+    ~s(<span class="jse-boolean">#{to_string(data)}</span>)
   end
 
-  defp do_format(nil, _level), do: "null"
+  defp do_format(nil, _level) do
+    ~s(<span class="jse-null">null</span>)
+  end
 
   defp do_format(data, _level) when is_number(data) do
-    to_string(data)
+    ~s(<span class="jse-number">#{to_string(data)}</span>)
   end
 
   defp do_format(data, _level) do
-    # Fallback for other types, inspect generally produces valid representations for atoms etc.
-    inspect(data)
+    # Fallback
+    ~s(<span class="jse-string">#{encode_string(inspect(data))}</span>)
+  end
+
+  defp encode_string(s) do
+    s
+    |> JSON.encode!()
+    |> Phoenix.HTML.html_escape()
+    |> Phoenix.HTML.safe_to_string()
   end
 end
