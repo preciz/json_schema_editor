@@ -123,6 +123,12 @@
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   }
 
+  .jse-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
 
   .jse-badge {
     display: inline-flex;
@@ -216,9 +222,10 @@
     background-color: var(--jse-primary-hover);
   }
 
-  .jse-btn-primary:disabled {
-    opacity: 0.6;
+  .jse-btn:disabled {
+    opacity: 0.4;
     cursor: not-allowed;
+    pointer-events: none;
   }
 
   .jse-btn-secondary {
