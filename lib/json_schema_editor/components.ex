@@ -38,10 +38,17 @@ defmodule JSONSchemaEditor.Components do
   clip-rule="evenodd"
 />)
 
+      :chevron_right ->
+        ~H(<path
+  fill-rule="evenodd"
+  d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
+  clip-rule="evenodd"
+/>)
+
       :chevron_down ->
         ~H(<path
   fill-rule="evenodd"
-  d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25 4.5a.75.75 0 01.02-1.06z"
+  d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.21 8.27a.75.75 0 01.02-1.06z"
   clip-rule="evenodd"
 />)
 
@@ -311,7 +318,10 @@ defmodule JSONSchemaEditor.Components do
           phx-value-path={JSON.encode!(@path)}
           title="Toggle Collapse"
         >
-          <.icon name={:chevron_down} class="jse-icon-xs" />
+          <.icon
+            name={if Map.get(@ui_state, "collapsed_node:#{JSON.encode!(@path)}", false), do: :chevron_right, else: :chevron_down}
+            class="jse-icon-xs"
+          />
         </button>
       <% end %>
       <form phx-change="change_type" phx-target={@myself} class="jse-type-form">

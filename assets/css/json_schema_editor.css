@@ -296,10 +296,6 @@
     border-color: var(--jse-primary);
   }
 
-  .jse-node-toggle.jse-collapsed {
-     transform: translateX(-50%) rotate(-90deg);
-  }
-
   .jse-type-select {
     background-color: var(--jse-bg-secondary);
     border: 1px solid transparent;
