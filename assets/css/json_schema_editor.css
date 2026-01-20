@@ -29,6 +29,13 @@
     --jse-radius: 0.375rem;
     --jse-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     --jse-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+
+    /* Syntax Highlighting Colors */
+    --jse-syntax-key: #7c3aed; /* Violet 600 */
+    --jse-syntax-string: #059669; /* Emerald 600 */
+    --jse-syntax-number: #2563eb; /* Blue 600 */
+    --jse-syntax-boolean: #db2777; /* Pink 600 */
+    --jse-syntax-null: #9ca3af; /* Gray 400 */
   }
 
   @media (prefers-color-scheme: dark) {
@@ -53,6 +60,13 @@
 
       --jse-success: #10b981;
       --jse-success-bg: #064e3b;
+
+      /* Syntax Highlighting Colors (Dark) */
+      --jse-syntax-key: #a78bfa; /* Violet 400 */
+      --jse-syntax-string: #34d399; /* Emerald 400 */
+      --jse-syntax-number: #60a5fa; /* Blue 400 */
+      --jse-syntax-boolean: #f472b6; /* Pink 400 */
+      --jse-syntax-null: #9ca3af; /* Gray 400 */
     }
   }
 
@@ -534,7 +548,7 @@
     padding: 0.25rem 0.5rem;
     font-size: 0.875rem;
     font-weight: 700;
-    color: var(--jse-text-primary);
+    color: var(--jse-syntax-key);
     transition: all 0.2s;
   }
 
@@ -701,37 +715,30 @@
 
   /* Syntax Highlighting */
   .jse-key {
-    color: #7c3aed; /* Violet 600 */
+    color: var(--jse-syntax-key);
   }
   .jse-string {
-    color: #059669; /* Emerald 600 */
+    color: var(--jse-syntax-string);
   }
   .jse-number {
-    color: #2563eb; /* Blue 600 */
+    color: var(--jse-syntax-number);
   }
   .jse-boolean {
-    color: #db2777; /* Pink 600 */
+    color: var(--jse-syntax-boolean);
   }
   .jse-null {
-    color: #9ca3af; /* Gray 400 */
+    color: var(--jse-syntax-null);
     font-style: italic;
   }
 
-  @media (prefers-color-scheme: dark) {
-    .jse-key {
-      color: #a78bfa; /* Violet 400 */
-    }
-    .jse-string {
-      color: #34d399; /* Emerald 400 */
-    }
-    .jse-number {
-      color: #60a5fa; /* Blue 400 */
-    }
-    .jse-boolean {
-      color: #f472b6; /* Pink 400 */
-    }
-    .jse-null {
-      color: #9ca3af; /* Gray 400 */
-    }
+  /* Input Syntax Highlighting */
+  .jse-input-string {
+    color: var(--jse-syntax-string);
+  }
+  .jse-input-number {
+    color: var(--jse-syntax-number);
+  }
+  .jse-input-boolean {
+    color: var(--jse-syntax-boolean);
   }
 }

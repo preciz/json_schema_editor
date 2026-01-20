@@ -92,7 +92,12 @@ defmodule JSONSchemaEditor.Components do
         type={@type}
         step={@step}
         value={@value}
-        class={["jse-constraint-input", @error && "jse-input-error"]}
+        class={[
+          "jse-constraint-input",
+          @error && "jse-input-error",
+          @type == "number" && "jse-input-number",
+          @type == "text" && "jse-input-string"
+        ]}
         phx-blur="update_constraint"
         phx-value-path={JSON.encode!(@path)}
         phx-value-field={@field}
@@ -119,7 +124,11 @@ defmodule JSONSchemaEditor.Components do
         type={@type}
         step={@step}
         value={Map.get(@node, "const")}
-        class="jse-constraint-input"
+        class={[
+          "jse-constraint-input",
+          @type == "number" && "jse-input-number",
+          @type == "text" && "jse-input-string"
+        ]}
         phx-blur="update_const"
         phx-value-path={JSON.encode!(@path)}
         phx-target={@myself}
@@ -127,6 +136,12 @@ defmodule JSONSchemaEditor.Components do
     </div>
     """
   end
+
+  defp get_input_class("string"), do: "jse-input-string"
+  defp get_input_class("number"), do: "jse-input-number"
+  defp get_input_class("integer"), do: "jse-input-number"
+  defp get_input_class("boolean"), do: "jse-input-boolean"
+  defp get_input_class(_), do: nil
 
   attr(:path, :list, required: true)
   attr(:node, :map, required: true)
@@ -161,7 +176,7 @@ defmodule JSONSchemaEditor.Components do
             <input
               type="text"
               value={to_string(val)}
-              class="jse-enum-input"
+              class={["jse-enum-input", get_input_class(Map.get(@node, "type"))]}
               phx-blur="update_enum_value"
               phx-target={@myself}
               phx-value-path={JSON.encode!(@path)}
@@ -454,7 +469,7 @@ defmodule JSONSchemaEditor.Components do
         <%= if @type == "boolean" do %>
           <div class="jse-constraint-field">
             <label class="jse-constraint-label">Const</label>
-            <select class="jse-constraint-input" phx-change="update_const" phx-target={@myself}>
+            <select class="jse-constraint-input jse-input-boolean" phx-change="update_const" phx-target={@myself}>
               <input type="hidden" name="path" value={JSON.encode!(@path)} />
               <option value="">None</option>
               <%= for val <- [true, false] do %>
