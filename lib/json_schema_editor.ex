@@ -278,6 +278,12 @@ defmodule JSONSchemaEditor do
   end
 
   # Consolidated field updaters
+  def handle_event("set_default_schema", _, socket) do
+    {:noreply,
+     push_history(socket)
+     |> update_node_field(JSON.encode!([]), "$schema", "https://json-schema.org/draft-07/schema")}
+  end
+
   def handle_event("change_schema", %{"value" => v}, socket),
     do: {:noreply, push_history(socket) |> update_node_field(JSON.encode!([]), "$schema", v)}
 
@@ -445,6 +451,16 @@ defmodule JSONSchemaEditor do
               phx-target={@myself}
               placeholder="Schema URI..."
             />
+            <%= if Map.get(@schema, "$schema") in [nil, ""] do %>
+              <button
+                class="jse-btn jse-btn-sm jse-btn-secondary"
+                phx-click="set_default_schema"
+                phx-target={@myself}
+                title="Set default schema"
+              >
+                Default
+              </button>
+            <% end %>
           </div>
           <div class="jse-actions">
             <button
