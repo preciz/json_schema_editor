@@ -882,7 +882,7 @@
 
   .jse-test-input-section {
     flex: 2; /* Give more space to input */
-    min-height: 500px;
+    min-height: 350px;
   }
 
   .jse-test-results {
