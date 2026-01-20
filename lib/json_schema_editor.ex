@@ -443,24 +443,26 @@ defmodule JSONSchemaEditor do
           </div>
           <div class="jse-schema-selector">
             <label for={"#{@id}-schema-uri"}>$schema</label>
-            <input
-              type="text"
-              id={"#{@id}-schema-uri"}
-              value={Map.get(@schema, "$schema")}
-              phx-blur="change_schema"
-              phx-target={@myself}
-              placeholder="Schema URI..."
-            />
-            <%= if Map.get(@schema, "$schema") in [nil, ""] do %>
-              <button
-                class="jse-btn jse-btn-sm jse-btn-secondary"
-                phx-click="set_default_schema"
+            <div class="jse-input-group">
+              <input
+                type="text"
+                id={"#{@id}-schema-uri"}
+                value={Map.get(@schema, "$schema")}
+                phx-blur="change_schema"
                 phx-target={@myself}
-                title="Set default schema"
-              >
-                Default
-              </button>
-            <% end %>
+                placeholder="Schema URI..."
+              />
+              <%= if Map.get(@schema, "$schema") in [nil, ""] do %>
+                <button
+                  class="jse-btn jse-btn-xs jse-btn-secondary jse-default-schema-btn"
+                  phx-click="set_default_schema"
+                  phx-target={@myself}
+                  title="Set default schema"
+                >
+                  Default
+                </button>
+              <% end %>
+            </div>
           </div>
           <div class="jse-actions">
             <button
