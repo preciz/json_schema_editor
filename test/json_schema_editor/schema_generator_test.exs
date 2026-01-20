@@ -10,6 +10,10 @@ defmodule JSONSchemaEditor.SchemaGeneratorTest do
     assert SchemaGenerator.generate(42) == %{"type" => "integer"}
   end
 
+  test "generates float schema" do
+    assert SchemaGenerator.generate(3.14) == %{"type" => "number"}
+  end
+
   test "generates number schema" do
     assert SchemaGenerator.generate(3.14) == %{"type" => "number"}
   end
@@ -20,6 +24,8 @@ defmodule JSONSchemaEditor.SchemaGeneratorTest do
 
   test "generates null/unknown as string" do
     assert SchemaGenerator.generate(nil) == %{"type" => "string"}
+    # PID is unknown to generator
+    assert SchemaGenerator.generate(self()) == %{"type" => "string"}
   end
 
   test "generates object schema" do

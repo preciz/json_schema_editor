@@ -24,7 +24,15 @@ defmodule JSONSchemaEditor do
       />
   """
   use Phoenix.LiveComponent
-  alias JSONSchemaEditor.{SchemaUtils, Validator, PrettyPrinter, Components, SchemaGenerator}
+
+  alias JSONSchemaEditor.{
+    SchemaUtils,
+    Validator,
+    PrettyPrinter,
+    Components,
+    SchemaGenerator,
+    SimpleValidator
+  }
 
   @types ~w(string number integer boolean object array)
   @logic_types ~w(anyOf oneOf allOf)
@@ -41,7 +49,9 @@ defmodule JSONSchemaEditor do
       :class,
       :show_import_modal,
       :import_error,
-      :import_mode
+      :import_mode,
+      :test_data_str,
+      :test_errors
     ]
 
     {known_assigns, rest} = Map.split(assigns, known_keys)
@@ -61,18 +71,44 @@ defmodule JSONSchemaEditor do
       |> assign_new(:import_mode, fn -> :schema end)
       |> assign_new(:history, fn -> [] end)
       |> assign_new(:future, fn -> [] end)
+      |> assign_new(:test_data_str, fn -> "{\n  \"example\": \"value\"\n}" end)
+      |> assign_new(:test_errors, fn -> [] end)
       |> validate_and_assign_errors()
 
     {:ok, socket}
   end
 
-  defp validate_and_assign_errors(socket),
-    do: assign(socket, :validation_errors, Validator.validate_schema(socket.assigns.schema))
+  defp validate_and_assign_errors(socket) do
+    schema_errors = Validator.validate_schema(socket.assigns.schema)
+    socket = assign(socket, :validation_errors, schema_errors)
+
+    # Also re-validate test data whenever schema changes
+    validate_test_data(socket)
+  end
+
+  defp validate_test_data(socket) do
+    case JSON.decode(socket.assigns.test_data_str) do
+      {:ok, data} ->
+        errors = SimpleValidator.validate(socket.assigns.schema, data)
+        status = if errors == [], do: :ok, else: errors
+        assign(socket, :test_errors, status)
+
+      {:error, _} ->
+        assign(socket, :test_errors, ["Invalid JSON Syntax"])
+    end
+  end
 
   defp push_history(socket) do
     socket
     |> update(:history, fn h -> [socket.assigns.schema | Enum.take(h, 49)] end)
     |> assign(:future, [])
+  end
+
+  def handle_event("update_test_data", %{"value" => value}, socket) do
+    {:noreply,
+     socket
+     |> assign(:test_data_str, value)
+     |> validate_test_data()}
   end
 
   def handle_event("undo", _, socket) do
@@ -390,6 +426,14 @@ defmodule JSONSchemaEditor do
             >
               JSON Preview
             </button>
+            <button
+              class={["jse-tab-btn", @active_tab == :test && "active"]}
+              phx-click="switch_tab"
+              phx-value-tab="test"
+              phx-target={@myself}
+            >
+              Test Lab
+            </button>
           </div>
           <div class="jse-schema-selector">
             <label for={"#{@id}-schema-uri"}>$schema</label>
@@ -468,6 +512,52 @@ defmodule JSONSchemaEditor do
               </div>
               <div class="jse-preview-content">
                 <pre class="jse-code-block"><code><%= PrettyPrinter.format(@schema) %></code></pre>
+              </div>
+            </div>
+          <% end %>
+          <%= if @active_tab == :test do %>
+            <div class="jse-test-lab">
+              <div class="jse-test-input-section">
+                <div class="jse-preview-header">
+                  <span>Sample JSON Data</span>
+                </div>
+                <textarea
+                  class="jse-test-textarea"
+                  phx-keyup="update_test_data"
+                  phx-target={@myself}
+                  spellcheck="false"
+                >{@test_data_str}</textarea>
+              </div>
+              <div class="jse-test-results">
+                <div class="jse-preview-header">
+                  <span>Validation Results</span>
+                  <%= if @test_errors == :ok do %>
+                    <Components.badge class="jse-badge-success">Valid</Components.badge>
+                  <% else %>
+                    <Components.badge class="jse-badge-error">Invalid</Components.badge>
+                  <% end %>
+                </div>
+                <div class="jse-test-output">
+                  <%= if @test_errors == :ok do %>
+                    <div class="jse-test-success-message">
+                      <Components.icon name={:check} class="jse-icon-lg" />
+                      <span>Data matches the schema!</span>
+                    </div>
+                  <% else %>
+                    <div class="jse-error-list">
+                      <%= for error <- @test_errors do %>
+                        <div class="jse-error-item">
+                          <%= if is_binary(error) do %>
+                            {error}
+                          <% else %>
+                            <span class="jse-error-path">{elem(error, 1)}</span>
+                            <span class="jse-error-desc">{elem(error, 0)}</span>
+                          <% end %>
+                        </div>
+                      <% end %>
+                    </div>
+                  <% end %>
+                </div>
               </div>
             </div>
           <% end %>

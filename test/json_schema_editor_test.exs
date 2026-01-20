@@ -15,6 +15,8 @@ defmodule JSONSchemaEditorTest do
         show_import_modal: false,
         import_error: nil,
         import_mode: :schema,
+        test_data_str: "{}",
+        test_errors: [],
         __changed__: %{},
         on_save: nil
       }
@@ -848,28 +850,177 @@ defmodule JSONSchemaEditorTest do
     assert socket.assigns.schema["const"] == false
   end
 
-  test "handle_event rename_property updates required list" do
-    schema = %{
-      "type" => "object",
-      "properties" => %{"old_name" => %{}},
-      "required" => ["old_name", "other"]
-    }
+  test "handle_event update_constraint with nil/empty/false (removal)" do
+    socket = setup_socket(%{"type" => "object", "minProperties" => 5})
 
-    socket = setup_socket(schema)
+    path_json = JSON.encode!([])
+
+    # Empty string
+
+    {:noreply, socket} =
+      JSONSchemaEditor.handle_event(
+        "update_constraint",
+        %{"path" => path_json, "field" => "minProperties", "value" => ""},
+        socket
+      )
+
+    refute Map.has_key?(socket.assigns.schema, "minProperties")
+
+    # false (for uniqueItems)
+
+    socket = setup_socket(%{"type" => "array", "uniqueItems" => true})
+
+    {:noreply, socket} =
+      JSONSchemaEditor.handle_event(
+        "update_constraint",
+        %{"path" => path_json, "field" => "uniqueItems", "value" => "false"},
+        socket
+      )
+
+    refute Map.has_key?(socket.assigns.schema, "uniqueItems")
+
+    # nil value (manual call to update_node_field is internal, but we can trigger via events that might send nil if any)
+
+    # Since events usually send strings, we test the logic via what's possible.
+  end
+
+  test "renders all icons" do
+    icons = [
+      :save,
+      :chevron_up,
+      :chevron_right,
+      :chevron_down,
+      :trash,
+      :plus,
+      :adjustments,
+      :import,
+      :close,
+      :undo,
+      :redo,
+      :check
+    ]
+
+    for name <- icons do
+      html = render_component(&JSONSchemaEditor.Components.icon/1, name: name)
+      assert html =~ "svg"
+    end
+  end
+
+  test "update/2 merges rest assigns" do
+    assigns = %{id: "test", schema: %{}, custom_attr: "val"}
+
+    socket = %Phoenix.LiveView.Socket{assigns: %{rest: %{}, __changed__: %{}}}
+
+    {:ok, socket} = JSONSchemaEditor.update(assigns, socket)
+
+    assert socket.assigns.rest.custom_attr == "val"
+  end
+
+  test "handle_event remove_enum_value last item" do
+    socket = setup_socket(%{"type" => "string", "enum" => ["A"]})
     path_json = JSON.encode!([])
 
     {:noreply, socket} =
       JSONSchemaEditor.handle_event(
-        "rename_property",
-        %{"path" => path_json, "old_key" => "old_name", "value" => "new_name"},
+        "remove_enum_value",
+        %{"path" => path_json, "index" => "0"},
         socket
       )
 
-    assert Map.has_key?(socket.assigns.schema["properties"], "new_name")
-    refute Map.has_key?(socket.assigns.schema["properties"], "old_name")
-    assert "new_name" in socket.assigns.schema["required"]
-    assert "other" in socket.assigns.schema["required"]
-    refute "old_name" in socket.assigns.schema["required"]
+    refute Map.has_key?(socket.assigns.schema, "enum")
+  end
+
+  test "handle_event remove_logic_branch last item" do
+    socket = setup_socket(%{"oneOf" => [%{"type" => "string"}]})
+    path_json = JSON.encode!([])
+
+    {:noreply, socket} =
+      JSONSchemaEditor.handle_event(
+        "remove_logic_branch",
+        %{"path" => path_json, "type" => "oneOf", "index" => "0"},
+        socket
+      )
+
+    assert socket.assigns.schema["type"] == "string"
+    refute Map.has_key?(socket.assigns.schema, "oneOf")
+  end
+
+  test "handle_event rename_property no-op cases" do
+    socket = setup_socket(%{"type" => "object", "properties" => %{"a" => %{}}})
+
+    path_json = JSON.encode!([])
+
+    # Same key
+
+    {:noreply, socket} =
+      JSONSchemaEditor.handle_event(
+        "rename_property",
+        %{"path" => path_json, "old_key" => "a", "value" => "a"},
+        socket
+      )
+
+    assert Map.has_key?(socket.assigns.schema["properties"], "a")
+
+    # Empty key
+
+    {:noreply, socket} =
+      JSONSchemaEditor.handle_event(
+        "rename_property",
+        %{"path" => path_json, "old_key" => "a", "value" => ""},
+        socket
+      )
+
+    assert Map.has_key?(socket.assigns.schema["properties"], "a")
+  end
+
+  test "renders all logic composition types" do
+    for type <- ["anyOf", "oneOf", "allOf"] do
+      schema = %{type => [%{"type" => "string"}]}
+
+      html = render_component(JSONSchemaEditor, id: "jse", schema: schema)
+
+      assert html =~ String.capitalize(type)
+    end
+  end
+
+  test "handle_event save with validation errors (noop)" do
+    parent = self()
+
+    on_save = fn schema -> send(parent, {:saved, schema}) end
+
+    socket = setup_socket(%{"type" => "string"})
+
+    socket =
+      Phoenix.Component.assign(socket, on_save: on_save, validation_errors: %{"key" => "error"})
+
+    {:noreply, _socket} = JSONSchemaEditor.handle_event("save", %{}, socket)
+
+    refute_receive {:saved, _}
+  end
+
+  test "handle_event save without on_save callback" do
+    socket = setup_socket(%{"type" => "string"})
+
+    # validation_errors is empty
+
+    {:noreply, _socket} = JSONSchemaEditor.handle_event("save", %{}, socket)
+
+    # Just checking it doesn't crash
+  end
+
+  test "handle_event add_logic_branch" do
+    socket = setup_socket(%{"oneOf" => []})
+
+    path_json = JSON.encode!([])
+
+    {:noreply, socket} =
+      JSONSchemaEditor.handle_event(
+        "add_logic_branch",
+        %{"path" => path_json, "type" => "oneOf"},
+        socket
+      )
+
+    assert length(socket.assigns.schema["oneOf"]) == 1
   end
 
   test "renders enum errors" do

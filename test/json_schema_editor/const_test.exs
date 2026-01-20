@@ -14,6 +14,8 @@ defmodule JSONSchemaEditor.ConstTest do
         show_import_modal: false,
         import_error: nil,
         import_mode: :schema,
+        test_data_str: "{}",
+        test_errors: [],
         __changed__: %{},
         on_save: nil
       }
