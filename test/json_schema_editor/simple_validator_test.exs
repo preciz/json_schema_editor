@@ -127,8 +127,9 @@ defmodule JSONSchemaEditor.SimpleValidatorTest do
     assert SimpleValidator.validate(all_schema, 7) == []
     assert SimpleValidator.validate(all_schema, 2) != []
     assert SimpleValidator.validate(all_schema, 12) != []
+
     # "not-a-number" is ignored by numeric constraints if type is not enforced, so it passes empty list.
-    
+
     # Actually allOf fails if any branch fails.
     # If branches are {%{"type" => "string"}, %{"minLength" => 10}}
     # "a" fails branch 2.

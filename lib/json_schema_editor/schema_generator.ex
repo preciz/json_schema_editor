@@ -18,11 +18,19 @@ defmodule JSONSchemaEditor.SchemaGenerator do
 
   def generate(data) when is_list(data) do
     items_schema =
-      if data == [] do
-        %{"type" => "string"}
-      else
-        # Infer from the first item for simplicity
-        generate(hd(data))
+      case Enum.uniq_by(data, &generate/1) do
+        # Default for empty array
+        [] ->
+          %{"type" => "string"}
+
+        # All items have same schema
+        [single_item] ->
+          generate(single_item)
+
+        mixed_items ->
+          # Mixed schemas, use anyOf to allow overlaps (e.g. integer vs number)
+          schemas = Enum.map(mixed_items, &generate/1)
+          %{"anyOf" => schemas}
       end
 
     %{
@@ -35,8 +43,7 @@ defmodule JSONSchemaEditor.SchemaGenerator do
   def generate(data) when is_integer(data), do: %{"type" => "integer"}
   def generate(data) when is_float(data), do: %{"type" => "number"}
   def generate(data) when is_boolean(data), do: %{"type" => "boolean"}
-  # Fallback for null
-  def generate(nil), do: %{"type" => "string"}
+  def generate(nil), do: %{"type" => "null"}
   # Fallback for unknown
   def generate(_), do: %{"type" => "string"}
 end

@@ -23,7 +23,7 @@ defmodule JSONSchemaEditor.SchemaGeneratorTest do
   end
 
   test "generates null/unknown as string" do
-    assert SchemaGenerator.generate(nil) == %{"type" => "string"}
+    assert SchemaGenerator.generate(nil) == %{"type" => "null"}
     # PID is unknown to generator
     assert SchemaGenerator.generate(self()) == %{"type" => "string"}
   end
