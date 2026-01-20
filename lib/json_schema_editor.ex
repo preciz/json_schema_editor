@@ -59,6 +59,8 @@ defmodule JSONSchemaEditor do
       |> assign_new(:show_import_modal, fn -> false end)
       |> assign_new(:import_error, fn -> nil end)
       |> assign_new(:import_mode, fn -> :schema end)
+      |> assign_new(:history, fn -> [] end)
+      |> assign_new(:future, fn -> [] end)
       |> validate_and_assign_errors()
 
     {:ok, socket}
@@ -66,6 +68,46 @@ defmodule JSONSchemaEditor do
 
   defp validate_and_assign_errors(socket),
     do: assign(socket, :validation_errors, Validator.validate_schema(socket.assigns.schema))
+
+  defp push_history(socket) do
+    socket
+    |> update(:history, fn h -> [socket.assigns.schema | Enum.take(h, 49)] end)
+    |> assign(:future, [])
+  end
+
+  def handle_event("undo", _, socket) do
+    case socket.assigns.history do
+      [previous | rest] ->
+        socket =
+          socket
+          |> update(:future, fn f -> [socket.assigns.schema | f] end)
+          |> assign(:history, rest)
+          |> assign(:schema, previous)
+          |> validate_and_assign_errors()
+
+        {:noreply, socket}
+
+      [] ->
+        {:noreply, socket}
+    end
+  end
+
+  def handle_event("redo", _, socket) do
+    case socket.assigns.future do
+      [next | rest] ->
+        socket =
+          socket
+          |> update(:history, fn h -> [socket.assigns.schema | h] end)
+          |> assign(:future, rest)
+          |> assign(:schema, next)
+          |> validate_and_assign_errors()
+
+        {:noreply, socket}
+
+      [] ->
+        {:noreply, socket}
+    end
+  end
 
   def handle_event("switch_tab", %{"tab" => tab}, socket),
     do: {:noreply, assign(socket, :active_tab, String.to_existing_atom(tab))}
@@ -92,6 +134,7 @@ defmodule JSONSchemaEditor do
         if is_map(schema) do
           socket =
             socket
+            |> push_history()
             |> assign(:schema, schema)
             |> assign(:show_import_modal, false)
             |> assign(:import_error, nil)
@@ -119,7 +162,9 @@ defmodule JSONSchemaEditor do
 
   def handle_event("change_type", %{"path" => path, "type" => type}, socket) do
     {:noreply,
-     update_schema(socket, path, fn node ->
+     socket
+     |> push_history()
+     |> update_schema(path, fn node ->
        base = Map.drop(node, ~w(type properties required items anyOf oneOf allOf))
 
        case type do
@@ -133,7 +178,9 @@ defmodule JSONSchemaEditor do
 
   def handle_event("add_property", %{"path" => path}, socket) do
     {:noreply,
-     update_schema(socket, path, fn node ->
+     socket
+     |> push_history()
+     |> update_schema(path, fn node ->
        props = Map.get(node, "properties", %{})
 
        Map.put(
@@ -146,7 +193,9 @@ defmodule JSONSchemaEditor do
 
   def handle_event("delete_property", %{"path" => path, "key" => key}, socket) do
     {:noreply,
-     update_schema(socket, path, fn node ->
+     socket
+     |> push_history()
+     |> update_schema(path, fn node ->
        node
        |> Map.update("properties", %{}, &Map.delete(&1, key))
        |> Map.update("required", [], &List.delete(&1, key))
@@ -160,7 +209,9 @@ defmodule JSONSchemaEditor do
       {:noreply, socket}
     else
       {:noreply,
-       update_schema(socket, path, fn node ->
+       socket
+       |> push_history()
+       |> update_schema(path, fn node ->
          if get_in(node, ["properties", new]) do
            node
          else
@@ -178,7 +229,9 @@ defmodule JSONSchemaEditor do
 
   def handle_event("toggle_required", %{"path" => path, "key" => key}, socket) do
     {:noreply,
-     update_schema(socket, path, fn node ->
+     socket
+     |> push_history()
+     |> update_schema(path, fn node ->
        Map.update(
          node,
          "required",
@@ -190,23 +243,25 @@ defmodule JSONSchemaEditor do
 
   # Consolidated field updaters
   def handle_event("change_schema", %{"value" => v}, socket),
-    do: {:noreply, update_node_field(socket, JSON.encode!([]), "$schema", v)}
+    do: {:noreply, push_history(socket) |> update_node_field(JSON.encode!([]), "$schema", v)}
 
   def handle_event("change_format", %{"path" => p, "value" => v}, socket),
-    do: {:noreply, update_node_field(socket, p, "format", v)}
+    do: {:noreply, push_history(socket) |> update_node_field(p, "format", v)}
 
   def handle_event("change_title", %{"path" => p, "value" => v}, socket),
-    do: {:noreply, update_node_field(socket, p, "title", String.trim(v))}
+    do: {:noreply, push_history(socket) |> update_node_field(p, "title", String.trim(v))}
 
   def handle_event("change_description", %{"path" => p, "value" => v}, socket),
-    do: {:noreply, update_node_field(socket, p, "description", String.trim(v))}
+    do: {:noreply, push_history(socket) |> update_node_field(p, "description", String.trim(v))}
 
   def handle_event("update_constraint", %{"path" => p, "field" => f, "value" => v}, socket),
-    do: {:noreply, update_node_field(socket, p, f, SchemaUtils.cast_value(f, v))}
+    do: {:noreply, push_history(socket) |> update_node_field(p, f, SchemaUtils.cast_value(f, v))}
 
   def handle_event("update_const", %{"path" => p, "value" => v}, socket) do
     {:noreply,
-     update_schema(socket, p, fn node ->
+     socket
+     |> push_history()
+     |> update_schema(p, fn node ->
        if v == "",
          do: Map.delete(node, "const"),
          else: Map.put(node, "const", SchemaUtils.cast_value(node["type"] || "string", v))
@@ -215,7 +270,9 @@ defmodule JSONSchemaEditor do
 
   def handle_event("toggle_additional_properties", %{"path" => p}, socket) do
     {:noreply,
-     update_schema(socket, p, fn node ->
+     socket
+     |> push_history()
+     |> update_schema(p, fn node ->
        if node["additionalProperties"] == false,
          do: Map.delete(node, "additionalProperties"),
          else: Map.put(node, "additionalProperties", false)
@@ -224,7 +281,9 @@ defmodule JSONSchemaEditor do
 
   def handle_event("add_enum_value", %{"path" => p}, socket) do
     {:noreply,
-     update_schema(socket, p, fn node ->
+     socket
+     |> push_history()
+     |> update_schema(p, fn node ->
        def_val =
          case node["type"] do
            "number" -> 0.0
@@ -239,7 +298,9 @@ defmodule JSONSchemaEditor do
 
   def handle_event("remove_enum_value", %{"path" => p, "index" => idx}, socket) do
     {:noreply,
-     update_schema(socket, p, fn node ->
+     socket
+     |> push_history()
+     |> update_schema(p, fn node ->
        new_enum = List.delete_at(node["enum"] || [], String.to_integer(idx))
        if new_enum == [], do: Map.delete(node, "enum"), else: Map.put(node, "enum", new_enum)
      end)}
@@ -247,7 +308,9 @@ defmodule JSONSchemaEditor do
 
   def handle_event("update_enum_value", %{"path" => p, "index" => idx, "value" => v}, socket) do
     {:noreply,
-     update_schema(socket, p, fn node ->
+     socket
+     |> push_history()
+     |> update_schema(p, fn node ->
        Map.put(
          node,
          "enum",
@@ -263,11 +326,15 @@ defmodule JSONSchemaEditor do
   def handle_event("add_logic_branch", %{"path" => p, "type" => t}, socket),
     do:
       {:noreply,
-       update_schema(socket, p, &Map.update(&1, t, [], fn b -> b ++ [%{"type" => "string"}] end))}
+       socket
+       |> push_history()
+       |> update_schema(p, &Map.update(&1, t, [], fn b -> b ++ [%{"type" => "string"}] end))}
 
   def handle_event("remove_logic_branch", %{"path" => p, "type" => t, "index" => idx}, socket) do
     {:noreply,
-     update_schema(socket, p, fn node ->
+     socket
+     |> push_history()
+     |> update_schema(p, fn node ->
        new_branches = List.delete_at(node[t] || [], String.to_integer(idx))
 
        if new_branches == [],
@@ -277,10 +344,14 @@ defmodule JSONSchemaEditor do
   end
 
   def handle_event("add_contains", %{"path" => p}, socket),
-    do: {:noreply, update_schema(socket, p, &Map.put(&1, "contains", %{"type" => "string"}))}
+    do:
+      {:noreply,
+       socket
+       |> push_history()
+       |> update_schema(p, &Map.put(&1, "contains", %{"type" => "string"}))}
 
   def handle_event("remove_contains", %{"path" => p}, socket),
-    do: {:noreply, update_schema(socket, p, &Map.delete(&1, "contains"))}
+    do: {:noreply, push_history(socket) |> update_schema(p, &Map.delete(&1, "contains"))}
 
   defp update_schema(socket, path_json, update_fn) do
     socket
@@ -331,21 +402,41 @@ defmodule JSONSchemaEditor do
               placeholder="Schema URI..."
             />
           </div>
-          <button
-            class="jse-btn jse-btn-secondary"
-            phx-click="open_import_modal"
-            phx-target={@myself}
-          >
-            <span>Import</span> <Components.icon name={:import} />
-          </button>
-          <button
-            class="jse-btn jse-btn-primary"
-            phx-click="save"
-            phx-target={@myself}
-            disabled={not Enum.empty?(@validation_errors)}
-          >
-            <span>Save</span> <Components.icon name={:save} />
-          </button>
+          <div class="jse-actions">
+            <button
+              class="jse-btn jse-btn-icon"
+              phx-click="undo"
+              phx-target={@myself}
+              disabled={Enum.empty?(@history)}
+              title="Undo"
+            >
+              <Components.icon name={:undo} />
+            </button>
+            <button
+              class="jse-btn jse-btn-icon"
+              phx-click="redo"
+              phx-target={@myself}
+              disabled={Enum.empty?(@future)}
+              title="Redo"
+            >
+              <Components.icon name={:redo} />
+            </button>
+            <button
+              class="jse-btn jse-btn-secondary"
+              phx-click="open_import_modal"
+              phx-target={@myself}
+            >
+              <span>Import</span> <Components.icon name={:import} />
+            </button>
+            <button
+              class="jse-btn jse-btn-primary"
+              phx-click="save"
+              phx-target={@myself}
+              disabled={not Enum.empty?(@validation_errors)}
+            >
+              <span>Save</span> <Components.icon name={:save} />
+            </button>
+          </div>
         </div>
         <div class="jse-content-area">
           <%= if @active_tab == :editor do %>

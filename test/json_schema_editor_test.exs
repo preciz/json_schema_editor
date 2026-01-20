@@ -10,6 +10,11 @@ defmodule JSONSchemaEditorTest do
         schema: schema,
         ui_state: %{},
         validation_errors: %{},
+        history: [],
+        future: [],
+        show_import_modal: false,
+        import_error: nil,
+        import_mode: :schema,
         __changed__: %{},
         on_save: nil
       }
