@@ -25,7 +25,7 @@ This library uses a small CSS file for styling and a JavaScript hook for clipboa
 ```elixir
 def deps do
   [
-    {:json_schema_editor, "~> 0.3.0"}
+    {:json_schema_editor, "~> 0.7.0"}
   ]
 end
 ```
