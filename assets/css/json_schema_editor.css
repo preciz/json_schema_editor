@@ -737,4 +737,95 @@
   .jse-input-boolean {
     color: var(--jse-syntax-boolean);
   }
+
+  /* Modal */
+  .jse-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    backdrop-filter: blur(2px);
+  }
+
+  .jse-modal {
+    background-color: var(--jse-bg);
+    border-radius: var(--jse-radius);
+    box-shadow: var(--jse-shadow);
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: jse-modal-appear 0.2s ease-out;
+  }
+
+  @keyframes jse-modal-appear {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .jse-modal-header {
+    padding: 1rem;
+    border-bottom: 1px solid var(--jse-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--jse-bg-secondary);
+  }
+
+  .jse-modal-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--jse-text-primary);
+  }
+
+  .jse-modal-body {
+    padding: 1rem;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .jse-modal-textarea {
+    width: 100%;
+    height: 300px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.875rem;
+    padding: 0.75rem;
+    border: 1px solid var(--jse-border);
+    border-radius: var(--jse-radius);
+    background-color: var(--jse-bg);
+    color: var(--jse-text-primary);
+    resize: none;
+  }
+
+  .jse-modal-textarea:focus {
+    outline: none;
+    border-color: var(--jse-border-focus);
+  }
+
+  .jse-modal-footer {
+    padding: 1rem;
+    border-top: 1px solid var(--jse-border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    background-color: var(--jse-bg-secondary);
+  }
+
+  .jse-modal-error {
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background-color: var(--jse-danger-bg);
+    border: 1px solid var(--jse-danger-border);
+    border-radius: var(--jse-radius);
+    color: var(--jse-danger);
+    font-size: 0.875rem;
+  }
 }

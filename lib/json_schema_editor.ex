@@ -31,7 +31,18 @@ defmodule JSONSchemaEditor do
   @formats ~w(email date-time date time uri uuid ipv4 ipv6 hostname)
 
   def update(assigns, socket) do
-    known_keys = [:id, :schema, :on_save, :ui_state, :active_tab, :myself, :class]
+    known_keys = [
+      :id,
+      :schema,
+      :on_save,
+      :ui_state,
+      :active_tab,
+      :myself,
+      :class,
+      :show_import_modal,
+      :import_error
+    ]
+
     {known_assigns, rest} = Map.split(assigns, known_keys)
 
     socket =
@@ -44,6 +55,8 @@ defmodule JSONSchemaEditor do
       |> update(:schema, &Map.put_new(&1, "$schema", "https://json-schema.org/draft-07/schema"))
       |> assign(types: @types, formats: @formats, logic_types: @logic_types)
       |> assign_new(:active_tab, fn -> :editor end)
+      |> assign_new(:show_import_modal, fn -> false end)
+      |> assign_new(:import_error, fn -> nil end)
       |> validate_and_assign_errors()
 
     {:ok, socket}
@@ -54,6 +67,32 @@ defmodule JSONSchemaEditor do
 
   def handle_event("switch_tab", %{"tab" => tab}, socket),
     do: {:noreply, assign(socket, :active_tab, String.to_existing_atom(tab))}
+
+  def handle_event("open_import_modal", _, socket),
+    do: {:noreply, assign(socket, :show_import_modal, true)}
+
+  def handle_event("close_import_modal", _, socket),
+    do: {:noreply, assign(socket, :show_import_modal, false) |> assign(:import_error, nil)}
+
+  def handle_event("import_schema", %{"schema_text" => text}, socket) do
+    case JSON.decode(text) do
+      {:ok, schema} when is_map(schema) ->
+        socket =
+          socket
+          |> assign(:schema, schema)
+          |> assign(:show_import_modal, false)
+          |> assign(:import_error, nil)
+          |> validate_and_assign_errors()
+
+        {:noreply, socket}
+
+      {:ok, _} ->
+        {:noreply, assign(socket, :import_error, "Invalid schema: Must be a JSON object")}
+
+      {:error, _} ->
+        {:noreply, assign(socket, :import_error, "Invalid JSON")}
+    end
+  end
 
   def handle_event("save", _, socket) do
     if Enum.empty?(socket.assigns.validation_errors) and socket.assigns[:on_save],
@@ -280,6 +319,13 @@ defmodule JSONSchemaEditor do
             />
           </div>
           <button
+            class="jse-btn jse-btn-secondary"
+            phx-click="open_import_modal"
+            phx-target={@myself}
+          >
+            <span>Import</span> <Components.icon name={:import} />
+          </button>
+          <button
             class="jse-btn jse-btn-primary"
             phx-click="save"
             phx-target={@myself}
@@ -323,6 +369,45 @@ defmodule JSONSchemaEditor do
           <% end %>
         </div>
       </div>
+
+      <%= if @show_import_modal do %>
+        <div class="jse-modal-overlay">
+          <div class="jse-modal">
+            <div class="jse-modal-header">
+              <h3 class="jse-modal-title">Import Schema</h3>
+              <button class="jse-btn-icon" phx-click="close_import_modal" phx-target={@myself}>
+                <Components.icon name={:close} class="jse-icon-sm" />
+              </button>
+            </div>
+            <form phx-submit="import_schema" phx-target={@myself}>
+              <div class="jse-modal-body">
+                <%= if @import_error do %>
+                  <div class="jse-modal-error">{@import_error}</div>
+                <% end %>
+                <textarea
+                  name="schema_text"
+                  class="jse-modal-textarea"
+                  placeholder="Paste your JSON Schema here..."
+                  autofocus
+                ></textarea>
+              </div>
+              <div class="jse-modal-footer">
+                <button
+                  type="button"
+                  class="jse-btn jse-btn-secondary"
+                  phx-click="close_import_modal"
+                  phx-target={@myself}
+                >
+                  Cancel
+                </button>
+                <button type="submit" class="jse-btn jse-btn-primary">
+                  Import
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      <% end %>
     </div>
     """
   end

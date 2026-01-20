@@ -66,6 +66,20 @@ defmodule JSONSchemaEditor.Components do
         ~H(<g fill-rule="evenodd" clip-rule="evenodd">
   <path d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5A.75.75 0 012 10z" /><path d="M12.75 8a.75.75 0 01.75.75v2.5a.75.75 0 01-1.5 0v-2.5a.75.75 0 01.75-.75zM7.75 13a.75.75 0 01.75.75v2.5a.75.75 0 01-1.5 0v-2.5a.75.75 0 01.75-.75zM17.75 3a.75.75 0 01.75.75v2.5a.75.75 0 01-1.5 0v-2.5A.75.75 0 0117.75 3z" />
 </g>)
+
+      :import ->
+        ~H(<path
+  fill-rule="evenodd"
+  d="M4.5 3.75a.75.75 0 0 1 .75-.75h9.5a.75.75 0 0 1 .75.75v6a.75.75 0 0 1-1.5 0V4.5h-8v11h3.75a.75.75 0 0 1 0 1.5H4.5a.75.75 0 0 1-.75-.75v-11.5Zm12.03 10.22a.75.75 0 0 1 0 1.06l-2.5 2.5a.75.75 0 0 1-1.06-1.06l1.22-1.22H10.5a.75.75 0 0 1 0-1.5h3.69l-1.22-1.22a.75.75 0 1 1 1.06-1.06l2.5 2.5Z"
+  clip-rule="evenodd"
+/>)
+
+      :close ->
+        ~H(<path
+  fill-rule="evenodd"
+  d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"
+  clip-rule="evenodd"
+/>)
     end
   end
 
@@ -319,7 +333,11 @@ defmodule JSONSchemaEditor.Components do
           title="Toggle Collapse"
         >
           <.icon
-            name={if Map.get(@ui_state, "collapsed_node:#{JSON.encode!(@path)}", false), do: :chevron_right, else: :chevron_down}
+            name={
+              if Map.get(@ui_state, "collapsed_node:#{JSON.encode!(@path)}", false),
+                do: :chevron_right,
+                else: :chevron_down
+            }
             class="jse-icon-xs"
           />
         </button>
@@ -479,7 +497,11 @@ defmodule JSONSchemaEditor.Components do
         <%= if @type == "boolean" do %>
           <div class="jse-constraint-field">
             <label class="jse-constraint-label">Const</label>
-            <select class="jse-constraint-input jse-input-boolean" phx-change="update_const" phx-target={@myself}>
+            <select
+              class="jse-constraint-input jse-input-boolean"
+              phx-change="update_const"
+              phx-target={@myself}
+            >
               <input type="hidden" name="path" value={JSON.encode!(@path)} />
               <option value="">None</option>
               <%= for val <- [true, false] do %>
