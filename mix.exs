@@ -2,7 +2,7 @@ defmodule JSONSchemaEditor.MixProject do
   use Mix.Project
 
   @source_url "https://github.com/preciz/json_schema_editor"
-  @version "0.4.0"
+  @version "0.5.0"
 
   def project do
     [
