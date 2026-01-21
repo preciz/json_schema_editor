@@ -36,6 +36,8 @@
     --jse-syntax-number: #2563eb; /* Blue 600 */
     --jse-syntax-boolean: #db2777; /* Pink 600 */
     --jse-syntax-null: #9ca3af; /* Gray 400 */
+    --jse-syntax-punctuation: #4b5563; /* Gray 600 */
+    --jse-indent-guide: #e5e7eb; /* Gray 200 */
   }
 
   @media (prefers-color-scheme: dark) {
@@ -67,6 +69,8 @@
       --jse-syntax-number: #60a5fa; /* Blue 400 */
       --jse-syntax-boolean: #f472b6; /* Pink 400 */
       --jse-syntax-null: #9ca3af; /* Gray 400 */
+      --jse-syntax-punctuation: #9ca3af; /* Gray 400 */
+      --jse-indent-guide: #374151; /* Gray 700 */
     }
   }
 
@@ -664,6 +668,14 @@
     max-height: 80vh;
   }
 
+  .jse-viewer-container {
+    padding: 1rem;
+    overflow: auto;
+    background-color: var(--jse-bg-secondary);
+    border: 1px solid var(--jse-border);
+    border-radius: var(--jse-radius);
+  }
+
   .jse-code-block {
     margin: 0;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -749,6 +761,14 @@
   .jse-null {
     color: var(--jse-syntax-null);
     font-style: italic;
+  }
+  .jse-punctuation {
+    color: var(--jse-syntax-punctuation);
+  }
+  .jse-indent-guide {
+    display: inline-block;
+    border-left: 1px solid var(--jse-indent-guide);
+    margin-left: -1px;
   }
 
   /* Input Syntax Highlighting */

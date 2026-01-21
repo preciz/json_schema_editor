@@ -11,8 +11,8 @@ defmodule JSONSchemaEditor.PrettyPrinterTest do
   describe "format/1" do
     test "formats primitives and empty structures" do
       scenarios = [
-        {%{}, "{}"},
-        {[], "[]"},
+        {%{}, "<span class=\"jse-punctuation\">{}</span>"},
+        {[], "<span class=\"jse-punctuation\">[]</span>"},
         {123, "<span class=\"jse-number\">123</span>"},
         {12.34, "<span class=\"jse-number\">12.34</span>"},
         {true, "<span class=\"jse-boolean\">true</span>"},
@@ -30,22 +30,27 @@ defmodule JSONSchemaEditor.PrettyPrinterTest do
       data = %{"a" => 1, "b" => "two"}
       result = unwrap(PrettyPrinter.format(data))
 
+      assert result =~ "<span class=\"jse-punctuation\">{</span>"
       assert result =~ "<span class=\"jse-key\">#{q()}a#{q()}</span>"
+      assert result =~ "<span class=\"jse-punctuation\">:</span>"
       assert result =~ "<span class=\"jse-number\">1</span>"
+      assert result =~ "<span class=\"jse-punctuation\">,</span>"
       assert result =~ "<span class=\"jse-key\">#{q()}b#{q()}</span>"
       assert result =~ "<span class=\"jse-string\">#{q()}two#{q()}</span>"
+      assert result =~ "<span class=\"jse-punctuation\">}</span>"
     end
 
     test "formats list of primitives" do
       data = [1, "two", true, nil]
       result = unwrap(PrettyPrinter.format(data))
 
-      assert result =~ "["
+      assert result =~ "<span class=\"jse-punctuation\">[</span>"
       assert result =~ "<span class=\"jse-number\">1</span>"
+      assert result =~ "<span class=\"jse-punctuation\">,</span>"
       assert result =~ "<span class=\"jse-string\">#{q()}two#{q()}</span>"
       assert result =~ "<span class=\"jse-boolean\">true</span>"
       assert result =~ "<span class=\"jse-null\">null</span>"
-      assert result =~ "]"
+      assert result =~ "<span class=\"jse-punctuation\">]</span>"
     end
 
     test "formats nested structures" do

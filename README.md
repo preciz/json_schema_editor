@@ -9,6 +9,7 @@ A Phoenix LiveComponent for visually building, editing, and validating JSON Sche
 ## Features
 
 - **Visual Editing**: Recursively build and edit deeply nested objects and arrays.
+- **JSON Viewer**: Dedicated component for displaying JSON with syntax highlighting and indentation guides.
 - **Tabbed Interface**: Switch between a visual editor and a live JSON preview.
 - **Logical Composition**: Support for `oneOf`, `anyOf`, and `allOf` composition types.
 - **Real-time Validation**: In-editor logic checking (e.g., `min <= max`) with immediate visual feedback.
@@ -25,7 +26,7 @@ This library uses a small CSS file for styling and a JavaScript hook for clipboa
 ```elixir
 def deps do
   [
-    {:json_schema_editor, "~> 0.7.0"}
+    {:json_schema_editor, "~> 0.8.0"}
   ]
 end
 ```
@@ -93,6 +94,16 @@ def handle_info({:schema_saved, updated_schema}, socket) do
   {:noreply, assign(socket, my_schema: updated_schema)}
 end
 ```
+
+### JSON Viewer
+
+You can also use the standalone viewer component to display any JSON data with syntax highlighting.
+
+```heex
+<JSONSchemaEditor.Viewer.render json={@my_schema} />
+```
+
+It accepts maps, lists, or even raw JSON strings (which it will attempt to decode and pretty-print).
 
 ## Development
 

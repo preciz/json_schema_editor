@@ -28,7 +28,6 @@ defmodule JSONSchemaEditor do
   alias JSONSchemaEditor.{
     SchemaUtils,
     Validator,
-    PrettyPrinter,
     Components,
     SchemaGenerator,
     SimpleValidator
@@ -529,7 +528,7 @@ defmodule JSONSchemaEditor do
                 </button>
               </div>
               <div class="jse-preview-content">
-                <pre class="jse-code-block"><code><%= PrettyPrinter.format(@schema) %></code></pre>
+                <JSONSchemaEditor.Viewer.render json={@schema} />
               </div>
             </div>
           <% end %>

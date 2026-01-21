@@ -4,6 +4,16 @@ defmodule JSONSchemaEditor.PrettyPrinter do
   @indent_size 2
 
   def format(data) do
+    data =
+      if is_binary(data) do
+        case JSON.decode(data) do
+          {:ok, decoded} -> decoded
+          _ -> data
+        end
+      else
+        data
+      end
+
     data
     |> do_format(0)
     |> Phoenix.HTML.raw()
@@ -11,10 +21,10 @@ defmodule JSONSchemaEditor.PrettyPrinter do
 
   defp do_format(data, level) when is_map(data) do
     if Enum.empty?(data) do
-      "{}"
+      punc("{}")
     else
-      indent = String.duplicate(" ", level * @indent_size)
-      inner_indent = String.duplicate(" ", (level + 1) * @indent_size)
+      indent = render_indent(level)
+      inner_indent = render_indent(level + 1)
 
       entries =
         data
@@ -22,29 +32,29 @@ defmodule JSONSchemaEditor.PrettyPrinter do
         |> Enum.sort_by(fn {k, _v} -> k end)
         |> Enum.map(fn {k, v} ->
           key_html = ~s(<span class="jse-key">#{encode_string(k)}</span>)
-          "#{inner_indent}#{key_html}: #{do_format(v, level + 1)}"
+          "#{inner_indent}#{key_html}#{punc(":")} #{do_format(v, level + 1)}"
         end)
-        |> Enum.join(",\n")
+        |> Enum.join("#{punc(",")}\n")
 
-      "{\n#{entries}\n#{indent}}"
+      "#{punc("{")}\n#{entries}\n#{indent}#{punc("}")}"
     end
   end
 
   defp do_format(data, level) when is_list(data) do
     if Enum.empty?(data) do
-      "[]"
+      punc("[]")
     else
-      indent = String.duplicate(" ", level * @indent_size)
-      inner_indent = String.duplicate(" ", (level + 1) * @indent_size)
+      indent = render_indent(level)
+      inner_indent = render_indent(level + 1)
 
       items =
         data
         |> Enum.map(fn item ->
           "#{inner_indent}#{do_format(item, level + 1)}"
         end)
-        |> Enum.join(",\n")
+        |> Enum.join("#{punc(",")}\n")
 
-      "[\n#{items}\n#{indent}]"
+      "#{punc("[")}\n#{items}\n#{indent}#{punc("]")}"
     end
   end
 
@@ -68,6 +78,16 @@ defmodule JSONSchemaEditor.PrettyPrinter do
     # Fallback
     ~s(<span class="jse-string">#{encode_string(inspect(data))}</span>)
   end
+
+  defp render_indent(level) when level > 0 do
+    for _ <- 1..level, into: "" do
+      ~s(<span class="jse-indent-guide">#{String.duplicate(" ", @indent_size)}</span>)
+    end
+  end
+
+  defp render_indent(_), do: ""
+
+  defp punc(text), do: ~s(<span class="jse-punctuation">#{text}</span>)
 
   defp encode_string(s) do
     s
