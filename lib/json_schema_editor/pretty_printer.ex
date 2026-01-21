@@ -1,5 +1,10 @@
 defmodule JSONSchemaEditor.PrettyPrinter do
-  @moduledoc false
+  @moduledoc """
+  Pretty prints JSON data into HTML with syntax highlighting.
+
+  Supports structural punctuation highlighting and indentation guides.
+  Can handle maps, lists, and raw JSON strings.
+  """
 
   @indent_size 2
 

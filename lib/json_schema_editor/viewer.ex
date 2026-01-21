@@ -1,6 +1,19 @@
 defmodule JSONSchemaEditor.Viewer do
   @moduledoc """
   A component for displaying JSON with syntax highlighting.
+
+  It supports structural punctuation highlighting and indentation guides.
+
+  ## Examples
+
+  ### Passing a map
+
+      <JSONSchemaEditor.Viewer.render json={%{"a" => 1, "b" => [true, nil]}} />
+
+  ### Passing a JSON string
+
+      <JSONSchemaEditor.Viewer.render json="{\\"foo\\": \\"bar\\"}" />
+
   """
   use Phoenix.Component
   alias JSONSchemaEditor.PrettyPrinter
