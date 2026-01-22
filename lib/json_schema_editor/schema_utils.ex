@@ -30,7 +30,9 @@ defmodule JSONSchemaEditor.SchemaUtils do
     if key < length(data) do
       List.replace_at(data, key, new_child)
     else
-      data ++ [new_child]
+      # Pad with nil if there's a gap
+      padding = if key > length(data), do: Enum.map(length(data)..(key - 1), fn _ -> nil end), else: []
+      data ++ padding ++ [new_child]
     end
   end
 
@@ -49,7 +51,9 @@ defmodule JSONSchemaEditor.SchemaUtils do
 
   def cast_value(field, value)
       when field in ~w(integer minLength maxLength minItems maxItems minProperties maxProperties) do
-    case Integer.parse(value) do
+    val_str = to_string(value)
+
+    case Integer.parse(val_str) do
       {int, _} ->
         int
 
@@ -61,7 +65,9 @@ defmodule JSONSchemaEditor.SchemaUtils do
   end
 
   def cast_value(field, value) when field in ~w(number minimum maximum multipleOf) do
-    case Float.parse(value) do
+    val_str = to_string(value)
+
+    case Float.parse(val_str) do
       {float, _} -> float
       :error -> if field == "number", do: 0.0, else: nil
     end
