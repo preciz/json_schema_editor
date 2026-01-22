@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2026-01-22
+
+### Added
+- Support for `if`, `then`, `else`, and `not` keywords (conditional logic)
+- Progressive disclosure for conditional logic and negation in the UI
+- Support for `null` type
+- UI state for property ordering
+
+### Changed
+- Major internal refactoring: introduced `SchemaMutator` to centralize schema transformations
+- Simplified event handling and UI component data flow
+- Performance optimization: Pre-compiled regex patterns in `SimpleValidator`
+- Performance optimization: Efficient validation error lookup using tuple keys
+- Performance optimization: Optimized `SchemaUtils.update_in_path/3` and schema validation logic
+- Improved documentation for `Viewer` and `PrettyPrinter` modules
+- Expanded test coverage including property-based tests for validator and mutator
+
+### Fixed
+- Removed redundant schema update logic when adding properties
+
 ## [0.8.0] - 2026-01-21
 
 ### Added
