@@ -3,7 +3,11 @@ defmodule JSONSchemaEditor do
   A Phoenix LiveComponent for visually editing JSON Schemas.
 
   It provides a rich interface for creating and modifying JSON Schemas (Draft 07), supporting
-  nested structures, arrays, validation constraints, and logical composition (oneOf, anyOf, allOf).
+  nested structures, arrays, validation constraints, logical composition (oneOf, anyOf, allOf),
+  and conditional logic (if, then, else, not).
+
+  The component also includes a "Test Lab" for live validation of sample data and a "JSON Preview"
+  with syntax highlighting.
 
   ## Attributes
 

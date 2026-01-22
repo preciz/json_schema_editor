@@ -10,10 +10,13 @@ A Phoenix LiveComponent for visually building, editing, and validating JSON Sche
 
 - **Visual Editing**: Recursively build and edit deeply nested objects and arrays.
 - **JSON Viewer**: Dedicated component for displaying JSON with syntax highlighting and indentation guides.
-- **Tabbed Interface**: Switch between a visual editor and a live JSON preview.
-- **Logical Composition**: Support for `oneOf`, `anyOf`, and `allOf` composition types.
+- **Tabbed Interface**: Switch between a visual editor, live JSON preview, and the Test Lab.
+- **Advanced Logic**: Support for `oneOf`, `anyOf`, `allOf` and conditional keywords (`if`, `then`, `else`, `not`).
+- **Test Lab**: Validate sample JSON data against your schema in real-time with detailed error reporting.
+- **Schema Generation**: Automatically infer a JSON Schema from a pasted JSON object.
+- **Undo/Redo**: Full history support for all schema modifications.
 - **Real-time Validation**: In-editor logic checking (e.g., `min <= max`) with immediate visual feedback.
-- **Draft 07 Support**: Includes constraints (minimum, pattern, etc.), enums, constants, and $schema management.
+- **Draft 07 Support**: Includes constraints, enums, constants, `null` type, and $schema management.
 - **Copy to Clipboard**: One-click export of the generated schema.
 - **Lightweight**: Zero external JS dependencies (uses native Phoenix hooks), only requires `phoenix_live_view`.
 
@@ -26,7 +29,7 @@ This library uses a small CSS file for styling and a JavaScript hook for clipboa
 ```elixir
 def deps do
   [
-    {:json_schema_editor, "~> 0.8.0"}
+    {:json_schema_editor, "~> 0.9.0"}
   ]
 end
 ```
