@@ -222,11 +222,15 @@ defmodule JSONSchemaEditor.SimpleValidator do
     # Items validation
     item_errors =
       if items_schema = schema["items"] do
-        data
-        |> Enum.with_index()
-        |> Enum.flat_map(fn {item, idx} ->
-          do_validate(items_schema, item, path ++ [idx])
-        end)
+        if is_map(items_schema) do
+          data
+          |> Enum.with_index()
+          |> Enum.flat_map(fn {item, idx} ->
+            do_validate(items_schema, item, path ++ [idx])
+          end)
+        else
+          []
+        end
       else
         []
       end
@@ -234,17 +238,21 @@ defmodule JSONSchemaEditor.SimpleValidator do
     # Contains validation (Draft 07)
     contains_errors =
       if contains_schema = schema["contains"] do
-        # At least one item must match
-        match_found =
-          Enum.any?(data, fn item ->
-            do_validate(contains_schema, item, []) == []
-          end)
+        if is_map(contains_schema) do
+          # At least one item must match
+          match_found =
+            Enum.any?(data, fn item ->
+              do_validate(contains_schema, item, []) == []
+            end)
 
-        if match_found,
-          do: [],
-          else: [
-            {format_path(path), "Array must contain at least one item matching 'contains' schema"}
-          ]
+          if match_found,
+            do: [],
+            else: [
+              {format_path(path), "Array must contain at least one item matching 'contains' schema"}
+            ]
+        else
+          []
+        end
       else
         []
       end
@@ -294,19 +302,27 @@ defmodule JSONSchemaEditor.SimpleValidator do
     prop_schemas = schema["properties"] || %{}
 
     prop_errors =
-      data
-      |> Enum.flat_map(fn {key, val} ->
-        if prop_schema = prop_schemas[key] do
-          do_validate(prop_schema, val, path ++ [key])
-        else
-          # Additional properties check
-          if schema["additionalProperties"] == false do
-            [{format_path(path), "Property not allowed: #{key}"}]
+      if is_map(prop_schemas) do
+        data
+        |> Enum.flat_map(fn {key, val} ->
+          if prop_schema = prop_schemas[key] do
+            if is_map(prop_schema) do
+              do_validate(prop_schema, val, path ++ [key])
+            else
+              []
+            end
           else
-            []
+            # Additional properties check
+            if schema["additionalProperties"] == false do
+              [{format_path(path), "Property not allowed: #{key}"}]
+            else
+              []
+            end
           end
-        end
-      end)
+        end)
+      else
+        []
+      end
 
     errors ++ req_errors ++ prop_errors
   end
@@ -320,11 +336,15 @@ defmodule JSONSchemaEditor.SimpleValidator do
     # anyOf: at least one must match
     errors =
       if branches = schema["anyOf"] do
-        matches = Enum.any?(branches, fn b -> do_validate(b, data, []) == [] end)
+        if is_list(branches) do
+          matches = Enum.any?(branches, fn b -> is_map(b) and do_validate(b, data, []) == [] end)
 
-        if matches,
-          do: errors,
-          else: [{format_path(path), "Must match at least one schema in anyOf"}] ++ errors
+          if matches,
+            do: errors,
+            else: [{format_path(path), "Must match at least one schema in anyOf"}] ++ errors
+        else
+          errors
+        end
       else
         errors
       end
@@ -332,11 +352,15 @@ defmodule JSONSchemaEditor.SimpleValidator do
     # allOf: all must match
     errors =
       if branches = schema["allOf"] do
-        failures = Enum.filter(branches, fn b -> do_validate(b, data, []) != [] end)
+        if is_list(branches) do
+          failures = Enum.filter(branches, fn b -> not is_map(b) or do_validate(b, data, []) != [] end)
 
-        if failures == [],
-          do: errors,
-          else: [{format_path(path), "Must match all schemas in allOf"}] ++ errors
+          if failures == [],
+            do: errors,
+            else: [{format_path(path), "Must match all schemas in allOf"}] ++ errors
+        else
+          errors
+        end
       else
         errors
       end
@@ -344,15 +368,19 @@ defmodule JSONSchemaEditor.SimpleValidator do
     # oneOf: exactly one must match
     errors =
       if branches = schema["oneOf"] do
-        match_count = Enum.count(branches, fn b -> do_validate(b, data, []) == [] end)
+        if is_list(branches) do
+          match_count = Enum.count(branches, fn b -> is_map(b) and do_validate(b, data, []) == [] end)
 
-        if match_count == 1,
-          do: errors,
-          else:
-            [
-              {format_path(path),
-               "Must match exactly one schema in oneOf (matched #{match_count})"}
-            ] ++ errors
+          if match_count == 1,
+            do: errors,
+            else:
+              [
+                {format_path(path),
+                 "Must match exactly one schema in oneOf (matched #{match_count})"}
+              ] ++ errors
+        else
+          errors
+        end
       else
         errors
       end
@@ -363,20 +391,24 @@ defmodule JSONSchemaEditor.SimpleValidator do
   # --- Conditional (if/then/else) ---
   defp validate_conditional(schema, data, path) do
     if if_schema = schema["if"] do
-      if_valid? = do_validate(if_schema, data, []) == []
+      if is_map(if_schema) do
+        if_valid? = do_validate(if_schema, data, []) == []
 
-      if if_valid? do
-        if then_schema = schema["then"] do
-          do_validate(then_schema, data, path)
+        if if_valid? do
+          if (then_schema = schema["then"]) && is_map(then_schema) do
+            do_validate(then_schema, data, path)
+          else
+            []
+          end
         else
-          []
+          if (else_schema = schema["else"]) && is_map(else_schema) do
+            do_validate(else_schema, data, path)
+          else
+            []
+          end
         end
       else
-        if else_schema = schema["else"] do
-          do_validate(else_schema, data, path)
-        else
-          []
-        end
+        []
       end
     else
       []
@@ -386,7 +418,7 @@ defmodule JSONSchemaEditor.SimpleValidator do
   # --- Negation (not) ---
   defp validate_negation(schema, data, path) do
     if not_schema = schema["not"] do
-      if do_validate(not_schema, data, []) == [] do
+      if is_map(not_schema) and do_validate(not_schema, data, []) == [] do
         [{format_path(path), "Must not match the 'not' schema"}]
       else
         []

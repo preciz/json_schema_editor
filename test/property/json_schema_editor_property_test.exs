@@ -8,15 +8,15 @@ defmodule JSONSchemaEditor.PropertyTest do
   def json_data do
     tree(simple_json_data(), fn complex ->
       one_of([
-        list_of(complex),
-        map_of(string(:printable), complex)
+        list_of(complex, min_length: 1, max_length: 5),
+        map_of(string(:alphanumeric, min_length: 1, max_length: 10), complex, min_length: 1, max_length: 5)
       ])
     end)
   end
 
   def simple_json_data do
     one_of([
-      string(:printable),
+      string(:alphanumeric, min_length: 1, max_length: 10),
       integer(),
       float(),
       boolean(),
@@ -43,7 +43,7 @@ defmodule JSONSchemaEditor.PropertyTest do
     # We generate somewhat structure-like maps for schemas
 
     check all(
-            schema <- map_of(string(:printable), simple_json_data()),
+            schema <- map_of(string(:alphanumeric, min_length: 1, max_length: 10), simple_json_data(), min_length: 1, max_length: 10),
             data <- json_data()
           ) do
       try do

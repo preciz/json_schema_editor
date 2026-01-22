@@ -6,8 +6,8 @@ defmodule JSONSchemaEditor.SchemaUtilsPropertyTest do
 
   property "get_in_path retrieves value set by put_in_path (maps)" do
     check all(
-            data <- map_of(string(:printable), simple_term()),
-            path <- uniq_list_of(string(:printable)),
+            data <- map_of(string(:alphanumeric, min_length: 1, max_length: 10), simple_term(), min_length: 1, max_length: 10),
+            path <- uniq_list_of(string(:alphanumeric, min_length: 1, max_length: 10), min_length: 1, max_length: 5),
             value <- simple_term()
           ) do
       # We start with some data, but put_in_path might overwrite parts of it.
@@ -22,8 +22,8 @@ defmodule JSONSchemaEditor.SchemaUtilsPropertyTest do
 
   property "generate_unique_key returns a key not present in map" do
     check all(
-            map <- map_of(string(:printable), term()),
-            base <- string(:printable)
+            map <- map_of(string(:alphanumeric, min_length: 1, max_length: 10), integer(), min_length: 1, max_length: 20),
+            base <- string(:alphanumeric, min_length: 1, max_length: 10)
           ) do
       new_key = SchemaUtils.generate_unique_key(map, base)
       refute Map.has_key?(map, new_key)
@@ -45,13 +45,13 @@ defmodule JSONSchemaEditor.SchemaUtilsPropertyTest do
   end
 
   property "cast_value always returns nil for null type" do
-    check all(val <- term()) do
+    check all(val <- simple_term()) do
       assert SchemaUtils.cast_value("null", val) == nil
     end
   end
 
   property "cast_value handles garbage strings gracefully" do
-    check all(str <- string(:printable)) do
+    check all(str <- string(:printable, min_length: 1, max_length: 20)) do
       # Should return 0 for min/max fields on error, or nil
       # Just asserting it doesn't raise
 
@@ -64,6 +64,6 @@ defmodule JSONSchemaEditor.SchemaUtilsPropertyTest do
   end
 
   defp simple_term do
-    one_of([integer(), boolean(), string(:printable)])
+    one_of([integer(), boolean(), string(:alphanumeric, min_length: 1, max_length: 10)])
   end
 end

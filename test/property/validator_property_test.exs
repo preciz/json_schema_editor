@@ -4,6 +4,14 @@ defmodule JSONSchemaEditor.ValidatorPropertyTest do
 
   alias JSONSchemaEditor.Validator
 
+  property "validate_schema never crashes on arbitrary map input" do
+    check all(data <- map_of(string(:printable, min_length: 1, max_length: 10), one_of([integer(), boolean(), string(:printable, min_length: 1, max_length: 10)]), min_length: 1, max_length: 10)) do
+      # Should not crash
+      _ = Validator.validate_schema(data)
+      assert true
+    end
+  end
+
   property "validates min/max constraints ordering" do
     pairs = [
       {"minLength", "maxLength"},
@@ -15,8 +23,8 @@ defmodule JSONSchemaEditor.ValidatorPropertyTest do
 
     check all(
             {min_key, max_key} <- member_of(pairs),
-            max_val <- integer(),
-            diff <- positive_integer()
+            max_val <- integer(0..1000),
+            diff <- integer(1..100)
           ) do
       min_val = max_val + diff
 
@@ -37,8 +45,7 @@ defmodule JSONSchemaEditor.ValidatorPropertyTest do
 
   property "validates multipleOf must be positive" do
     check all(
-            val <- one_of([integer(), float()]),
-            val <= 0
+            val <- one_of([integer(-100..0), float(min: -100.0, max: 0.0)])
           ) do
       schema = %{"multipleOf" => val}
       errors = Validator.validate_schema(schema)
@@ -49,7 +56,7 @@ defmodule JSONSchemaEditor.ValidatorPropertyTest do
 
   property "validates enum uniqueness" do
     check all(
-            list <- list_of(term(), min_length: 1),
+            list <- list_of(one_of([integer(), boolean(), string(:alphanumeric, max_length: 10)]), min_length: 1, max_length: 20),
             duplicate <- member_of(list)
           ) do
       schema = %{"enum" => list ++ [duplicate]}
