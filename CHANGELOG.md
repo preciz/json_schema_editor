@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.2] - 2026-01-22
+
+### Changed
+- Bump Elixir requirement to ~> 1.18 to use the built-in JSON module
+
+### Fixed
+- Improved `SchemaUtils.cast_value/2` to safely handle non-string inputs
+- Fixed list index gap handling in `SchemaUtils.update_in_path/3`
+
 ## [0.9.1] - 2026-01-22
 
 ### Changed
