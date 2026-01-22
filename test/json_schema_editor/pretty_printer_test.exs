@@ -67,5 +67,22 @@ defmodule JSONSchemaEditor.PrettyPrinterTest do
       # values
       assert result =~ "<span class=\"jse-boolean\">true</span>"
     end
+
+    test "handles invalid JSON string by treating it as a raw string" do
+      input = "not json"
+      # It enters format, fails decode, keeps "not json", then hits do_format(binary)
+      # do_format(binary) wraps it in span.jse-string and encodes it
+      result = unwrap(PrettyPrinter.format(input))
+      expected = "<span class=\"jse-string\">#{q()}not json#{q()}</span>"
+      assert result == expected
+    end
+
+    test "parses valid JSON string input" do
+      input = "{\"a\": 1}"
+      result = unwrap(PrettyPrinter.format(input))
+      # Should format as map
+      assert result =~ "<span class=\"jse-key\">#{q()}a#{q()}</span>"
+      assert result =~ "<span class=\"jse-number\">1</span>"
+    end
   end
 end

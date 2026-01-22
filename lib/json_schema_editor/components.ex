@@ -701,13 +701,22 @@ defmodule JSONSchemaEditor.Components do
     """
   end
 
+  alias JSONSchemaEditor.UIState
+
   attr(:node, :map, required: true)
+
   attr(:path, :list, required: true)
+
   attr(:ui_state, :map, required: true)
+
   attr(:validation_errors, :map, required: true)
+
   attr(:types, :list, required: true)
+
   attr(:logic_types, :list, required: true)
+
   attr(:formats, :list, default: [])
+
   attr(:myself, :any, required: true)
 
   defp object_properties(assigns) do
@@ -722,10 +731,18 @@ defmodule JSONSchemaEditor.Components do
             phx-target={@myself}
             phx-value-path={JSON.encode!(@path)}
           />
+
           <span class="jse-strict-text">Strict Mode (additionalProperties: false)</span>
         </label>
       </div>
-      <%= for {key, val} <- Map.get(@node, "properties", %{}) do %>
+
+      <% props = Map.get(@node, "properties", %{})
+
+      display_keys = UIState.get_ordered_keys(@ui_state, @path, props) %>
+
+      <%= for key <- display_keys do %>
+        <% val = Map.get(props, key) %>
+
         <div class="jse-property-item">
           <div class="jse-property-row">
             <button

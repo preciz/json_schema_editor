@@ -30,11 +30,14 @@ defmodule JSONSchemaEditor do
     Validator,
     Components,
     SchemaGenerator,
-    SimpleValidator
+    SimpleValidator,
+    UIState
   }
 
   @types ~w(string number integer boolean object array null)
+
   @logic_types ~w(anyOf oneOf allOf)
+
   @formats ~w(email date-time date time uri uuid ipv4 ipv6 hostname)
 
   def update(assigns, socket) do
@@ -79,9 +82,11 @@ defmodule JSONSchemaEditor do
 
   defp validate_and_assign_errors(socket) do
     schema_errors = Validator.validate_schema(socket.assigns.schema)
+
     socket = assign(socket, :validation_errors, schema_errors)
 
     # Also re-validate test data whenever schema changes
+
     validate_test_data(socket)
   end
 
@@ -89,7 +94,9 @@ defmodule JSONSchemaEditor do
     case JSON.decode(socket.assigns.test_data_str) do
       {:ok, data} ->
         errors = SimpleValidator.validate(socket.assigns.schema, data)
+
         status = if errors == [], do: :ok, else: errors
+
         assign(socket, :test_errors, status)
 
       {:error, _} ->
@@ -212,18 +219,74 @@ defmodule JSONSchemaEditor do
   end
 
   def handle_event("add_property", %{"path" => path}, socket) do
-    {:noreply,
-     socket
-     |> push_history()
-     |> update_schema(path, fn node ->
-       props = Map.get(node, "properties", %{})
+    {:ok, path_list} = JSON.decode(path)
 
-       Map.put(
-         node,
-         "properties",
-         Map.put(props, SchemaUtils.generate_unique_key(props, "new_field"), %{"type" => "string"})
-       )
-     end)}
+    new_key_fn = fn props ->
+      SchemaUtils.generate_unique_key(props, "new_field")
+    end
+
+    socket =
+      socket
+      |> push_history()
+      |> update_schema(path, fn node ->
+        props = Map.get(node, "properties", %{})
+
+        new_key = new_key_fn.(props)
+
+        Map.put(
+          node,
+          "properties",
+          Map.put(props, new_key, %{"type" => "string"})
+        )
+      end)
+
+    # Get the key that was just added (by re-evaluating the unique key logic on the OLD properties,
+
+    # or better, just get the current node again).
+
+    # Since update_schema runs first, we can fetch the updated schema to be sure.
+
+    current_node = SchemaUtils.get_in_path(socket.assigns.schema, path_list)
+
+    _current_props = Map.get(current_node, "properties", %{})
+
+    # We need to know which key was added.
+
+    # A safe way is to check the keys against the old list, but we don't have the old list easily.
+
+    # However, our generate_unique_key is deterministic given the same inputs.
+
+    # Wait, update_schema already updated the schema in the socket.
+
+    # The safest way is to do the calculation.
+
+    # But wait, we used `generate_unique_key` inside the update callback.
+
+    # We should calculate the new key OUTSIDE the update callback to be sure we know what it is.
+
+    # Correct approach:
+
+    # 1. Get current props
+
+    current_node_before = SchemaUtils.get_in_path(socket.assigns.schema, path_list)
+
+    current_props_before = Map.get(current_node_before, "properties", %{})
+
+    new_key = new_key_fn.(current_props_before)
+
+    # 2. Update schema
+
+    socket =
+      update_schema(socket, path, fn node ->
+        props = Map.get(node, "properties", %{})
+
+        Map.put(node, "properties", Map.put(props, new_key, %{"type" => "string"}))
+      end)
+
+    # 3. Update UI state
+
+    {:noreply,
+     update(socket, :ui_state, &UIState.add_property(&1, path, current_props_before, new_key))}
   end
 
   def handle_event("delete_property", %{"path" => path, "key" => key}, socket) do
@@ -234,7 +297,8 @@ defmodule JSONSchemaEditor do
        node
        |> Map.update("properties", %{}, &Map.delete(&1, key))
        |> Map.update("required", [], &List.delete(&1, key))
-     end)}
+     end)
+     |> update(:ui_state, &UIState.remove_property(&1, path, key))}
   end
 
   def handle_event("rename_property", %{"path" => path, "old_key" => old, "value" => new}, socket) do
@@ -243,22 +307,33 @@ defmodule JSONSchemaEditor do
     if new == "" or new == old do
       {:noreply, socket}
     else
-      {:noreply,
-       socket
-       |> push_history()
-       |> update_schema(path, fn node ->
-         if get_in(node, ["properties", new]) do
-           node
-         else
-           {val, props} = Map.pop(node["properties"], old)
+      {:ok, path_list} = JSON.decode(path)
 
-           node
-           |> Map.put("properties", Map.put(props, new, val))
-           |> Map.update("required", [], fn req ->
-             Enum.map(req, &if(&1 == old, do: new, else: &1))
-           end)
-         end
-       end)}
+      current_node = SchemaUtils.get_in_path(socket.assigns.schema, path_list)
+
+      current_props = Map.get(current_node, "properties", %{})
+
+      if Map.has_key?(current_props, new) do
+        # Key collision or no change effectively
+
+        {:noreply, socket}
+      else
+        socket =
+          socket
+          |> push_history()
+          |> update_schema(path, fn node ->
+            {val, props} = Map.pop(node["properties"], old)
+
+            node
+            |> Map.put("properties", Map.put(props, new, val))
+            |> Map.update("required", [], fn req ->
+              Enum.map(req, &if(&1 == old, do: new, else: &1))
+            end)
+          end)
+          |> update(:ui_state, &UIState.rename_property(&1, path, current_props, old, new))
+
+        {:noreply, socket}
+      end
     end
   end
 

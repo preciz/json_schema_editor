@@ -1052,4 +1052,157 @@ defmodule JSONSchemaEditorTest do
     # Check for delete button presence
     assert html =~ "phx-click=\"remove_contains\""
   end
+
+  describe "handle_event import_schema" do
+    test "imports valid JSON Schema" do
+      socket = setup_socket()
+      schema_str = "{\"type\": \"object\", \"title\": \"Imported\"}"
+
+      {:noreply, socket} =
+        JSONSchemaEditor.handle_event("import_schema", %{"schema_text" => schema_str}, socket)
+
+      assert socket.assigns.schema["title"] == "Imported"
+      assert socket.assigns.show_import_modal == false
+      assert socket.assigns.import_error == nil
+      # History should be updated
+      assert length(socket.assigns.history) == 1
+    end
+
+    test "generates schema from JSON" do
+      socket = setup_socket()
+      json_str = "{\"name\": \"Alice\", \"age\": 30}"
+
+      # Set mode to json
+      socket = Phoenix.Component.assign(socket, import_mode: :json)
+
+      {:noreply, socket} =
+        JSONSchemaEditor.handle_event("import_schema", %{"schema_text" => json_str}, socket)
+
+      assert socket.assigns.schema["type"] == "object"
+      assert socket.assigns.schema["properties"]["name"]["type"] == "string"
+      assert socket.assigns.schema["properties"]["age"]["type"] == "integer"
+    end
+
+    test "handles invalid JSON input" do
+      socket = setup_socket()
+
+      {:noreply, socket} =
+        JSONSchemaEditor.handle_event("import_schema", %{"schema_text" => "{bad json"}, socket)
+
+      assert socket.assigns.import_error == "Invalid JSON"
+      # Schema should not change (default from setup)
+      assert socket.assigns.schema["type"] == "object"
+    end
+
+    test "handles non-object schema input (e.g. array)" do
+      socket = setup_socket()
+      # Valid JSON but not a valid schema root (must be object)
+      {:noreply, socket} =
+        JSONSchemaEditor.handle_event("import_schema", %{"schema_text" => "[]"}, socket)
+
+      assert socket.assigns.import_error == "Invalid schema: Must be a JSON object"
+    end
+  end
+
+  describe "undo/redo" do
+    test "undo restores previous state" do
+      socket = setup_socket(%{"type" => "string"})
+      # Push history manually for test setup
+      socket = Phoenix.Component.assign(socket, history: [%{"type" => "number"}])
+
+      {:noreply, socket} = JSONSchemaEditor.handle_event("undo", %{}, socket)
+
+      assert socket.assigns.schema == %{"type" => "number"}
+      assert socket.assigns.history == []
+      assert length(socket.assigns.future) == 1
+    end
+
+    test "undo does nothing if history is empty" do
+      socket = setup_socket()
+      {:noreply, socket} = JSONSchemaEditor.handle_event("undo", %{}, socket)
+      assert socket.assigns.history == []
+    end
+
+    test "redo restores future state" do
+      socket = setup_socket(%{"type" => "string"})
+      socket = Phoenix.Component.assign(socket, future: [%{"type" => "boolean"}])
+
+      {:noreply, socket} = JSONSchemaEditor.handle_event("redo", %{}, socket)
+
+      assert socket.assigns.schema == %{"type" => "boolean"}
+      assert socket.assigns.future == []
+      assert length(socket.assigns.history) == 1
+    end
+
+    test "redo does nothing if future is empty" do
+      socket = setup_socket()
+      {:noreply, socket} = JSONSchemaEditor.handle_event("redo", %{}, socket)
+      assert socket.assigns.future == []
+    end
+  end
+
+  describe "test lab" do
+    test "updates test data and validates" do
+      schema = %{"type" => "string"}
+      socket = setup_socket(schema)
+
+      # Valid input
+      {:noreply, socket} =
+        JSONSchemaEditor.handle_event("update_test_data", %{"value" => "\"hello\""}, socket)
+
+      assert socket.assigns.test_data_str == "\"hello\""
+      assert socket.assigns.test_errors == :ok
+
+      # Invalid input (type mismatch)
+      {:noreply, socket} =
+        JSONSchemaEditor.handle_event("update_test_data", %{"value" => "123"}, socket)
+
+      assert socket.assigns.test_errors != :ok
+
+      # Invalid JSON syntax
+      {:noreply, socket} =
+        JSONSchemaEditor.handle_event("update_test_data", %{"value" => "{bad"}, socket)
+
+      assert socket.assigns.test_errors == ["Invalid JSON Syntax"]
+    end
+  end
+
+  describe "array contains handlers" do
+    test "add_contains puts a new schema" do
+      socket = setup_socket(%{"type" => "array"})
+      path_json = JSON.encode!([])
+
+      {:noreply, socket} =
+        JSONSchemaEditor.handle_event("add_contains", %{"path" => path_json}, socket)
+
+      assert socket.assigns.schema["contains"] == %{"type" => "string"}
+    end
+
+    test "remove_contains deletes the schema" do
+      socket = setup_socket(%{"type" => "array", "contains" => %{"type" => "string"}})
+      path_json = JSON.encode!([])
+
+      {:noreply, socket} =
+        JSONSchemaEditor.handle_event("remove_contains", %{"path" => path_json}, socket)
+
+      refute Map.has_key?(socket.assigns.schema, "contains")
+    end
+  end
+
+  test "handle_event open/close/set_import_mode modal" do
+    socket = setup_socket()
+
+    {:noreply, socket} = JSONSchemaEditor.handle_event("open_import_modal", %{}, socket)
+    assert socket.assigns.show_import_modal == true
+    assert socket.assigns.import_mode == :schema
+
+    {:noreply, socket} =
+      JSONSchemaEditor.handle_event("set_import_mode", %{"mode" => "json"}, socket)
+
+    assert socket.assigns.import_mode == :json
+
+    {:noreply, socket} = JSONSchemaEditor.handle_event("close_import_modal", %{}, socket)
+    assert socket.assigns.show_import_modal == false
+    assert socket.assigns.import_error == nil
+  end
 end

@@ -137,6 +137,23 @@ defmodule JSONSchemaEditor.SimpleValidatorTest do
     # "a" fails branch 2.
     all_schema_2 = %{"allOf" => [%{"type" => "string"}, %{"minLength" => 5}]}
     assert SimpleValidator.validate(all_schema_2, "abc") != []
+
+    # oneOf
+    one_schema = %{
+      "oneOf" => [
+        %{"type" => "number", "multipleOf" => 5},
+        %{"type" => "number", "multipleOf" => 3}
+      ]
+    }
+
+    # Matches one (5) -> OK
+    assert SimpleValidator.validate(one_schema, 5) == []
+    # Matches one (3) -> OK
+    assert SimpleValidator.validate(one_schema, 9) == []
+    # Matches both (15) -> Fail
+    assert SimpleValidator.validate(one_schema, 15) != []
+    # Matches zero (2) -> Fail
+    assert SimpleValidator.validate(one_schema, 2) != []
   end
 
   test "validates complex nested structures" do
