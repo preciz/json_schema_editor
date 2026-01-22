@@ -1205,4 +1205,52 @@ defmodule JSONSchemaEditorTest do
     assert socket.assigns.show_import_modal == false
     assert socket.assigns.import_error == nil
   end
+
+  describe "conditional and negation handlers" do
+    test "add/remove if/then/else" do
+      socket = setup_socket()
+      path_json = JSON.encode!([])
+
+      {:noreply, socket} =
+        JSONSchemaEditor.handle_event("add_if", %{"path" => path_json}, socket)
+
+      assert socket.assigns.schema["if"] == %{"type" => "string"}
+
+      {:noreply, socket} =
+        JSONSchemaEditor.handle_event("add_then", %{"path" => path_json}, socket)
+
+      assert socket.assigns.schema["then"] == %{"type" => "string"}
+
+      {:noreply, socket} =
+        JSONSchemaEditor.handle_event("add_else", %{"path" => path_json}, socket)
+
+      assert socket.assigns.schema["else"] == %{"type" => "string"}
+
+      # Remove
+      {:noreply, socket} =
+        JSONSchemaEditor.handle_event("remove_else", %{"path" => path_json}, socket)
+
+      refute Map.has_key?(socket.assigns.schema, "else")
+
+      {:noreply, socket} =
+        JSONSchemaEditor.handle_event("remove_if", %{"path" => path_json}, socket)
+
+      refute Map.has_key?(socket.assigns.schema, "if")
+    end
+
+    test "add/remove not" do
+      socket = setup_socket()
+      path_json = JSON.encode!([])
+
+      {:noreply, socket} =
+        JSONSchemaEditor.handle_event("add_not", %{"path" => path_json}, socket)
+
+      assert socket.assigns.schema["not"] == %{"type" => "string"}
+
+      {:noreply, socket} =
+        JSONSchemaEditor.handle_event("remove_not", %{"path" => path_json}, socket)
+
+      refute Map.has_key?(socket.assigns.schema, "not")
+    end
+  end
 end

@@ -316,6 +316,26 @@ defmodule JSONSchemaEditor.Components do
               <%!-- No children --%>
           <% end %>
         <% end %>
+        <.conditional_section
+          node={@node}
+          path={@path}
+          ui_state={@ui_state}
+          validation_errors={@validation_errors}
+          types={@types}
+          logic_types={@logic_types}
+          formats={@formats}
+          myself={@myself}
+        />
+        <.negation_section
+          node={@node}
+          path={@path}
+          ui_state={@ui_state}
+          validation_errors={@validation_errors}
+          types={@types}
+          logic_types={@logic_types}
+          formats={@formats}
+          myself={@myself}
+        />
       <% end %>
     </div>
     """
@@ -802,6 +822,200 @@ defmodule JSONSchemaEditor.Components do
           Add Property
         </button>
       </div>
+    </div>
+    """
+  end
+
+  attr(:node, :map, required: true)
+  attr(:path, :list, required: true)
+  attr(:ui_state, :map, required: true)
+  attr(:validation_errors, :map, required: true)
+  attr(:types, :list, required: true)
+  attr(:logic_types, :list, required: true)
+  attr(:formats, :list, default: [])
+  attr(:myself, :any, required: true)
+
+  defp conditional_section(assigns) do
+    ~H"""
+    <div class="jse-logic-container">
+      <div class="jse-logic-header">
+        <.badge class="jse-badge-logic">Conditional Logic</.badge>
+        <%= if !Map.has_key?(@node, "if") do %>
+          <button
+            class="jse-btn jse-btn-secondary jse-btn-xs"
+            phx-click="add_if"
+            phx-target={@myself}
+            phx-value-path={JSON.encode!(@path)}
+            title="Add 'if' schema"
+          >
+            <.icon name={:plus} class="jse-icon-xs" /> Add If
+          </button>
+        <% end %>
+      </div>
+      <%= if Map.has_key?(@node, "if") do %>
+        <div class="jse-logic-content">
+          <div class="jse-logic-branch">
+            <div class="jse-logic-branch-header">
+              <span class="jse-logic-branch-label">If</span>
+              <button
+                phx-click="remove_if"
+                phx-target={@myself}
+                phx-value-path={JSON.encode!(@path)}
+                class="jse-btn-icon jse-btn-delete"
+                title="Remove If"
+              >
+                <.icon name={:trash} class="jse-icon-xs" />
+              </button>
+            </div>
+            <.render_node
+              node={Map.get(@node, "if")}
+              path={@path ++ ["if"]}
+              ui_state={@ui_state}
+              validation_errors={@validation_errors}
+              types={@types}
+              logic_types={@logic_types}
+              formats={@formats}
+              myself={@myself}
+            />
+          </div>
+
+          <%= if Map.has_key?(@node, "then") do %>
+            <div class="jse-logic-branch">
+              <div class="jse-logic-branch-header">
+                <span class="jse-logic-branch-label">Then</span>
+                <button
+                  phx-click="remove_then"
+                  phx-target={@myself}
+                  phx-value-path={JSON.encode!(@path)}
+                  class="jse-btn-icon jse-btn-delete"
+                  title="Remove Then"
+                >
+                  <.icon name={:trash} class="jse-icon-xs" />
+                </button>
+              </div>
+              <.render_node
+                node={Map.get(@node, "then")}
+                path={@path ++ ["then"]}
+                ui_state={@ui_state}
+                validation_errors={@validation_errors}
+                types={@types}
+                logic_types={@logic_types}
+                formats={@formats}
+                myself={@myself}
+              />
+            </div>
+          <% else %>
+            <div class="jse-add-property-container">
+              <button
+                phx-click="add_then"
+                phx-target={@myself}
+                phx-value-path={JSON.encode!(@path)}
+                class="jse-btn jse-btn-secondary jse-btn-sm"
+              >
+                <div class="jse-icon-circle jse-icon-circle-logic"><.icon name={:plus} class="jse-icon-xs" /></div>
+                Add Then
+              </button>
+            </div>
+          <% end %>
+
+          <%= if Map.has_key?(@node, "else") do %>
+            <div class="jse-logic-branch">
+              <div class="jse-logic-branch-header">
+                <span class="jse-logic-branch-label">Else</span>
+                <button
+                  phx-click="remove_else"
+                  phx-target={@myself}
+                  phx-value-path={JSON.encode!(@path)}
+                  class="jse-btn-icon jse-btn-delete"
+                  title="Remove Else"
+                >
+                  <.icon name={:trash} class="jse-icon-xs" />
+                </button>
+              </div>
+              <.render_node
+                node={Map.get(@node, "else")}
+                path={@path ++ ["else"]}
+                ui_state={@ui_state}
+                validation_errors={@validation_errors}
+                types={@types}
+                logic_types={@logic_types}
+                formats={@formats}
+                myself={@myself}
+              />
+            </div>
+          <% else %>
+            <div class="jse-add-property-container">
+              <button
+                phx-click="add_else"
+                phx-target={@myself}
+                phx-value-path={JSON.encode!(@path)}
+                class="jse-btn jse-btn-secondary jse-btn-sm"
+              >
+                <div class="jse-icon-circle jse-icon-circle-logic"><.icon name={:plus} class="jse-icon-xs" /></div>
+                Add Else
+              </button>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+    """
+  end
+
+  attr(:node, :map, required: true)
+  attr(:path, :list, required: true)
+  attr(:ui_state, :map, required: true)
+  attr(:validation_errors, :map, required: true)
+  attr(:types, :list, required: true)
+  attr(:logic_types, :list, required: true)
+  attr(:formats, :list, default: [])
+  attr(:myself, :any, required: true)
+
+  defp negation_section(assigns) do
+    ~H"""
+    <div class="jse-logic-container">
+      <div class="jse-logic-header">
+        <.badge class="jse-badge-logic">Negation (Not)</.badge>
+        <%= if !Map.has_key?(@node, "not") do %>
+           <button
+            class="jse-btn jse-btn-secondary jse-btn-xs"
+            phx-click="add_not"
+            phx-target={@myself}
+            phx-value-path={JSON.encode!(@path)}
+            title="Add 'not' schema"
+          >
+            <.icon name={:plus} class="jse-icon-xs" /> Add Not
+          </button>
+        <% end %>
+      </div>
+      <%= if Map.has_key?(@node, "not") do %>
+        <div class="jse-logic-content">
+          <div class="jse-logic-branch">
+             <div class="jse-logic-branch-header">
+              <span class="jse-logic-branch-label">Not</span>
+              <button
+                phx-click="remove_not"
+                phx-target={@myself}
+                phx-value-path={JSON.encode!(@path)}
+                class="jse-btn-icon jse-btn-delete"
+                title="Remove Not"
+              >
+                <.icon name={:trash} class="jse-icon-xs" />
+              </button>
+            </div>
+            <.render_node
+              node={Map.get(@node, "not")}
+              path={@path ++ ["not"]}
+              ui_state={@ui_state}
+              validation_errors={@validation_errors}
+              types={@types}
+              logic_types={@logic_types}
+              formats={@formats}
+              myself={@myself}
+            />
+          </div>
+        </div>
+      <% end %>
     </div>
     """
   end

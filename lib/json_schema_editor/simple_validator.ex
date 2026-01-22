@@ -23,7 +23,9 @@ defmodule JSONSchemaEditor.SimpleValidator do
         validate_number_constraints(schema, data, path),
         validate_array_constraints(schema, data, path),
         validate_object_constraints(schema, data, path),
-        validate_composition(schema, data, path)
+        validate_composition(schema, data, path),
+        validate_conditional(schema, data, path),
+        validate_negation(schema, data, path)
       ])
     end
   end
@@ -352,6 +354,42 @@ defmodule JSONSchemaEditor.SimpleValidator do
       end
 
     errors
+  end
+
+  # --- Conditional (if/then/else) ---
+  defp validate_conditional(schema, data, path) do
+    if if_schema = schema["if"] do
+      if_valid? = do_validate(if_schema, data, []) == []
+
+      if if_valid? do
+        if then_schema = schema["then"] do
+          do_validate(then_schema, data, path)
+        else
+          []
+        end
+      else
+        if else_schema = schema["else"] do
+          do_validate(else_schema, data, path)
+        else
+          []
+        end
+      end
+    else
+      []
+    end
+  end
+
+  # --- Negation (not) ---
+  defp validate_negation(schema, data, path) do
+    if not_schema = schema["not"] do
+      if do_validate(not_schema, data, []) == [] do
+        [{format_path(path), "Must not match the 'not' schema"}]
+      else
+        []
+      end
+    else
+      []
+    end
   end
 
   # --- Helpers ---

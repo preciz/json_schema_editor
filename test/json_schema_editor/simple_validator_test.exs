@@ -200,4 +200,64 @@ defmodule JSONSchemaEditor.SimpleValidatorTest do
     errors = SimpleValidator.validate(schema, self())
     assert hd(errors) |> elem(1) =~ "got unknown"
   end
+
+  describe "conditional logic (if/then/else)" do
+    test "validates if/then/else" do
+      schema = %{
+        "if" => %{"type" => "string"},
+        "then" => %{"minLength" => 5},
+        "else" => %{"maximum" => 10}
+      }
+
+      # Matches "if" (string), must satisfy "then" (minLength 5)
+      assert SimpleValidator.validate(schema, "abcde") == []
+      assert SimpleValidator.validate(schema, "abc") != []
+
+      # Does not match "if" (number), must satisfy "else" (max 10)
+      assert SimpleValidator.validate(schema, 5) == []
+      assert SimpleValidator.validate(schema, 20) != []
+    end
+
+    test "validates if/then (no else)" do
+      schema = %{
+        "if" => %{"const" => "trigger"},
+        "then" => %{"const" => "valid"}
+      }
+
+      # Matches if -> check then -> fail
+      assert SimpleValidator.validate(schema, "trigger") != []
+      # Does not match if -> valid (no else)
+      assert SimpleValidator.validate(schema, "other") == []
+    end
+
+    test "validates if/else (no then)" do
+      schema = %{
+        "if" => %{"const" => "trigger"},
+        "else" => %{"const" => "valid"}
+      }
+
+      # Matches if -> valid (no then)
+      assert SimpleValidator.validate(schema, "trigger") == []
+      # Does not match if -> check else -> fail
+      assert SimpleValidator.validate(schema, "other") != []
+    end
+  end
+
+  describe "negation (not)" do
+    test "validates not" do
+      schema = %{"not" => %{"type" => "string"}}
+      assert SimpleValidator.validate(schema, 123) == []
+      assert SimpleValidator.validate(schema, "fail") != []
+    end
+
+    test "validates complex not" do
+      schema = %{"not" => %{"type" => "object", "required" => ["foo"]}}
+      # Is an object with foo -> fail
+      assert SimpleValidator.validate(schema, %{"foo" => 1}) != []
+      # Is an object without foo -> pass (inner validation fails)
+      assert SimpleValidator.validate(schema, %{"bar" => 1}) == []
+      # Is not an object -> pass
+      assert SimpleValidator.validate(schema, 1) == []
+    end
+  end
 end
