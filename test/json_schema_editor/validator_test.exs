@@ -29,7 +29,8 @@ defmodule JSONSchemaEditor.ValidatorTest do
         {%{"type" => "string", "enum" => ["a", "a"]}, %{{[], "enum"} => "Values must be unique"}},
         # Format
         {%{"type" => "string", "format" => "email"}, %{}},
-        {%{"type" => "number", "format" => "email"}, %{{[], "format"} => "Only valid for strings"}},
+        {%{"type" => "number", "format" => "email"},
+         %{{[], "format"} => "Only valid for strings"}},
         # Invalid child types (noop)
         {%{"type" => "object", "properties" => nil}, %{}},
         {%{"type" => "array", "items" => "invalid"}, %{}}

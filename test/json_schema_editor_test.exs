@@ -1293,12 +1293,13 @@ defmodule JSONSchemaEditorTest do
   test "renders null type constraints (none)" do
     path_json = JSON.encode!([])
     ui_state = %{"expanded_constraints:#{path_json}" => true}
-    
-    html = render_component(JSONSchemaEditor, 
-      id: "jse", 
-      schema: %{"type" => "null"},
-      ui_state: ui_state
-    )
+
+    html =
+      render_component(JSONSchemaEditor,
+        id: "jse",
+        schema: %{"type" => "null"},
+        ui_state: ui_state
+      )
 
     refute html =~ "No constraints for this type"
     assert html =~ "Enum Values"
@@ -1308,12 +1309,13 @@ defmodule JSONSchemaEditorTest do
     # Ensure both true and false options are rendered
     path_json = JSON.encode!([])
     ui_state = %{"expanded_constraints:#{path_json}" => true}
-    
-    html = render_component(JSONSchemaEditor, 
-      id: "jse", 
-      schema: %{"type" => "boolean"},
-      ui_state: ui_state
-    )
+
+    html =
+      render_component(JSONSchemaEditor,
+        id: "jse",
+        schema: %{"type" => "boolean"},
+        ui_state: ui_state
+      )
 
     assert html =~ "value=\"true\""
     assert html =~ "value=\"false\""
@@ -1322,12 +1324,13 @@ defmodule JSONSchemaEditorTest do
   test "renders unknown type constraints" do
     path_json = JSON.encode!([])
     ui_state = %{"expanded_constraints:#{path_json}" => true}
-    
-    html = render_component(JSONSchemaEditor, 
-      id: "jse", 
-      schema: %{"type" => "unknown_thing"},
-      ui_state: ui_state
-    )
+
+    html =
+      render_component(JSONSchemaEditor,
+        id: "jse",
+        schema: %{"type" => "unknown_thing"},
+        ui_state: ui_state
+      )
 
     assert html =~ "No constraints for this type"
   end
@@ -1343,13 +1346,14 @@ defmodule JSONSchemaEditorTest do
       path_json = JSON.encode!([])
       ui_state = %{"expanded_constraints:#{path_json}" => true}
       schema = %{"type" => type, "enum" => enum}
-      
-      html = render_component(JSONSchemaEditor, 
-        id: "jse", 
-        schema: schema,
-        ui_state: ui_state
-      )
-      
+
+      html =
+        render_component(JSONSchemaEditor,
+          id: "jse",
+          schema: schema,
+          ui_state: ui_state
+        )
+
       assert html =~ expected_class
     end
   end
@@ -1362,29 +1366,35 @@ defmodule JSONSchemaEditorTest do
 
   test "renders conditional logic UI" do
     # Should NOT show Add If by default
-    html = render_component(JSONSchemaEditor, 
-      id: "jse", 
-      schema: %{"type" => "object"},
-      ui_state: %{}
-    )
+    html =
+      render_component(JSONSchemaEditor,
+        id: "jse",
+        schema: %{"type" => "object"},
+        ui_state: %{}
+      )
+
     refute html =~ "Add If"
 
     # Should show Add If when expanded
-    html = render_component(JSONSchemaEditor, 
-      id: "jse", 
-      schema: %{"type" => "object"},
-      ui_state: %{"expanded_logic:[]" => true}
-    )
+    html =
+      render_component(JSONSchemaEditor,
+        id: "jse",
+        schema: %{"type" => "object"},
+        ui_state: %{"expanded_logic:[]" => true}
+      )
+
     assert html =~ "Add If"
-    
+
     # Now with 'if' (should show even if ui_state is empty)
     schema = %{"if" => %{"type" => "string"}}
-    html = render_component(JSONSchemaEditor, 
-      id: "jse", 
-      schema: schema,
-      ui_state: %{}
-    )
-    
+
+    html =
+      render_component(JSONSchemaEditor,
+        id: "jse",
+        schema: schema,
+        ui_state: %{}
+      )
+
     assert html =~ "Conditional Logic"
     assert html =~ "Add Then"
     assert html =~ "Add Else"
@@ -1392,8 +1402,9 @@ defmodule JSONSchemaEditorTest do
 
   test "update/2 with minimal assigns uses defaults" do
     # Only id and schema are required
-    {:ok, socket} = JSONSchemaEditor.update(%{id: "test", schema: %{}}, %Phoenix.LiveView.Socket{})
-    
+    {:ok, socket} =
+      JSONSchemaEditor.update(%{id: "test", schema: %{}}, %Phoenix.LiveView.Socket{})
+
     assert socket.assigns.class == nil
     assert socket.assigns.test_data_str =~ "example"
     assert socket.assigns.history == []

@@ -198,7 +198,10 @@ defmodule JSONSchemaEditor do
 
   def handle_event("add_property", %{"path" => path}, socket) do
     {:ok, path_list} = JSON.decode(path)
-    current_props = SchemaUtils.get_in_path(socket.assigns.schema, path_list) |> Map.get("properties", %{})
+
+    current_props =
+      SchemaUtils.get_in_path(socket.assigns.schema, path_list) |> Map.get("properties", %{})
+
     {new_schema, new_key} = SchemaMutator.add_property(socket.assigns.schema, path)
 
     {:noreply,
@@ -222,13 +225,18 @@ defmodule JSONSchemaEditor do
     case SchemaMutator.rename_property(socket.assigns.schema, path, old, new) do
       {:ok, new_schema} ->
         {:ok, path_list} = JSON.decode(path)
-        current_props = SchemaUtils.get_in_path(socket.assigns.schema, path_list) |> Map.get("properties", %{})
+
+        current_props =
+          SchemaUtils.get_in_path(socket.assigns.schema, path_list) |> Map.get("properties", %{})
 
         {:noreply,
          socket
          |> push_history()
          |> assign(:schema, new_schema)
-         |> update(:ui_state, &UIState.rename_property(&1, path, current_props, old, String.trim(new)))
+         |> update(
+           :ui_state,
+           &UIState.rename_property(&1, path, current_props, old, String.trim(new))
+         )
          |> validate_and_assign_errors()}
 
       _ ->
@@ -249,6 +257,7 @@ defmodule JSONSchemaEditor do
          |> push_history()
          |> assign(:schema, apply(SchemaMutator, func, [socket.assigns.schema | args]))
          |> validate_and_assign_errors()}
+
       nil ->
         {:noreply, socket}
     end
@@ -256,24 +265,48 @@ defmodule JSONSchemaEditor do
 
   defp get_mutation("change_type", %{"path" => p, "type" => t}), do: {:change_type, [p, t]}
   defp get_mutation("toggle_required", %{"path" => p, "key" => k}), do: {:toggle_required, [p, k]}
-  defp get_mutation("set_default_schema", _), do: {:update_field, ["[]", "$schema", "https://json-schema.org/draft-07/schema"]}
+
+  defp get_mutation("set_default_schema", _),
+    do: {:update_field, ["[]", "$schema", "https://json-schema.org/draft-07/schema"]}
+
   defp get_mutation("change_schema", %{"value" => v}), do: {:update_field, ["[]", "$schema", v]}
-  defp get_mutation("change_format", %{"path" => p, "value" => v}), do: {:update_field, [p, "format", v]}
-  defp get_mutation("change_title", %{"path" => p, "value" => v}), do: {:update_field, [p, "title", String.trim(v)]}
-  defp get_mutation("change_description", %{"path" => p, "value" => v}), do: {:update_field, [p, "description", String.trim(v)]}
-  defp get_mutation("update_constraint", %{"path" => p, "field" => f, "value" => v}), do: {:update_constraint, [p, f, v]}
+
+  defp get_mutation("change_format", %{"path" => p, "value" => v}),
+    do: {:update_field, [p, "format", v]}
+
+  defp get_mutation("change_title", %{"path" => p, "value" => v}),
+    do: {:update_field, [p, "title", String.trim(v)]}
+
+  defp get_mutation("change_description", %{"path" => p, "value" => v}),
+    do: {:update_field, [p, "description", String.trim(v)]}
+
+  defp get_mutation("update_constraint", %{"path" => p, "field" => f, "value" => v}),
+    do: {:update_constraint, [p, f, v]}
+
   defp get_mutation("update_const", %{"path" => p, "value" => v}), do: {:update_const, [p, v]}
-  defp get_mutation("toggle_additional_properties", %{"path" => p}), do: {:toggle_additional_properties, [p]}
+
+  defp get_mutation("toggle_additional_properties", %{"path" => p}),
+    do: {:toggle_additional_properties, [p]}
+
   defp get_mutation("add_enum_value", %{"path" => p}), do: {:add_enum_value, [p]}
-  defp get_mutation("remove_enum_value", %{"path" => p, "index" => i}), do: {:remove_enum_value, [p, i]}
-  defp get_mutation("update_enum_value", %{"path" => p, "index" => i, "value" => v}), do: {:update_enum_value, [p, i, v]}
-  defp get_mutation("add_logic_branch", %{"path" => p, "type" => t}), do: {:add_logic_branch, [p, t]}
-  defp get_mutation("remove_logic_branch", %{"path" => p, "type" => t, "index" => i}), do: {:remove_logic_branch, [p, t, i]}
+
+  defp get_mutation("remove_enum_value", %{"path" => p, "index" => i}),
+    do: {:remove_enum_value, [p, i]}
+
+  defp get_mutation("update_enum_value", %{"path" => p, "index" => i, "value" => v}),
+    do: {:update_enum_value, [p, i, v]}
+
+  defp get_mutation("add_logic_branch", %{"path" => p, "type" => t}),
+    do: {:add_logic_branch, [p, t]}
+
+  defp get_mutation("remove_logic_branch", %{"path" => p, "type" => t, "index" => i}),
+    do: {:remove_logic_branch, [p, t, i]}
+
   defp get_mutation("add_child", %{"path" => p, "key" => k}), do: {:add_child, [p, k]}
   defp get_mutation("remove_child", %{"path" => p, "key" => k}), do: {:remove_child, [p, k]}
   defp get_mutation(_, _), do: nil
-  
-    def render(assigns) do
+
+  def render(assigns) do
     ~H"""
     <div id={@id} class={["jse-host", @class]} {@rest}>
       <div class="jse-container">

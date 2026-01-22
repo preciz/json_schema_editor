@@ -5,7 +5,15 @@ defmodule JSONSchemaEditor.ValidatorPropertyTest do
   alias JSONSchemaEditor.Validator
 
   property "validate_schema never crashes on arbitrary map input" do
-    check all(data <- map_of(string(:printable, min_length: 1, max_length: 10), one_of([integer(), boolean(), string(:printable, min_length: 1, max_length: 10)]), min_length: 1, max_length: 10)) do
+    check all(
+            data <-
+              map_of(
+                string(:printable, min_length: 1, max_length: 10),
+                one_of([integer(), boolean(), string(:printable, min_length: 1, max_length: 10)]),
+                min_length: 1,
+                max_length: 10
+              )
+          ) do
       # Should not crash
       _ = Validator.validate_schema(data)
       assert true
@@ -36,6 +44,7 @@ defmodule JSONSchemaEditor.ValidatorPropertyTest do
       errors = Validator.validate_schema(schema)
 
       error_key = {[], min_key}
+
       assert Map.has_key?(errors, error_key),
              "Expected error for #{min_key} > #{max_key} with values #{min_val}, #{max_val}"
 
@@ -44,9 +53,7 @@ defmodule JSONSchemaEditor.ValidatorPropertyTest do
   end
 
   property "validates multipleOf must be positive" do
-    check all(
-            val <- one_of([integer(-100..0), float(min: -100.0, max: 0.0)])
-          ) do
+    check all(val <- one_of([integer(-100..0), float(min: -100.0, max: 0.0)])) do
       schema = %{"multipleOf" => val}
       errors = Validator.validate_schema(schema)
 
@@ -56,7 +63,11 @@ defmodule JSONSchemaEditor.ValidatorPropertyTest do
 
   property "validates enum uniqueness" do
     check all(
-            list <- list_of(one_of([integer(), boolean(), string(:alphanumeric, max_length: 10)]), min_length: 1, max_length: 20),
+            list <-
+              list_of(one_of([integer(), boolean(), string(:alphanumeric, max_length: 10)]),
+                min_length: 1,
+                max_length: 20
+              ),
             duplicate <- member_of(list)
           ) do
       schema = %{"enum" => list ++ [duplicate]}

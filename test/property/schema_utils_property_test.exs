@@ -6,8 +6,16 @@ defmodule JSONSchemaEditor.SchemaUtilsPropertyTest do
 
   property "get_in_path retrieves value set by put_in_path (maps)" do
     check all(
-            data <- map_of(string(:alphanumeric, min_length: 1, max_length: 10), simple_term(), min_length: 1, max_length: 10),
-            path <- uniq_list_of(string(:alphanumeric, min_length: 1, max_length: 10), min_length: 1, max_length: 5),
+            data <-
+              map_of(string(:alphanumeric, min_length: 1, max_length: 10), simple_term(),
+                min_length: 1,
+                max_length: 10
+              ),
+            path <-
+              uniq_list_of(string(:alphanumeric, min_length: 1, max_length: 10),
+                min_length: 1,
+                max_length: 5
+              ),
             value <- simple_term()
           ) do
       # We start with some data, but put_in_path might overwrite parts of it.
@@ -22,7 +30,11 @@ defmodule JSONSchemaEditor.SchemaUtilsPropertyTest do
 
   property "generate_unique_key returns a key not present in map" do
     check all(
-            map <- map_of(string(:alphanumeric, min_length: 1, max_length: 10), integer(), min_length: 1, max_length: 20),
+            map <-
+              map_of(string(:alphanumeric, min_length: 1, max_length: 10), integer(),
+                min_length: 1,
+                max_length: 20
+              ),
             base <- string(:alphanumeric, min_length: 1, max_length: 10)
           ) do
       new_key = SchemaUtils.generate_unique_key(map, base)

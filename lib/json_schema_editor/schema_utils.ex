@@ -16,7 +16,8 @@ defmodule JSONSchemaEditor.SchemaUtils do
     update_in_path(data, path, fn _ -> value end)
   end
 
-  def update_in_path(data, path, func) when is_binary(path), do: update_in_path(data, JSON.decode!(path), func)
+  def update_in_path(data, path, func) when is_binary(path),
+    do: update_in_path(data, JSON.decode!(path), func)
 
   def update_in_path(data, [], func), do: func.(data)
 

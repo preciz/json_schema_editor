@@ -248,7 +248,8 @@ defmodule JSONSchemaEditor.SimpleValidator do
           if match_found,
             do: [],
             else: [
-              {format_path(path), "Array must contain at least one item matching 'contains' schema"}
+              {format_path(path),
+               "Array must contain at least one item matching 'contains' schema"}
             ]
         else
           []
@@ -353,7 +354,8 @@ defmodule JSONSchemaEditor.SimpleValidator do
     errors =
       if branches = schema["allOf"] do
         if is_list(branches) do
-          failures = Enum.filter(branches, fn b -> not is_map(b) or do_validate(b, data, []) != [] end)
+          failures =
+            Enum.filter(branches, fn b -> not is_map(b) or do_validate(b, data, []) != [] end)
 
           if failures == [],
             do: errors,
@@ -369,7 +371,8 @@ defmodule JSONSchemaEditor.SimpleValidator do
     errors =
       if branches = schema["oneOf"] do
         if is_list(branches) do
-          match_count = Enum.count(branches, fn b -> is_map(b) and do_validate(b, data, []) == [] end)
+          match_count =
+            Enum.count(branches, fn b -> is_map(b) and do_validate(b, data, []) == [] end)
 
           if match_count == 1,
             do: errors,

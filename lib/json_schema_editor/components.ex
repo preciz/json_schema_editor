@@ -95,7 +95,11 @@ defmodule JSONSchemaEditor.Components do
         ~H(<path d="M7.5 5a.75.75 0 0 1 1.28-.53l5 5a.75.75 0 0 1 0 1.06l-5 5a.75.75 0 0 1-1.28-.53V11.5h-2.25a3.75 3.75 0 0 0-3.75 3.75v1a.75.75 0 0 1-1.5 0v-1a5.25 5.25 0 0 1 5.25-5.25h2.25V5Z" />)
 
       :beaker ->
-        ~H(<path fill-rule="evenodd" d="M11.622 3.307a.75.75 0 0 1 .937.351l4.81 9.097a4.499 4.499 0 1 1-7.869 4.49l-1.54-2.912a.75.75 0 0 1 .139-.906l2.121-2.122a.75.75 0 0 1 .906-.139l1.54 2.913a2.999 2.999 0 1 0 5.247-2.993l-3.993-7.547a.75.75 0 0 1 .352-.937Z" clip-rule="evenodd" /><path d="M6.515 4.515a.75.75 0 0 1 .53-.22h2.91a.75.75 0 0 1 0 1.5h-2.38l6.3 6.3a.75.75 0 1 1-1.06 1.06l-6.3-6.3v2.38a.75.75 0 0 1-1.5 0v-2.91a.75.75 0 0 1 .22-.53Z" />)
+        ~H(<path
+  fill-rule="evenodd"
+  d="M8.5 3.528v4.644c0 .729-.29 1.428-.805 1.944l-1.217 1.216a8.75 8.75 0 0 1 3.55.621l.502.201a7.25 7.25 0 0 0 4.178.365l-2.403-2.403a2.75 2.75 0 0 1-.805-1.944V3.528a40.205 40.205 0 0 0-3 0Zm4.5.084.19.015a.75.75 0 1 0 .12-1.495 41.364 41.364 0 0 0-6.62 0 .75.75 0 0 0 .12 1.495L7 3.612v4.56c0 .331-.132.649-.366.883L2.6 13.09c-1.496 1.496-.817 4.15 1.403 4.475C5.961 17.852 7.963 18 10 18s4.039-.148 5.997-.436c2.22-.325 2.9-2.979 1.403-4.475l-4.034-4.034A1.25 1.25 0 0 1 13 8.172v-4.56Z"
+  clip-rule="evenodd"
+/>)
     end
   end
 
@@ -119,7 +123,8 @@ defmodule JSONSchemaEditor.Components do
   attr(:myself, :any, required: true)
 
   defp constraint_input(assigns) do
-    assigns = assign(assigns, :error, Map.get(assigns.validation_errors, {assigns.path, assigns.field}))
+    assigns =
+      assign(assigns, :error, Map.get(assigns.validation_errors, {assigns.path, assigns.field}))
 
     ~H"""
     <div class="jse-constraint-field">

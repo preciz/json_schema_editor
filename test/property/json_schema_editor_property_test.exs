@@ -9,7 +9,10 @@ defmodule JSONSchemaEditor.PropertyTest do
     tree(simple_json_data(), fn complex ->
       one_of([
         list_of(complex, min_length: 1, max_length: 5),
-        map_of(string(:alphanumeric, min_length: 1, max_length: 10), complex, min_length: 1, max_length: 5)
+        map_of(string(:alphanumeric, min_length: 1, max_length: 10), complex,
+          min_length: 1,
+          max_length: 5
+        )
       ])
     end)
   end
@@ -43,7 +46,11 @@ defmodule JSONSchemaEditor.PropertyTest do
     # We generate somewhat structure-like maps for schemas
 
     check all(
-            schema <- map_of(string(:alphanumeric, min_length: 1, max_length: 10), simple_json_data(), min_length: 1, max_length: 10),
+            schema <-
+              map_of(string(:alphanumeric, min_length: 1, max_length: 10), simple_json_data(),
+                min_length: 1,
+                max_length: 10
+              ),
             data <- json_data()
           ) do
       try do

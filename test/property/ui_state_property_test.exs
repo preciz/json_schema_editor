@@ -6,9 +6,18 @@ defmodule JSONSchemaEditor.UIStatePropertyTest do
 
   property "get_ordered_keys returns all and only keys from properties" do
     check all(
-            ui_state <- map_of(string(:alphanumeric, min_length: 1, max_length: 10), list_of(string(:alphanumeric, min_length: 1, max_length: 10), max_length: 10), max_length: 10),
+            ui_state <-
+              map_of(
+                string(:alphanumeric, min_length: 1, max_length: 10),
+                list_of(string(:alphanumeric, min_length: 1, max_length: 10), max_length: 10),
+                max_length: 10
+              ),
             path <- list_of(string(:alphanumeric, min_length: 1, max_length: 10), max_length: 5),
-            properties <- map_of(string(:alphanumeric, min_length: 1, max_length: 10), integer(), min_length: 1, max_length: 20)
+            properties <-
+              map_of(string(:alphanumeric, min_length: 1, max_length: 10), integer(),
+                min_length: 1,
+                max_length: 20
+              )
           ) do
       ordered_keys = UIState.get_ordered_keys(ui_state, path, properties)
 
@@ -18,9 +27,17 @@ defmodule JSONSchemaEditor.UIStatePropertyTest do
 
   property "add_property appends the new key to the order" do
     check all(
-            ui_state <- map_of(string(:alphanumeric, min_length: 1, max_length: 10), list_of(string(:alphanumeric, min_length: 1, max_length: 10), max_length: 10), max_length: 10),
+            ui_state <-
+              map_of(
+                string(:alphanumeric, min_length: 1, max_length: 10),
+                list_of(string(:alphanumeric, min_length: 1, max_length: 10), max_length: 10),
+                max_length: 10
+              ),
             path <- list_of(string(:alphanumeric, min_length: 1, max_length: 10), max_length: 5),
-            properties <- map_of(string(:alphanumeric, min_length: 1, max_length: 10), integer(), max_length: 20),
+            properties <-
+              map_of(string(:alphanumeric, min_length: 1, max_length: 10), integer(),
+                max_length: 20
+              ),
             new_key <- string(:alphanumeric, min_length: 1, max_length: 10)
           ) do
       # Ensure new_key is not already in properties to avoid confusion
@@ -37,9 +54,18 @@ defmodule JSONSchemaEditor.UIStatePropertyTest do
 
   property "remove_property removes the key from the order" do
     check all(
-            ui_state <- map_of(string(:alphanumeric, min_length: 1, max_length: 10), list_of(string(:alphanumeric, min_length: 1, max_length: 10), max_length: 10), max_length: 10),
+            ui_state <-
+              map_of(
+                string(:alphanumeric, min_length: 1, max_length: 10),
+                list_of(string(:alphanumeric, min_length: 1, max_length: 10), max_length: 10),
+                max_length: 10
+              ),
             path <- list_of(string(:alphanumeric, min_length: 1, max_length: 10), max_length: 5),
-            properties <- map_of(string(:alphanumeric, min_length: 1, max_length: 10), integer(), min_length: 1, max_length: 20),
+            properties <-
+              map_of(string(:alphanumeric, min_length: 1, max_length: 10), integer(),
+                min_length: 1,
+                max_length: 20
+              ),
             key_to_remove <- member_of(Map.keys(properties))
           ) do
       new_ui_state = UIState.remove_property(ui_state, path, key_to_remove)
@@ -53,9 +79,18 @@ defmodule JSONSchemaEditor.UIStatePropertyTest do
 
   property "rename_property preserves the position of the key" do
     check all(
-            ui_state <- map_of(string(:alphanumeric, min_length: 1, max_length: 10), list_of(string(:alphanumeric, min_length: 1, max_length: 10), max_length: 10), max_length: 10),
+            ui_state <-
+              map_of(
+                string(:alphanumeric, min_length: 1, max_length: 10),
+                list_of(string(:alphanumeric, min_length: 1, max_length: 10), max_length: 10),
+                max_length: 10
+              ),
             path <- list_of(string(:alphanumeric, min_length: 1, max_length: 10), max_length: 5),
-            properties <- map_of(string(:alphanumeric, min_length: 1, max_length: 10), integer(), min_length: 1, max_length: 20),
+            properties <-
+              map_of(string(:alphanumeric, min_length: 1, max_length: 10), integer(),
+                min_length: 1,
+                max_length: 20
+              ),
             old_key <- member_of(Map.keys(properties)),
             new_key <- string(:alphanumeric, min_length: 1, max_length: 10)
           ) do

@@ -9,7 +9,10 @@ defmodule JSONSchemaEditor.PrettyPrinterPropertyTest do
     tree(simple_json_data(), fn complex ->
       one_of([
         list_of(complex, min_length: 1, max_length: 5),
-        map_of(string(:alphanumeric, min_length: 1, max_length: 10), complex, min_length: 1, max_length: 5)
+        map_of(string(:alphanumeric, min_length: 1, max_length: 10), complex,
+          min_length: 1,
+          max_length: 5
+        )
       ])
     end)
   end
@@ -33,7 +36,15 @@ defmodule JSONSchemaEditor.PrettyPrinterPropertyTest do
   end
 
   property "format/1 output contains all leaf strings" do
-    check all(data <- map_of(string(:alphanumeric, min_length: 1, max_length: 10), string(:alphanumeric, min_length: 1, max_length: 10), min_length: 1, max_length: 10)) do
+    check all(
+            data <-
+              map_of(
+                string(:alphanumeric, min_length: 1, max_length: 10),
+                string(:alphanumeric, min_length: 1, max_length: 10),
+                min_length: 1,
+                max_length: 10
+              )
+          ) do
       {:safe, html_content} = PrettyPrinter.format(data)
 
       Enum.each(data, fn {k, v} ->
