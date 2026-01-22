@@ -472,6 +472,24 @@
     background-color: var(--jse-bg-secondary);
   }
 
+  .jse-btn-toggle-constraints.jse-has-data, .jse-btn-toggle-logic.jse-has-data {
+    color: var(--jse-primary);
+  }
+
+  .jse-btn-icon.jse-has-error {
+    color: var(--jse-danger) !important;
+  }
+
+  .jse-node-summary {
+    font-size: 0.75rem;
+    color: var(--jse-text-tertiary);
+    background-color: var(--jse-bg-secondary);
+    padding: 0.125rem 0.375rem;
+    border-radius: 4px;
+    margin-left: 0.5rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  }
+
   .jse-enum-container {
     grid-column: 1 / -1;
     padding-top: 1rem;

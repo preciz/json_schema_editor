@@ -248,8 +248,21 @@ defmodule JSONSchemaEditor do
     end
   end
 
-  def handle_event("toggle_ui", %{"path" => p, "type" => t}, socket),
-    do: {:noreply, update(socket, :ui_state, &Map.update(&1, "#{t}:#{p}", true, fn v -> !v end))}
+  def handle_event("toggle_ui", %{"path" => p, "type" => t}, socket) do
+    new_ui_state =
+      Map.update(socket.assigns.ui_state, "#{t}:#{p}", true, fn v -> !v end)
+
+    # If we are expanding constraints, logic or description, ensure the node itself is not collapsed
+    final_ui_state =
+      if t in ["expanded_constraints", "expanded_logic", "expanded_description"] and
+           Map.get(new_ui_state, "#{t}:#{p}") do
+        Map.put(new_ui_state, "collapsed_node:#{p}", false)
+      else
+        new_ui_state
+      end
+
+    {:noreply, assign(socket, :ui_state, final_ui_state)}
+  end
 
   # --- Simple Mutations (Schema update only) ---
 

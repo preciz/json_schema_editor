@@ -359,11 +359,13 @@ defmodule JSONSchemaEditor.Components do
     ~H"""
     <div class="jse-node-header">
       <% logic_active = Enum.any?(@logic_types, &Map.has_key?(@node, &1)) %>
+      <% collapsed = Map.get(@ui_state, "collapsed_node:#{JSON.encode!(@path)}", false) %>
       <%= if Map.get(@node, "type") in ["object", "array"] or logic_active do %>
         <button
           class={[
             "jse-btn-icon jse-node-toggle",
-            Map.get(@ui_state, "collapsed_node:#{JSON.encode!(@path)}", false) && "jse-collapsed"
+            collapsed && "jse-collapsed",
+            collapsed && any_errors?(@validation_errors, @path) && "jse-has-error"
           ]}
           phx-click="toggle_ui"
           phx-value-type="collapsed_node"
@@ -373,7 +375,7 @@ defmodule JSONSchemaEditor.Components do
         >
           <.icon
             name={
-              if Map.get(@ui_state, "collapsed_node:#{JSON.encode!(@path)}", false),
+              if collapsed,
                 do: :chevron_right,
                 else: :chevron_down
             }
@@ -409,6 +411,9 @@ defmodule JSONSchemaEditor.Components do
         phx-target={@myself}
         phx-value-path={JSON.encode!(@path)}
       />
+      <%= if collapsed do %>
+        <.node_summary node={@node} />
+      <% end %>
       <div class="jse-description-container">
         <% expanded = Map.get(@ui_state, "expanded_description:#{JSON.encode!(@path)}", false) %>
         <div class={if expanded, do: "jse-description-expanded", else: "jse-description-collapsed"}>
@@ -432,7 +437,10 @@ defmodule JSONSchemaEditor.Components do
             />
           <% end %>
           <button
-            class="jse-btn-icon jse-btn-sm"
+            class={[
+              "jse-btn-icon jse-btn-sm",
+              !expanded && has_description?(@node) && "jse-has-data"
+            ]}
             phx-click="toggle_ui"
             phx-value-type="expanded_description"
             phx-target={@myself}
@@ -446,7 +454,9 @@ defmodule JSONSchemaEditor.Components do
       <button
         class={[
           "jse-btn-icon jse-btn-toggle-constraints",
-          Map.get(@ui_state, "expanded_constraints:#{JSON.encode!(@path)}", false) && "jse-active"
+          Map.get(@ui_state, "expanded_constraints:#{JSON.encode!(@path)}", false) && "jse-active",
+          has_constraints?(@node) && "jse-has-data",
+          any_errors?(@validation_errors, @path, constraints_fields()) && "jse-has-error"
         ]}
         phx-click="toggle_ui"
         phx-value-type="expanded_constraints"
@@ -459,7 +469,11 @@ defmodule JSONSchemaEditor.Components do
       <button
         class={[
           "jse-btn-icon jse-btn-toggle-logic",
-          Map.get(@ui_state, "expanded_logic:#{JSON.encode!(@path)}", false) && "jse-active"
+          Map.get(@ui_state, "expanded_logic:#{JSON.encode!(@path)}", false) && "jse-active",
+          has_advanced_logic?(@node) && "jse-has-data",
+          (any_errors?(@validation_errors, @path, logic_fields()) or
+             Enum.any?(~w(if then else not), &any_errors?(@validation_errors, @path ++ [&1]))) &&
+            "jse-has-error"
         ]}
         phx-click="toggle_ui"
         phx-value-type="expanded_logic"
@@ -471,6 +485,86 @@ defmodule JSONSchemaEditor.Components do
       </button>
     </div>
     """
+  end
+
+  defp has_constraints?(node) do
+    type = Map.get(node, "type")
+
+    has_common = Map.has_key?(node, "enum") or Map.has_key?(node, "const")
+
+    has_type_specific =
+      case type do
+        "string" ->
+          Enum.any?(["minLength", "maxLength", "pattern", "format"], &Map.has_key?(node, &1))
+
+        t when t in ["number", "integer"] ->
+          Enum.any?(["minimum", "maximum", "multipleOf"], &Map.has_key?(node, &1))
+
+        "array" ->
+          Enum.any?(
+            ["minItems", "maxItems", "uniqueItems", "minContains", "maxContains"],
+            &Map.has_key?(node, &1)
+          )
+
+        "object" ->
+          Enum.any?(["minProperties", "maxProperties", "additionalProperties"], &Map.has_key?(node, &1)) or
+            (Map.get(node, "required") not in [nil, []])
+
+        _ ->
+          false
+      end
+
+    has_common or has_type_specific
+  end
+
+  defp has_advanced_logic?(node) do
+    Enum.any?(["if", "then", "else", "not"], &Map.has_key?(node, &1))
+  end
+
+  defp has_description?(node) do
+    desc = Map.get(node, "description")
+    desc != nil and desc != ""
+  end
+
+  defp any_errors?(validation_errors, path, fields) do
+    Enum.any?(fields, fn field -> Map.has_key?(validation_errors, {path, field}) end)
+  end
+
+  defp any_errors?(validation_errors, path) do
+    Enum.any?(validation_errors, fn {{p, _}, _} ->
+      List.starts_with?(p, path)
+    end)
+  end
+
+  defp constraints_fields do
+    ~w(minLength maxLength pattern minimum maximum multipleOf minItems maxItems minContains maxContains minProperties maxProperties enum const format uniqueItems required additionalProperties)
+  end
+
+  defp logic_fields do
+    ~w(if then else not anyOf oneOf allOf)
+  end
+
+  defp node_summary(assigns) do
+    case Map.get(assigns.node, "type") do
+      "object" ->
+        assigns =
+          assign(assigns, :count, map_size(Map.get(assigns.node, "properties", %{})))
+
+        ~H"""
+        <span class="jse-node-summary">{@count} props</span>
+        """
+
+      "array" ->
+        assigns =
+          assign(assigns, :items_type, get_in(assigns.node, ["items", "type"]) || "any")
+
+        ~H"""
+        <span class="jse-node-summary">items: {@items_type}</span>
+        """
+
+      _ ->
+        ~H""
+    end
   end
 
   defp constraints_config("string"),
