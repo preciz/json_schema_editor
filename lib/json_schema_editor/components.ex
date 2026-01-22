@@ -116,8 +116,7 @@ defmodule JSONSchemaEditor.Components do
   attr(:myself, :any, required: true)
 
   defp constraint_input(assigns) do
-    error_key = "#{JSON.encode!(assigns.path)}:#{assigns.field}"
-    assigns = assign(assigns, :error, Map.get(assigns.validation_errors, error_key))
+    assigns = assign(assigns, :error, Map.get(assigns.validation_errors, {assigns.path, assigns.field}))
 
     ~H"""
     <div class="jse-constraint-field">
@@ -183,8 +182,7 @@ defmodule JSONSchemaEditor.Components do
   attr(:myself, :any, required: true)
 
   defp enum_section(assigns) do
-    error_key = "#{JSON.encode!(assigns.path)}:enum"
-    assigns = assign(assigns, :error, Map.get(assigns.validation_errors, error_key))
+    assigns = assign(assigns, :error, Map.get(assigns.validation_errors, {assigns.path, "enum"}))
 
     ~H"""
     <div class="jse-enum-container">

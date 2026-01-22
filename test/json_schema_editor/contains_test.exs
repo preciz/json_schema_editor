@@ -60,7 +60,7 @@ defmodule JSONSchemaEditor.ContainsTest do
     }
 
     errors = Validator.validate_schema(schema)
-    assert errors["[]:minContains"] == "Must be ≤ maxContains"
+    assert errors[{[], "minContains"}] == "Must be ≤ maxContains"
 
     schema = %{
       "type" => "array",
@@ -83,6 +83,6 @@ defmodule JSONSchemaEditor.ContainsTest do
     }
 
     errors = Validator.validate_schema(schema)
-    assert errors["[\"contains\"]:minimum"] == "Must be ≤ maximum"
+    assert errors[{["contains"], "minimum"}] == "Must be ≤ maximum"
   end
 end

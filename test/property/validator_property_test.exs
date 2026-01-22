@@ -27,10 +27,11 @@ defmodule JSONSchemaEditor.ValidatorPropertyTest do
 
       errors = Validator.validate_schema(schema)
 
-      assert Map.has_key?(errors, "#{format_path_root(min_key)}"),
+      error_key = {[], min_key}
+      assert Map.has_key?(errors, error_key),
              "Expected error for #{min_key} > #{max_key} with values #{min_val}, #{max_val}"
 
-      assert errors["#{format_path_root(min_key)}"] == "Must be ≤ #{max_key}"
+      assert errors[error_key] == "Must be ≤ #{max_key}"
     end
   end
 
@@ -42,7 +43,7 @@ defmodule JSONSchemaEditor.ValidatorPropertyTest do
       schema = %{"multipleOf" => val}
       errors = Validator.validate_schema(schema)
 
-      assert errors["#{format_path_root("multipleOf")}"] == "Must be > 0"
+      assert errors[{[], "multipleOf"}] == "Must be > 0"
     end
   end
 
@@ -54,15 +55,7 @@ defmodule JSONSchemaEditor.ValidatorPropertyTest do
       schema = %{"enum" => list ++ [duplicate]}
       errors = Validator.validate_schema(schema)
 
-      assert errors["#{format_path_root("enum")}"] == "Values must be unique"
+      assert errors[{[], "enum"}] == "Values must be unique"
     end
-  end
-
-  # Helper to match how Validator keys errors.
-  # The validator outputs keys like "[]:minLength" (root path).
-  # `validate_schema` uses `path_json = JSON.encode!(path)` which for empty list is "[]".
-  # Wait, standard JSON encode of [] is "[]".
-  defp format_path_root(field) do
-    "[]:#{field}"
   end
 end

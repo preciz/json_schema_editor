@@ -14,8 +14,7 @@ defmodule JSONSchemaEditor.Validator do
 
     base_errors =
       if map_size(node_errors) > 0 do
-        path_json = JSON.encode!(path)
-        Enum.into(node_errors, %{}, fn {field, msg} -> {"#{path_json}:#{field}", msg} end)
+        Enum.into(node_errors, %{}, fn {field, msg} -> {{path, field}, msg} end)
       else
         %{}
       end
