@@ -225,66 +225,21 @@ defmodule JSONSchemaEditor do
       SchemaUtils.generate_unique_key(props, "new_field")
     end
 
+    # 1. Get current props
+    current_node_before = SchemaUtils.get_in_path(socket.assigns.schema, path_list)
+    current_props_before = Map.get(current_node_before, "properties", %{})
+    new_key = new_key_fn.(current_props_before)
+
+    # 2. Update schema
     socket =
       socket
       |> push_history()
       |> update_schema(path, fn node ->
         props = Map.get(node, "properties", %{})
-
-        new_key = new_key_fn.(props)
-
-        Map.put(
-          node,
-          "properties",
-          Map.put(props, new_key, %{"type" => "string"})
-        )
-      end)
-
-    # Get the key that was just added (by re-evaluating the unique key logic on the OLD properties,
-
-    # or better, just get the current node again).
-
-    # Since update_schema runs first, we can fetch the updated schema to be sure.
-
-    current_node = SchemaUtils.get_in_path(socket.assigns.schema, path_list)
-
-    _current_props = Map.get(current_node, "properties", %{})
-
-    # We need to know which key was added.
-
-    # A safe way is to check the keys against the old list, but we don't have the old list easily.
-
-    # However, our generate_unique_key is deterministic given the same inputs.
-
-    # Wait, update_schema already updated the schema in the socket.
-
-    # The safest way is to do the calculation.
-
-    # But wait, we used `generate_unique_key` inside the update callback.
-
-    # We should calculate the new key OUTSIDE the update callback to be sure we know what it is.
-
-    # Correct approach:
-
-    # 1. Get current props
-
-    current_node_before = SchemaUtils.get_in_path(socket.assigns.schema, path_list)
-
-    current_props_before = Map.get(current_node_before, "properties", %{})
-
-    new_key = new_key_fn.(current_props_before)
-
-    # 2. Update schema
-
-    socket =
-      update_schema(socket, path, fn node ->
-        props = Map.get(node, "properties", %{})
-
         Map.put(node, "properties", Map.put(props, new_key, %{"type" => "string"}))
       end)
 
     # 3. Update UI state
-
     {:noreply,
      update(socket, :ui_state, &UIState.add_property(&1, path, current_props_before, new_key))}
   end
