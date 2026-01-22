@@ -537,31 +537,31 @@ defmodule JSONSchemaEditor.Components do
         <%= if @type == "string" do %>
           <div class="jse-constraint-field">
             <label class="jse-constraint-label">Format</label>
-            <select class="jse-constraint-input" phx-change="change_format" phx-target={@myself}>
+            <form phx-change="change_format" phx-target={@myself}>
               <input type="hidden" name="path" value={JSON.encode!(@path)} />
-              <option value="">None</option>
-              <%= for fmt <- @formats do %>
-                <option value={fmt} selected={Map.get(@node, "format") == fmt}>{fmt}</option>
-              <% end %>
-            </select>
+              <select name="value" class="jse-constraint-input">
+                <option value="">None</option>
+                <%= for fmt <- @formats do %>
+                  <option value={fmt} selected={Map.get(@node, "format") == fmt}>{fmt}</option>
+                <% end %>
+              </select>
+            </form>
           </div>
         <% end %>
         <%= if @type == "boolean" do %>
           <div class="jse-constraint-field">
             <label class="jse-constraint-label">Const</label>
-            <select
-              class="jse-constraint-input jse-input-boolean"
-              phx-change="update_const"
-              phx-target={@myself}
-            >
+            <form phx-change="update_const" phx-target={@myself}>
               <input type="hidden" name="path" value={JSON.encode!(@path)} />
-              <option value="">None</option>
-              <%= for val <- [true, false] do %>
-                <option value={to_string(val)} selected={Map.get(@node, "const") == val}>
-                  {to_string(val)}
-                </option>
-              <% end %>
-            </select>
+              <select name="value" class="jse-constraint-input jse-input-boolean">
+                <option value="">None</option>
+                <%= for val <- [true, false] do %>
+                  <option value={to_string(val)} selected={Map.get(@node, "const") == val}>
+                    {to_string(val)}
+                  </option>
+                <% end %>
+              </select>
+            </form>
           </div>
         <% end %>
         <%= if @type == "array" do %>
