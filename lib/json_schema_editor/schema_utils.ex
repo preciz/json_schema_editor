@@ -33,9 +33,29 @@ defmodule JSONSchemaEditor.SchemaUtils do
   end
 
   def update_in_path(data, path, func) when is_binary(path), do: update_in_path(data, JSON.decode!(path), func)
+
   def update_in_path(data, path, func) do
-    node = get_in_path(data, path)
-    put_in_path(data, path, func.(node))
+    do_update_in_path(data, path, func)
+  end
+
+  defp do_update_in_path(data, [], func), do: func.(data)
+
+  defp do_update_in_path(data, [key | rest], func)
+       when is_integer(key) and (is_list(data) or is_nil(data)) do
+    data = data || []
+    current = Enum.at(data, key)
+    new_child = do_update_in_path(current, rest, func)
+
+    if key < length(data) do
+      List.replace_at(data, key, new_child)
+    else
+      data ++ [new_child]
+    end
+  end
+
+  defp do_update_in_path(data, [key | rest], func) do
+    data = if is_map(data), do: data, else: %{}
+    Map.put(data, key, do_update_in_path(Map.get(data, key), rest, func))
   end
 
   def generate_unique_key(existing_map, base_name, counter \\ 1) do
