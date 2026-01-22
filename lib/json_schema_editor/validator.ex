@@ -12,12 +12,7 @@ defmodule JSONSchemaEditor.Validator do
   def validate_schema(schema, path \\ []) do
     node_errors = validate_node(schema)
 
-    base_errors =
-      if map_size(node_errors) > 0 do
-        Enum.into(node_errors, %{}, fn {field, msg} -> {{path, field}, msg} end)
-      else
-        %{}
-      end
+    base_errors = Map.new(node_errors, fn {field, msg} -> {{path, field}, msg} end)
 
     child_errors =
       schema

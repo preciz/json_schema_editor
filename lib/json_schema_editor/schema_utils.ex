@@ -12,39 +12,19 @@ defmodule JSONSchemaEditor.SchemaUtils do
 
   def get_in_path(_, _), do: nil
 
-  def put_in_path(_data, [], value), do: value
-
-  def put_in_path(data, [key | rest], value)
-      when is_integer(key) and (is_list(data) or is_nil(data)) do
-    data = data || []
-    current = Enum.at(data, key)
-    new_child = put_in_path(current, rest, value)
-
-    if key < length(data) do
-      List.replace_at(data, key, new_child)
-    else
-      data ++ [new_child]
-    end
-  end
-
-  def put_in_path(data, [key | rest], value) do
-    data = if is_map(data), do: data, else: %{}
-    Map.put(data, key, put_in_path(Map.get(data, key), rest, value))
+  def put_in_path(data, path, value) do
+    update_in_path(data, path, fn _ -> value end)
   end
 
   def update_in_path(data, path, func) when is_binary(path), do: update_in_path(data, JSON.decode!(path), func)
 
-  def update_in_path(data, path, func) do
-    do_update_in_path(data, path, func)
-  end
+  def update_in_path(data, [], func), do: func.(data)
 
-  defp do_update_in_path(data, [], func), do: func.(data)
-
-  defp do_update_in_path(data, [key | rest], func)
-       when is_integer(key) and (is_list(data) or is_nil(data)) do
+  def update_in_path(data, [key | rest], func)
+      when is_integer(key) and (is_list(data) or is_nil(data)) do
     data = data || []
     current = Enum.at(data, key)
-    new_child = do_update_in_path(current, rest, func)
+    new_child = update_in_path(current, rest, func)
 
     if key < length(data) do
       List.replace_at(data, key, new_child)
@@ -53,9 +33,9 @@ defmodule JSONSchemaEditor.SchemaUtils do
     end
   end
 
-  defp do_update_in_path(data, [key | rest], func) do
+  def update_in_path(data, [key | rest], func) do
     data = if is_map(data), do: data, else: %{}
-    Map.put(data, key, do_update_in_path(Map.get(data, key), rest, func))
+    Map.put(data, key, update_in_path(Map.get(data, key), rest, func))
   end
 
   def generate_unique_key(existing_map, base_name, counter \\ 1) do

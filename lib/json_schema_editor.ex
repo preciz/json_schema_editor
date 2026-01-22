@@ -271,7 +271,7 @@ defmodule JSONSchemaEditor do
   defp get_mutation("remove_logic_branch", %{"path" => p, "type" => t, "index" => i}), do: {:remove_logic_branch, [p, t, i]}
   defp get_mutation("add_child", %{"path" => p, "key" => k}), do: {:add_child, [p, k]}
   defp get_mutation("remove_child", %{"path" => p, "key" => k}), do: {:remove_child, [p, k]}
-    defp get_mutation(_, _), do: nil
+  defp get_mutation(_, _), do: nil
   
     def render(assigns) do
     ~H"""
