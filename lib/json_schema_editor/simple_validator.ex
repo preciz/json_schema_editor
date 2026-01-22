@@ -5,7 +5,33 @@ defmodule JSONSchemaEditor.SimpleValidator do
   """
 
   def validate(schema, data) do
-    do_validate(schema, data, [])
+    compiled_schema = compile_schema(schema)
+    do_validate(compiled_schema, data, [])
+  end
+
+  defp compile_schema(schema) when is_map(schema) do
+    schema
+    |> Map.new(fn {k, v} -> {k, compile_schema(v)} end)
+    |> maybe_compile_pattern()
+  end
+
+  defp compile_schema(list) when is_list(list) do
+    Enum.map(list, &compile_schema/1)
+  end
+
+  defp compile_schema(val), do: val
+
+  defp maybe_compile_pattern(schema) do
+    case schema["pattern"] do
+      pattern when is_binary(pattern) ->
+        case Regex.compile(pattern) do
+          {:ok, regex} -> Map.put(schema, "pattern", regex)
+          _ -> schema
+        end
+
+      _ ->
+        schema
+    end
   end
 
   defp do_validate(schema, data, path) when is_map(schema) do
@@ -93,13 +119,24 @@ defmodule JSONSchemaEditor.SimpleValidator do
       end
 
     if pattern = schema["pattern"] do
-      case Regex.compile(pattern) do
-        {:ok, regex} ->
-          if Regex.match?(regex, data),
+      cond do
+        is_struct(pattern, Regex) ->
+          if Regex.match?(pattern, data),
             do: errors,
-            else: [{format_path(path), "Must match pattern: #{pattern}"}] ++ errors
+            else: [{format_path(path), "Must match pattern: #{pattern.source}"}] ++ errors
 
-        _ ->
+        is_binary(pattern) ->
+          case Regex.compile(pattern) do
+            {:ok, regex} ->
+              if Regex.match?(regex, data),
+                do: errors,
+                else: [{format_path(path), "Must match pattern: #{pattern}"}] ++ errors
+
+            _ ->
+              errors
+          end
+
+        true ->
           errors
       end
     else
