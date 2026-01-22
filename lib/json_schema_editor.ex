@@ -460,49 +460,13 @@ defmodule JSONSchemaEditor do
      end)}
   end
 
-  def handle_event("add_contains", %{"path" => p}, socket),
+  def handle_event("add_child", %{"path" => p, "key" => key}, socket),
     do:
       {:noreply,
-       socket
-       |> push_history()
-       |> update_schema(p, &Map.put(&1, "contains", %{"type" => "string"}))}
+       push_history(socket) |> update_schema(p, &Map.put(&1, key, %{"type" => "string"}))}
 
-  def handle_event("remove_contains", %{"path" => p}, socket),
-    do: {:noreply, push_history(socket) |> update_schema(p, &Map.delete(&1, "contains"))}
-
-  # --- Conditional Logic (if/then/else) ---
-  def handle_event("add_if", %{"path" => p}, socket),
-    do:
-      {:noreply,
-       push_history(socket) |> update_schema(p, &Map.put(&1, "if", %{"type" => "string"}))}
-
-  def handle_event("remove_if", %{"path" => p}, socket),
-    do: {:noreply, push_history(socket) |> update_schema(p, &Map.delete(&1, "if"))}
-
-  def handle_event("add_then", %{"path" => p}, socket),
-    do:
-      {:noreply,
-       push_history(socket) |> update_schema(p, &Map.put(&1, "then", %{"type" => "string"}))}
-
-  def handle_event("remove_then", %{"path" => p}, socket),
-    do: {:noreply, push_history(socket) |> update_schema(p, &Map.delete(&1, "then"))}
-
-  def handle_event("add_else", %{"path" => p}, socket),
-    do:
-      {:noreply,
-       push_history(socket) |> update_schema(p, &Map.put(&1, "else", %{"type" => "string"}))}
-
-  def handle_event("remove_else", %{"path" => p}, socket),
-    do: {:noreply, push_history(socket) |> update_schema(p, &Map.delete(&1, "else"))}
-
-  # --- Negation (not) ---
-  def handle_event("add_not", %{"path" => p}, socket),
-    do:
-      {:noreply,
-       push_history(socket) |> update_schema(p, &Map.put(&1, "not", %{"type" => "string"}))}
-
-  def handle_event("remove_not", %{"path" => p}, socket),
-    do: {:noreply, push_history(socket) |> update_schema(p, &Map.delete(&1, "not"))}
+  def handle_event("remove_child", %{"path" => p, "key" => key}, socket),
+    do: {:noreply, push_history(socket) |> update_schema(p, &Map.delete(&1, key))}
 
   defp update_schema(socket, path_json, update_fn) do
     socket

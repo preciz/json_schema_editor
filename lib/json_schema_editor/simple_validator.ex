@@ -34,56 +34,23 @@ defmodule JSONSchemaEditor.SimpleValidator do
   # No type specified = any type allowed (unless other constraints fail)
   defp validate_type(nil, _, _), do: []
 
-  defp validate_type("string", data, path),
-    do:
-      if(is_binary(data),
-        do: [],
-        else: [{format_path(path), "Expected string, got #{type_of(data)}"}]
-      )
+  defp validate_type(expected_type, data, path) do
+    matches? =
+      case expected_type do
+        "string" -> is_binary(data)
+        "number" -> is_number(data)
+        "integer" -> is_integer(data)
+        "boolean" -> is_boolean(data)
+        "object" -> is_map(data)
+        "array" -> is_list(data)
+        "null" -> is_nil(data)
+        _ -> true
+      end
 
-  defp validate_type("number", data, path),
-    do:
-      if(is_number(data),
-        do: [],
-        else: [{format_path(path), "Expected number, got #{type_of(data)}"}]
-      )
-
-  defp validate_type("integer", data, path),
-    do:
-      if(is_integer(data),
-        do: [],
-        else: [{format_path(path), "Expected integer, got #{type_of(data)}"}]
-      )
-
-  defp validate_type("boolean", data, path),
-    do:
-      if(is_boolean(data),
-        do: [],
-        else: [{format_path(path), "Expected boolean, got #{type_of(data)}"}]
-      )
-
-  defp validate_type("object", data, path),
-    do:
-      if(is_map(data),
-        do: [],
-        else: [{format_path(path), "Expected object, got #{type_of(data)}"}]
-      )
-
-  defp validate_type("array", data, path),
-    do:
-      if(is_list(data),
-        do: [],
-        else: [{format_path(path), "Expected array, got #{type_of(data)}"}]
-      )
-
-  defp validate_type("null", data, path),
-    do:
-      if(is_nil(data),
-        do: [],
-        else: [{format_path(path), "Expected null, got #{type_of(data)}"}]
-      )
-
-  defp validate_type(_, _, _), do: []
+    if matches?,
+      do: [],
+      else: [{format_path(path), "Expected #{expected_type}, got #{type_of(data)}"}]
+  end
 
   # --- Generic Constraints ---
   defp validate_const(%{"const" => const}, data, path) do

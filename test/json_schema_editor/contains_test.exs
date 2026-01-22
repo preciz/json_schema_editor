@@ -29,8 +29,8 @@ defmodule JSONSchemaEditor.ContainsTest do
 
     {:noreply, socket} =
       JSONSchemaEditor.handle_event(
-        "add_contains",
-        %{"path" => path_json},
+        "add_child",
+        %{"path" => path_json, "key" => "contains"},
         socket
       )
 
@@ -44,8 +44,8 @@ defmodule JSONSchemaEditor.ContainsTest do
 
     {:noreply, socket} =
       JSONSchemaEditor.handle_event(
-        "remove_contains",
-        %{"path" => path_json},
+        "remove_child",
+        %{"path" => path_json, "key" => "contains"},
         socket
       )
 
