@@ -31,7 +31,8 @@ defmodule JSONSchemaEditor.CoverageTest do
 
   describe "JSONSchemaEditor event coverage" do
     test "handle_event save: respects validation errors" do
-      socket = setup_socket(%{"type" => "string", "minLength" => -1}) # Invalid schema
+      # Invalid schema
+      socket = setup_socket(%{"type" => "string", "minLength" => -1})
       # We need to run validate_and_assign_errors logic roughly or just manually set errors
       socket = Phoenix.Component.assign(socket, :validation_errors, %{"root" => "error"})
 
@@ -55,31 +56,59 @@ defmodule JSONSchemaEditor.CoverageTest do
     test "handle_event rename_property: edge cases" do
       socket = setup_socket()
       path = JSON.encode!([])
-      
+
       # 1. Empty new name
-      {:noreply, s1} = JSONSchemaEditor.handle_event("rename_property", %{"path" => path, "old_key" => "a", "value" => "  "}, socket)
+      {:noreply, s1} =
+        JSONSchemaEditor.handle_event(
+          "rename_property",
+          %{"path" => path, "old_key" => "a", "value" => "  "},
+          socket
+        )
+
       assert s1 == socket
 
       # 2. Same name
-      {:noreply, s2} = JSONSchemaEditor.handle_event("rename_property", %{"path" => path, "old_key" => "a", "value" => "a"}, socket)
+      {:noreply, s2} =
+        JSONSchemaEditor.handle_event(
+          "rename_property",
+          %{"path" => path, "old_key" => "a", "value" => "a"},
+          socket
+        )
+
       assert s2 == socket
 
       # 3. Collision
-      socket_w_props = Phoenix.Component.assign(socket, :schema, %{"type" => "object", "properties" => %{"a" => 1, "b" => 2}})
-      {:noreply, s3} = JSONSchemaEditor.handle_event("rename_property", %{"path" => path, "old_key" => "a", "value" => "b"}, socket_w_props)
-      assert s3 == socket_w_props # No change
+      socket_w_props =
+        Phoenix.Component.assign(socket, :schema, %{
+          "type" => "object",
+          "properties" => %{"a" => 1, "b" => 2}
+        })
+
+      {:noreply, s3} =
+        JSONSchemaEditor.handle_event(
+          "rename_property",
+          %{"path" => path, "old_key" => "a", "value" => "b"},
+          socket_w_props
+        )
+
+      # No change
+      assert s3 == socket_w_props
     end
 
     test "handle_event toggle_required" do
       socket = setup_socket(%{"type" => "object", "required" => ["a"]})
       path = JSON.encode!([])
-      
+
       # Remove
-      {:noreply, s1} = JSONSchemaEditor.handle_event("toggle_required", %{"path" => path, "key" => "a"}, socket)
+      {:noreply, s1} =
+        JSONSchemaEditor.handle_event("toggle_required", %{"path" => path, "key" => "a"}, socket)
+
       assert s1.assigns.schema["required"] == []
 
       # Add
-      {:noreply, s2} = JSONSchemaEditor.handle_event("toggle_required", %{"path" => path, "key" => "b"}, s1)
+      {:noreply, s2} =
+        JSONSchemaEditor.handle_event("toggle_required", %{"path" => path, "key" => "b"}, s1)
+
       assert s2.assigns.schema["required"] == ["b"]
     end
 
@@ -115,16 +144,25 @@ defmodule JSONSchemaEditor.CoverageTest do
     test "handle_event remove_enum_value: cleanups" do
       path = JSON.encode!([])
       socket = setup_socket(%{"enum" => ["a"]})
-      {:noreply, s1} = JSONSchemaEditor.handle_event("remove_enum_value", %{"path" => path, "index" => "0"}, socket)
+
+      {:noreply, s1} =
+        JSONSchemaEditor.handle_event(
+          "remove_enum_value",
+          %{"path" => path, "index" => "0"},
+          socket
+        )
+
       refute Map.has_key?(s1.assigns.schema, "enum")
     end
 
     test "handle_event change_type: logic types" do
       path = JSON.encode!([])
       socket = setup_socket(%{})
-      
+
       for t <- ~w(anyOf oneOf allOf) do
-        {:noreply, s} = JSONSchemaEditor.handle_event("change_type", %{"path" => path, "type" => t}, socket)
+        {:noreply, s} =
+          JSONSchemaEditor.handle_event("change_type", %{"path" => path, "type" => t}, socket)
+
         assert Map.has_key?(s.assigns.schema, t)
         assert s.assigns.schema[t] == [%{"type" => "string"}]
       end
@@ -133,8 +171,14 @@ defmodule JSONSchemaEditor.CoverageTest do
     test "handle_event remove_logic_branch: cleanup" do
       path = JSON.encode!([])
       socket = setup_socket(%{"anyOf" => [%{"type" => "string"}]})
-      
-      {:noreply, s1} = JSONSchemaEditor.handle_event("remove_logic_branch", %{"path" => path, "type" => "anyOf", "index" => "0"}, socket)
+
+      {:noreply, s1} =
+        JSONSchemaEditor.handle_event(
+          "remove_logic_branch",
+          %{"path" => path, "type" => "anyOf", "index" => "0"},
+          socket
+        )
+
       # Should revert to default type string (or just be empty, code says default string)
       assert s1.assigns.schema["type"] == "string"
       refute Map.has_key?(s1.assigns.schema, "anyOf")
@@ -143,7 +187,7 @@ defmodule JSONSchemaEditor.CoverageTest do
 
   describe "Components coverage via rendering" do
     # We can use render_component to test the live component rendering with different schemas
-    
+
     test "renders logic types" do
       schema = %{"anyOf" => [%{"type" => "string"}]}
       html = render_component(JSONSchemaEditor, id: "test", schema: schema)
@@ -152,27 +196,56 @@ defmodule JSONSchemaEditor.CoverageTest do
 
     test "renders all constraints types" do
       ui_state = %{"expanded_constraints:[]" => true}
-      
+
       # Integer
-      html = render_component(JSONSchemaEditor, id: "test", schema: %{"type" => "integer"}, ui_state: ui_state)
+      html =
+        render_component(JSONSchemaEditor,
+          id: "test",
+          schema: %{"type" => "integer"},
+          ui_state: ui_state
+        )
+
       assert html =~ "Multiple Of"
 
       # Boolean (has const input)
-      html = render_component(JSONSchemaEditor, id: "test", schema: %{"type" => "boolean"}, ui_state: ui_state)
+      html =
+        render_component(JSONSchemaEditor,
+          id: "test",
+          schema: %{"type" => "boolean"},
+          ui_state: ui_state
+        )
+
       assert html =~ "jse-input-boolean"
 
       # Null (No specific constraints block, but Enum is there)
-      html = render_component(JSONSchemaEditor, id: "test", schema: %{"type" => "null"}, ui_state: ui_state)
+      html =
+        render_component(JSONSchemaEditor,
+          id: "test",
+          schema: %{"type" => "null"},
+          ui_state: ui_state
+        )
+
       refute html =~ "No constraints for this type"
       assert html =~ "Enum Values"
 
       # Unknown
-      html = render_component(JSONSchemaEditor, id: "test", schema: %{"type" => "unknown"}, ui_state: ui_state)
+      html =
+        render_component(JSONSchemaEditor,
+          id: "test",
+          schema: %{"type" => "unknown"},
+          ui_state: ui_state
+        )
+
       assert html =~ "No constraints for this type"
     end
 
     test "renders array items and contains" do
-      schema = %{"type" => "array", "items" => %{"type" => "string"}, "contains" => %{"type" => "number"}}
+      schema = %{
+        "type" => "array",
+        "items" => %{"type" => "string"},
+        "contains" => %{"type" => "number"}
+      }
+
       html = render_component(JSONSchemaEditor, id: "test", schema: schema)
       assert html =~ "Array Items"
       assert html =~ "Contains"
@@ -191,25 +264,44 @@ defmodule JSONSchemaEditor.CoverageTest do
       html = render_component(JSONSchemaEditor, id: "test", schema: %{}, show_import_modal: true)
       assert html =~ "jse-modal-overlay"
       # Icon check (close)
-      assert html =~ "d=\"M6.28 5.22a.75.75" 
+      assert html =~ "d=\"M6.28 5.22a.75.75"
     end
 
     test "renders collapsed node icon" do
       path = JSON.encode!([])
       ui_state = %{"collapsed_node:#{path}" => true}
-      html = render_component(JSONSchemaEditor, id: "test", schema: %{"type" => "object"}, ui_state: ui_state)
+
+      html =
+        render_component(JSONSchemaEditor,
+          id: "test",
+          schema: %{"type" => "object"},
+          ui_state: ui_state
+        )
+
       # Chevron right path
-      assert html =~ "d=\"M7.21 14.77a.75.75" 
+      assert html =~ "d=\"M7.21 14.77a.75.75"
     end
 
     test "renders string and number constraints" do
       ui_state = %{"expanded_constraints:[]" => true}
-      
-      html = render_component(JSONSchemaEditor, id: "test", schema: %{"type" => "string"}, ui_state: ui_state)
+
+      html =
+        render_component(JSONSchemaEditor,
+          id: "test",
+          schema: %{"type" => "string"},
+          ui_state: ui_state
+        )
+
       assert html =~ "Min Length"
       assert html =~ "Pattern"
 
-      html = render_component(JSONSchemaEditor, id: "test", schema: %{"type" => "number"}, ui_state: ui_state)
+      html =
+        render_component(JSONSchemaEditor,
+          id: "test",
+          schema: %{"type" => "number"},
+          ui_state: ui_state
+        )
+
       assert html =~ "Minimum"
     end
 

@@ -903,13 +903,13 @@ defmodule JSONSchemaEditor.Components do
         <div class="jse-logic-header">
           <.badge class={@badge_class}>{@header_label}</.badge>
           <%= if !Map.has_key?(@node, @key) do %>
-             <.add_child_button key={@key} label={@label} myself={@myself} path={@path} />
+            <.add_child_button key={@key} label={@label} myself={@myself} path={@path} />
           <% end %>
         </div>
         <%= if Map.has_key?(@node, @key) do %>
           <div class="jse-logic-content">
             <.child_schema_content {assigns} />
-            <%= render_slot(@inner_block) %>
+            {render_slot(@inner_block)}
           </div>
         <% end %>
       </div>

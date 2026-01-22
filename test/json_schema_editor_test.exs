@@ -1173,7 +1173,11 @@ defmodule JSONSchemaEditorTest do
       path_json = JSON.encode!([])
 
       {:noreply, socket} =
-        JSONSchemaEditor.handle_event("add_child", %{"path" => path_json, "key" => "contains"}, socket)
+        JSONSchemaEditor.handle_event(
+          "add_child",
+          %{"path" => path_json, "key" => "contains"},
+          socket
+        )
 
       assert socket.assigns.schema["contains"] == %{"type" => "string"}
     end
@@ -1183,7 +1187,11 @@ defmodule JSONSchemaEditorTest do
       path_json = JSON.encode!([])
 
       {:noreply, socket} =
-        JSONSchemaEditor.handle_event("remove_child", %{"path" => path_json, "key" => "contains"}, socket)
+        JSONSchemaEditor.handle_event(
+          "remove_child",
+          %{"path" => path_json, "key" => "contains"},
+          socket
+        )
 
       refute Map.has_key?(socket.assigns.schema, "contains")
     end
@@ -1217,23 +1225,39 @@ defmodule JSONSchemaEditorTest do
       assert socket.assigns.schema["if"] == %{"type" => "string"}
 
       {:noreply, socket} =
-        JSONSchemaEditor.handle_event("add_child", %{"path" => path_json, "key" => "then"}, socket)
+        JSONSchemaEditor.handle_event(
+          "add_child",
+          %{"path" => path_json, "key" => "then"},
+          socket
+        )
 
       assert socket.assigns.schema["then"] == %{"type" => "string"}
 
       {:noreply, socket} =
-        JSONSchemaEditor.handle_event("add_child", %{"path" => path_json, "key" => "else"}, socket)
+        JSONSchemaEditor.handle_event(
+          "add_child",
+          %{"path" => path_json, "key" => "else"},
+          socket
+        )
 
       assert socket.assigns.schema["else"] == %{"type" => "string"}
 
       # Remove
       {:noreply, socket} =
-        JSONSchemaEditor.handle_event("remove_child", %{"path" => path_json, "key" => "else"}, socket)
+        JSONSchemaEditor.handle_event(
+          "remove_child",
+          %{"path" => path_json, "key" => "else"},
+          socket
+        )
 
       refute Map.has_key?(socket.assigns.schema, "else")
 
       {:noreply, socket} =
-        JSONSchemaEditor.handle_event("remove_child", %{"path" => path_json, "key" => "if"}, socket)
+        JSONSchemaEditor.handle_event(
+          "remove_child",
+          %{"path" => path_json, "key" => "if"},
+          socket
+        )
 
       refute Map.has_key?(socket.assigns.schema, "if")
     end
@@ -1248,7 +1272,11 @@ defmodule JSONSchemaEditorTest do
       assert socket.assigns.schema["not"] == %{"type" => "string"}
 
       {:noreply, socket} =
-        JSONSchemaEditor.handle_event("remove_child", %{"path" => path_json, "key" => "not"}, socket)
+        JSONSchemaEditor.handle_event(
+          "remove_child",
+          %{"path" => path_json, "key" => "not"},
+          socket
+        )
 
       refute Map.has_key?(socket.assigns.schema, "not")
     end
