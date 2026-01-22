@@ -171,9 +171,9 @@
   }
 
   .jse-badge-logic {
-    background-color: var(--jse-danger-bg);
-    color: var(--jse-danger);
-    border-color: var(--jse-danger-border);
+    background-color: var(--jse-bg-tertiary);
+    color: var(--jse-text-secondary);
+    border-color: var(--jse-border);
   }
 
   .jse-tabs {
@@ -467,7 +467,7 @@
     color: var(--jse-danger);
   }
 
-  .jse-btn-toggle-constraints.jse-active {
+  .jse-btn-toggle-constraints.jse-active, .jse-btn-toggle-logic.jse-active {
     color: var(--jse-primary);
     background-color: var(--jse-bg-secondary);
   }
@@ -735,8 +735,8 @@
   }
 
   .jse-icon-circle-logic {
-    background-color: var(--jse-danger-bg);
-    color: var(--jse-danger);
+    background-color: var(--jse-bg-tertiary);
+    color: var(--jse-text-secondary);
   }
 
   .jse-add-property-container {

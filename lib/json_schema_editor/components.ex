@@ -93,6 +93,9 @@ defmodule JSONSchemaEditor.Components do
 
       :redo ->
         ~H(<path d="M7.5 5a.75.75 0 0 1 1.28-.53l5 5a.75.75 0 0 1 0 1.06l-5 5a.75.75 0 0 1-1.28-.53V11.5h-2.25a3.75 3.75 0 0 0-3.75 3.75v1a.75.75 0 0 1-1.5 0v-1a5.25 5.25 0 0 1 5.25-5.25h2.25V5Z" />)
+
+      :beaker ->
+        ~H(<path fill-rule="evenodd" d="M11.622 3.307a.75.75 0 0 1 .937.351l4.81 9.097a4.499 4.499 0 1 1-7.869 4.49l-1.54-2.912a.75.75 0 0 1 .139-.906l2.121-2.122a.75.75 0 0 1 .906-.139l1.54 2.913a2.999 2.999 0 1 0 5.247-2.993l-3.993-7.547a.75.75 0 0 1 .352-.937Z" clip-rule="evenodd" /><path d="M6.515 4.515a.75.75 0 0 1 .53-.22h2.91a.75.75 0 0 1 0 1.5h-2.38l6.3 6.3a.75.75 0 1 1-1.06 1.06l-6.3-6.3v2.38a.75.75 0 0 1-1.5 0v-2.91a.75.75 0 0 1 .22-.53Z" />)
     end
   end
 
@@ -447,6 +450,19 @@ defmodule JSONSchemaEditor.Components do
         title="Toggle Constraints"
       >
         <.icon name={:adjustments} class="jse-icon-sm" />
+      </button>
+      <button
+        class={[
+          "jse-btn-icon jse-btn-toggle-logic",
+          Map.get(@ui_state, "expanded_logic:#{JSON.encode!(@path)}", false) && "jse-active"
+        ]}
+        phx-click="toggle_ui"
+        phx-value-type="expanded_logic"
+        phx-target={@myself}
+        phx-value-path={JSON.encode!(@path)}
+        title="Toggle Advanced Logic (If/Not)"
+      >
+        <.icon name={:beaker} class="jse-icon-sm" />
       </button>
     </div>
     """
@@ -823,6 +839,7 @@ defmodule JSONSchemaEditor.Components do
       logic_types={@logic_types}
       formats={@formats}
       myself={@myself}
+      progressive={true}
     >
       <.optional_child_section
         key="then"
@@ -875,6 +892,7 @@ defmodule JSONSchemaEditor.Components do
       logic_types={@logic_types}
       formats={@formats}
       myself={@myself}
+      progressive={true}
     />
     """
   end
@@ -892,33 +910,45 @@ defmodule JSONSchemaEditor.Components do
   attr(:logic_types, :list, required: true)
   attr(:formats, :list, default: [])
   attr(:myself, :any, required: true)
+  attr(:progressive, :boolean, default: false)
   slot(:inner_block, required: false)
 
   defp optional_child_section(assigns) do
+    has_key = Map.has_key?(assigns.node, assigns.key)
+
+    expanded =
+      if assigns.progressive,
+        do: Map.get(assigns.ui_state, "expanded_logic:#{JSON.encode!(assigns.path)}", false),
+        else: true
+
+    assigns = assign(assigns, :show_section, has_key or expanded)
+
     ~H"""
-    <%= if @header_label do %>
-      <div class={@container_class}>
-        <div class="jse-logic-header">
-          <.badge class={@badge_class}>{@header_label}</.badge>
-          <%= if !Map.has_key?(@node, @key) do %>
-            <.add_child_button key={@key} label={@label} myself={@myself} path={@path} />
+    <%= if @show_section do %>
+      <%= if @header_label do %>
+        <div class={@container_class}>
+          <div class="jse-logic-header">
+            <.badge class={@badge_class}>{@header_label}</.badge>
+            <%= if !Map.has_key?(@node, @key) do %>
+              <.add_child_button key={@key} label={@label} myself={@myself} path={@path} />
+            <% end %>
+          </div>
+          <%= if Map.has_key?(@node, @key) do %>
+            <div class="jse-logic-content">
+              <.child_schema_content {assigns} />
+              {render_slot(@inner_block)}
+            </div>
           <% end %>
         </div>
+      <% else %>
+        <%!-- Inline version (for then/else inside conditional) --%>
         <%= if Map.has_key?(@node, @key) do %>
-          <div class="jse-logic-content">
-            <.child_schema_content {assigns} />
-            {render_slot(@inner_block)}
+          <.child_schema_content {assigns} />
+        <% else %>
+          <div class="jse-add-property-container">
+            <.add_child_button key={@key} label={@label} myself={@myself} path={@path} />
           </div>
         <% end %>
-      </div>
-    <% else %>
-      <%!-- Inline version (for then/else inside conditional) --%>
-      <%= if Map.has_key?(@node, @key) do %>
-        <.child_schema_content {assigns} />
-      <% else %>
-        <div class="jse-add-property-container">
-          <.add_child_button key={@key} label={@label} myself={@myself} path={@path} />
-        </div>
       <% end %>
     <% end %>
     """

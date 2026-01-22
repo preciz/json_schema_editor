@@ -1361,16 +1361,23 @@ defmodule JSONSchemaEditorTest do
   end
 
   test "renders conditional logic UI" do
+    # Should NOT show Add If by default
     html = render_component(JSONSchemaEditor, 
       id: "jse", 
       schema: %{"type" => "object"},
       ui_state: %{}
     )
+    refute html =~ "Add If"
 
-    # Should show Add If
+    # Should show Add If when expanded
+    html = render_component(JSONSchemaEditor, 
+      id: "jse", 
+      schema: %{"type" => "object"},
+      ui_state: %{"expanded_logic:[]" => true}
+    )
     assert html =~ "Add If"
     
-    # Now with 'if'
+    # Now with 'if' (should show even if ui_state is empty)
     schema = %{"if" => %{"type" => "string"}}
     html = render_component(JSONSchemaEditor, 
       id: "jse", 
