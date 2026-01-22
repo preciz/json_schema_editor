@@ -1,6 +1,7 @@
 defmodule JSONSchemaEditor.SchemaUtils do
   @moduledoc false
 
+  def get_in_path(data, path) when is_binary(path), do: get_in_path(data, JSON.decode!(path))
   def get_in_path(data, []), do: data
 
   def get_in_path(data, [key | rest]) when is_map(data),
@@ -31,6 +32,7 @@ defmodule JSONSchemaEditor.SchemaUtils do
     Map.put(data, key, put_in_path(Map.get(data, key), rest, value))
   end
 
+  def update_in_path(data, path, func) when is_binary(path), do: update_in_path(data, JSON.decode!(path), func)
   def update_in_path(data, path, func) do
     node = get_in_path(data, path)
     put_in_path(data, path, func.(node))

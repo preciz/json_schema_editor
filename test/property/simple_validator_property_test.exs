@@ -29,7 +29,11 @@ defmodule JSONSchemaEditor.SimpleValidatorPropertyTest do
             len <- integer(min..20),
             str <- string(:printable, length: len)
           ) do
-      schema = %{"type" => "string", "minLength" => min}
+      # Adjust min to ensure it respects grapheme length
+      actual_len = String.length(str)
+      adjusted_min = min(min, actual_len)
+
+      schema = %{"type" => "string", "minLength" => adjusted_min}
       assert SimpleValidator.validate(schema, str) == []
     end
   end

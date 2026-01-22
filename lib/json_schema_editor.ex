@@ -31,7 +31,8 @@ defmodule JSONSchemaEditor do
     Components,
     SchemaGenerator,
     SimpleValidator,
-    UIState
+    UIState,
+    SchemaMutator
   }
 
   @types ~w(string number integer boolean object array null)
@@ -82,11 +83,7 @@ defmodule JSONSchemaEditor do
 
   defp validate_and_assign_errors(socket) do
     schema_errors = Validator.validate_schema(socket.assigns.schema)
-
     socket = assign(socket, :validation_errors, schema_errors)
-
-    # Also re-validate test data whenever schema changes
-
     validate_test_data(socket)
   end
 
@@ -94,9 +91,7 @@ defmodule JSONSchemaEditor do
     case JSON.decode(socket.assigns.test_data_str) do
       {:ok, data} ->
         errors = SimpleValidator.validate(socket.assigns.schema, data)
-
         status = if errors == [], do: :ok, else: errors
-
         assign(socket, :test_errors, status)
 
       {:error, _} ->
@@ -199,246 +194,86 @@ defmodule JSONSchemaEditor do
     {:noreply, socket}
   end
 
-  def handle_event("toggle_ui", %{"path" => p, "type" => t}, socket),
-    do: {:noreply, update(socket, :ui_state, &Map.update(&1, "#{t}:#{p}", true, fn v -> !v end))}
-
-  def handle_event("change_type", %{"path" => path, "type" => type}, socket) do
-    {:noreply,
-     socket
-     |> push_history()
-     |> update_schema(path, fn node ->
-       base = Map.drop(node, ~w(type properties required items anyOf oneOf allOf))
-
-       case type do
-         "object" -> Map.merge(base, %{"type" => "object", "properties" => %{}})
-         "array" -> Map.merge(base, %{"type" => "array", "items" => %{"type" => "string"}})
-         l when l in @logic_types -> Map.put(base, l, [%{"type" => "string"}])
-         _ -> Map.put(base, "type", type)
-       end
-     end)}
-  end
+  # --- Complex Mutations (involve UI State or special logic) ---
 
   def handle_event("add_property", %{"path" => path}, socket) do
     {:ok, path_list} = JSON.decode(path)
+    current_props = SchemaUtils.get_in_path(socket.assigns.schema, path_list) |> Map.get("properties", %{})
+    {new_schema, new_key} = SchemaMutator.add_property(socket.assigns.schema, path)
 
-    new_key_fn = fn props ->
-      SchemaUtils.generate_unique_key(props, "new_field")
-    end
-
-    # 1. Get current props
-    current_node_before = SchemaUtils.get_in_path(socket.assigns.schema, path_list)
-    current_props_before = Map.get(current_node_before, "properties", %{})
-    new_key = new_key_fn.(current_props_before)
-
-    # 2. Update schema
-    socket =
-      socket
-      |> push_history()
-      |> update_schema(path, fn node ->
-        props = Map.get(node, "properties", %{})
-        Map.put(node, "properties", Map.put(props, new_key, %{"type" => "string"}))
-      end)
-
-    # 3. Update UI state
     {:noreply,
-     update(socket, :ui_state, &UIState.add_property(&1, path, current_props_before, new_key))}
+     socket
+     |> push_history()
+     |> assign(:schema, new_schema)
+     |> update(:ui_state, &UIState.add_property(&1, path, current_props, new_key))
+     |> validate_and_assign_errors()}
   end
 
   def handle_event("delete_property", %{"path" => path, "key" => key}, socket) do
     {:noreply,
      socket
      |> push_history()
-     |> update_schema(path, fn node ->
-       node
-       |> Map.update("properties", %{}, &Map.delete(&1, key))
-       |> Map.update("required", [], &List.delete(&1, key))
-     end)
-     |> update(:ui_state, &UIState.remove_property(&1, path, key))}
+     |> assign(:schema, SchemaMutator.delete_property(socket.assigns.schema, path, key))
+     |> update(:ui_state, &UIState.remove_property(&1, path, key))
+     |> validate_and_assign_errors()}
   end
 
   def handle_event("rename_property", %{"path" => path, "old_key" => old, "value" => new}, socket) do
-    new = String.trim(new)
+    case SchemaMutator.rename_property(socket.assigns.schema, path, old, new) do
+      {:ok, new_schema} ->
+        {:ok, path_list} = JSON.decode(path)
+        current_props = SchemaUtils.get_in_path(socket.assigns.schema, path_list) |> Map.get("properties", %{})
 
-    if new == "" or new == old do
-      {:noreply, socket}
-    else
-      {:ok, path_list} = JSON.decode(path)
+        {:noreply,
+         socket
+         |> push_history()
+         |> assign(:schema, new_schema)
+         |> update(:ui_state, &UIState.rename_property(&1, path, current_props, old, String.trim(new)))
+         |> validate_and_assign_errors()}
 
-      current_node = SchemaUtils.get_in_path(socket.assigns.schema, path_list)
-
-      current_props = Map.get(current_node, "properties", %{})
-
-      if Map.has_key?(current_props, new) do
-        # Key collision or no change effectively
-
+      _ ->
         {:noreply, socket}
-      else
-        socket =
-          socket
-          |> push_history()
-          |> update_schema(path, fn node ->
-            {val, props} = Map.pop(node["properties"], old)
-
-            node
-            |> Map.put("properties", Map.put(props, new, val))
-            |> Map.update("required", [], fn req ->
-              Enum.map(req, &if(&1 == old, do: new, else: &1))
-            end)
-          end)
-          |> update(:ui_state, &UIState.rename_property(&1, path, current_props, old, new))
-
-        {:noreply, socket}
-      end
     end
   end
 
-  def handle_event("toggle_required", %{"path" => path, "key" => key}, socket) do
-    {:noreply,
-     socket
-     |> push_history()
-     |> update_schema(path, fn node ->
-       Map.update(
-         node,
-         "required",
-         [key],
-         &if(key in &1, do: List.delete(&1, key), else: &1 ++ [key])
-       )
-     end)}
+  def handle_event("toggle_ui", %{"path" => p, "type" => t}, socket),
+    do: {:noreply, update(socket, :ui_state, &Map.update(&1, "#{t}:#{p}", true, fn v -> !v end))}
+
+  # --- Simple Mutations (Schema update only) ---
+
+  def handle_event(event, params, socket) do
+    case get_mutation(event, params) do
+      {func, args} ->
+        {:noreply,
+         socket
+         |> push_history()
+         |> assign(:schema, apply(SchemaMutator, func, [socket.assigns.schema | args]))
+         |> validate_and_assign_errors()}
+      nil ->
+        {:noreply, socket}
+    end
   end
 
-  # Consolidated field updaters
-  def handle_event("set_default_schema", _, socket) do
-    {:noreply,
-     push_history(socket)
-     |> update_node_field(JSON.encode!([]), "$schema", "https://json-schema.org/draft-07/schema")}
-  end
-
-  def handle_event("change_schema", %{"value" => v}, socket),
-    do: {:noreply, push_history(socket) |> update_node_field(JSON.encode!([]), "$schema", v)}
-
-  def handle_event("change_format", %{"path" => p, "value" => v}, socket),
-    do: {:noreply, push_history(socket) |> update_node_field(p, "format", v)}
-
-  def handle_event("change_title", %{"path" => p, "value" => v}, socket),
-    do: {:noreply, push_history(socket) |> update_node_field(p, "title", String.trim(v))}
-
-  def handle_event("change_description", %{"path" => p, "value" => v}, socket),
-    do: {:noreply, push_history(socket) |> update_node_field(p, "description", String.trim(v))}
-
-  def handle_event("update_constraint", %{"path" => p, "field" => f, "value" => v}, socket),
-    do: {:noreply, push_history(socket) |> update_node_field(p, f, SchemaUtils.cast_value(f, v))}
-
-  def handle_event("update_const", %{"path" => p, "value" => v}, socket) do
-    {:noreply,
-     socket
-     |> push_history()
-     |> update_schema(p, fn node ->
-       if v == "",
-         do: Map.delete(node, "const"),
-         else: Map.put(node, "const", SchemaUtils.cast_value(node["type"] || "string", v))
-     end)}
-  end
-
-  def handle_event("toggle_additional_properties", %{"path" => p}, socket) do
-    {:noreply,
-     socket
-     |> push_history()
-     |> update_schema(p, fn node ->
-       if node["additionalProperties"] == false,
-         do: Map.delete(node, "additionalProperties"),
-         else: Map.put(node, "additionalProperties", false)
-     end)}
-  end
-
-  def handle_event("add_enum_value", %{"path" => p}, socket) do
-    {:noreply,
-     socket
-     |> push_history()
-     |> update_schema(p, fn node ->
-       def_val =
-         case node["type"] do
-           "number" -> 0.0
-           "integer" -> 0
-           "boolean" -> true
-           "null" -> nil
-           _ -> "new value"
-         end
-
-       Map.update(node, "enum", [def_val], &(&1 ++ [def_val]))
-     end)}
-  end
-
-  def handle_event("remove_enum_value", %{"path" => p, "index" => idx}, socket) do
-    {:noreply,
-     socket
-     |> push_history()
-     |> update_schema(p, fn node ->
-       new_enum = List.delete_at(node["enum"] || [], String.to_integer(idx))
-       if new_enum == [], do: Map.delete(node, "enum"), else: Map.put(node, "enum", new_enum)
-     end)}
-  end
-
-  def handle_event("update_enum_value", %{"path" => p, "index" => idx, "value" => v}, socket) do
-    {:noreply,
-     socket
-     |> push_history()
-     |> update_schema(p, fn node ->
-       Map.put(
-         node,
-         "enum",
-         List.replace_at(
-           node["enum"] || [],
-           String.to_integer(idx),
-           SchemaUtils.cast_value(node["type"] || "string", v)
-         )
-       )
-     end)}
-  end
-
-  def handle_event("add_logic_branch", %{"path" => p, "type" => t}, socket),
-    do:
-      {:noreply,
-       socket
-       |> push_history()
-       |> update_schema(p, &Map.update(&1, t, [], fn b -> b ++ [%{"type" => "string"}] end))}
-
-  def handle_event("remove_logic_branch", %{"path" => p, "type" => t, "index" => idx}, socket) do
-    {:noreply,
-     socket
-     |> push_history()
-     |> update_schema(p, fn node ->
-       new_branches = List.delete_at(node[t] || [], String.to_integer(idx))
-
-       if new_branches == [],
-         do: Map.delete(node, t) |> Map.put("type", "string"),
-         else: Map.put(node, t, new_branches)
-     end)}
-  end
-
-  def handle_event("add_child", %{"path" => p, "key" => key}, socket),
-    do:
-      {:noreply,
-       push_history(socket) |> update_schema(p, &Map.put(&1, key, %{"type" => "string"}))}
-
-  def handle_event("remove_child", %{"path" => p, "key" => key}, socket),
-    do: {:noreply, push_history(socket) |> update_schema(p, &Map.delete(&1, key))}
-
-  defp update_schema(socket, path_json, update_fn) do
-    socket
-    |> assign(
-      :schema,
-      SchemaUtils.update_in_path(socket.assigns.schema, JSON.decode!(path_json), update_fn)
-    )
-    |> validate_and_assign_errors()
-  end
-
-  defp update_node_field(socket, path_json, field, value) do
-    update_schema(socket, path_json, fn node ->
-      if value in [nil, "", false], do: Map.delete(node, field), else: Map.put(node, field, value)
-    end)
-  end
-
-  def render(assigns) do
+  defp get_mutation("change_type", %{"path" => p, "type" => t}), do: {:change_type, [p, t]}
+  defp get_mutation("toggle_required", %{"path" => p, "key" => k}), do: {:toggle_required, [p, k]}
+  defp get_mutation("set_default_schema", _), do: {:update_field, ["[]", "$schema", "https://json-schema.org/draft-07/schema"]}
+  defp get_mutation("change_schema", %{"value" => v}), do: {:update_field, ["[]", "$schema", v]}
+  defp get_mutation("change_format", %{"path" => p, "value" => v}), do: {:update_field, [p, "format", v]}
+  defp get_mutation("change_title", %{"path" => p, "value" => v}), do: {:update_field, [p, "title", String.trim(v)]}
+  defp get_mutation("change_description", %{"path" => p, "value" => v}), do: {:update_field, [p, "description", String.trim(v)]}
+  defp get_mutation("update_constraint", %{"path" => p, "field" => f, "value" => v}), do: {:update_constraint, [p, f, v]}
+  defp get_mutation("update_const", %{"path" => p, "value" => v}), do: {:update_const, [p, v]}
+  defp get_mutation("toggle_additional_properties", %{"path" => p}), do: {:toggle_additional_properties, [p]}
+  defp get_mutation("add_enum_value", %{"path" => p}), do: {:add_enum_value, [p]}
+  defp get_mutation("remove_enum_value", %{"path" => p, "index" => i}), do: {:remove_enum_value, [p, i]}
+  defp get_mutation("update_enum_value", %{"path" => p, "index" => i, "value" => v}), do: {:update_enum_value, [p, i, v]}
+  defp get_mutation("add_logic_branch", %{"path" => p, "type" => t}), do: {:add_logic_branch, [p, t]}
+  defp get_mutation("remove_logic_branch", %{"path" => p, "type" => t, "index" => i}), do: {:remove_logic_branch, [p, t, i]}
+  defp get_mutation("add_child", %{"path" => p, "key" => k}), do: {:add_child, [p, k]}
+  defp get_mutation("remove_child", %{"path" => p, "key" => k}), do: {:remove_child, [p, k]}
+    defp get_mutation(_, _), do: nil
+  
+    def render(assigns) do
     ~H"""
     <div id={@id} class={["jse-host", @class]} {@rest}>
       <div class="jse-container">

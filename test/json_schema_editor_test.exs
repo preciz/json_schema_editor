@@ -1281,4 +1281,114 @@ defmodule JSONSchemaEditorTest do
       refute Map.has_key?(socket.assigns.schema, "not")
     end
   end
+
+  test "handle_event set_default_schema" do
+    socket = setup_socket(%{"$schema" => ""})
+
+    {:noreply, socket} = JSONSchemaEditor.handle_event("set_default_schema", %{}, socket)
+
+    assert socket.assigns.schema["$schema"] == "https://json-schema.org/draft-07/schema"
+  end
+
+  test "renders null type constraints (none)" do
+    path_json = JSON.encode!([])
+    ui_state = %{"expanded_constraints:#{path_json}" => true}
+    
+    html = render_component(JSONSchemaEditor, 
+      id: "jse", 
+      schema: %{"type" => "null"},
+      ui_state: ui_state
+    )
+
+    refute html =~ "No constraints for this type"
+    assert html =~ "Enum Values"
+  end
+
+  test "renders boolean type constraints options" do
+    # Ensure both true and false options are rendered
+    path_json = JSON.encode!([])
+    ui_state = %{"expanded_constraints:#{path_json}" => true}
+    
+    html = render_component(JSONSchemaEditor, 
+      id: "jse", 
+      schema: %{"type" => "boolean"},
+      ui_state: ui_state
+    )
+
+    assert html =~ "value=\"true\""
+    assert html =~ "value=\"false\""
+  end
+
+  test "renders unknown type constraints" do
+    path_json = JSON.encode!([])
+    ui_state = %{"expanded_constraints:#{path_json}" => true}
+    
+    html = render_component(JSONSchemaEditor, 
+      id: "jse", 
+      schema: %{"type" => "unknown_thing"},
+      ui_state: ui_state
+    )
+
+    assert html =~ "No constraints for this type"
+  end
+
+  test "renders enum input classes correctly" do
+    scenarios = [
+      {"number", "jse-input-number", [1]},
+      {"boolean", "jse-input-boolean", [true]},
+      {"integer", "jse-input-number", [1]}
+    ]
+
+    for {type, expected_class, enum} <- scenarios do
+      path_json = JSON.encode!([])
+      ui_state = %{"expanded_constraints:#{path_json}" => true}
+      schema = %{"type" => type, "enum" => enum}
+      
+      html = render_component(JSONSchemaEditor, 
+        id: "jse", 
+        schema: schema,
+        ui_state: ui_state
+      )
+      
+      assert html =~ expected_class
+    end
+  end
+
+  test "switch_tab to test tab" do
+    socket = setup_socket()
+    {:noreply, socket} = JSONSchemaEditor.handle_event("switch_tab", %{"tab" => "test"}, socket)
+    assert socket.assigns.active_tab == :test
+  end
+
+  test "renders conditional logic UI" do
+    html = render_component(JSONSchemaEditor, 
+      id: "jse", 
+      schema: %{"type" => "object"},
+      ui_state: %{}
+    )
+
+    # Should show Add If
+    assert html =~ "Add If"
+    
+    # Now with 'if'
+    schema = %{"if" => %{"type" => "string"}}
+    html = render_component(JSONSchemaEditor, 
+      id: "jse", 
+      schema: schema,
+      ui_state: %{}
+    )
+    
+    assert html =~ "Conditional Logic"
+    assert html =~ "Add Then"
+    assert html =~ "Add Else"
+  end
+
+  test "update/2 with minimal assigns uses defaults" do
+    # Only id and schema are required
+    {:ok, socket} = JSONSchemaEditor.update(%{id: "test", schema: %{}}, %Phoenix.LiveView.Socket{})
+    
+    assert socket.assigns.class == nil
+    assert socket.assigns.test_data_str =~ "example"
+    assert socket.assigns.history == []
+  end
 end
