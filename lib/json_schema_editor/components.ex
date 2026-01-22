@@ -539,7 +539,7 @@ defmodule JSONSchemaEditor.Components do
             />
           </div>
         <% end %>
-        <%= if !(@type in ["string", "number", "integer", "boolean", "array", "object"]) do %>
+        <%= if !(@type in ["string", "number", "integer", "boolean", "array", "object", "null"]) do %>
           <span class="jse-constraint-label">No constraints for this type</span>
         <% end %>
         <.enum_section

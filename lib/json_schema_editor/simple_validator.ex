@@ -74,6 +74,13 @@ defmodule JSONSchemaEditor.SimpleValidator do
         else: [{format_path(path), "Expected array, got #{type_of(data)}"}]
       )
 
+  defp validate_type("null", data, path),
+    do:
+      if(is_nil(data),
+        do: [],
+        else: [{format_path(path), "Expected null, got #{type_of(data)}"}]
+      )
+
   defp validate_type(_, _, _), do: []
 
   # --- Generic Constraints ---

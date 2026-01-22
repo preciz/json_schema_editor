@@ -33,7 +33,7 @@ defmodule JSONSchemaEditor do
     SimpleValidator
   }
 
-  @types ~w(string number integer boolean object array)
+  @types ~w(string number integer boolean object array null)
   @logic_types ~w(anyOf oneOf allOf)
   @formats ~w(email date-time date time uri uuid ipv4 ipv6 hostname)
 
@@ -330,6 +330,7 @@ defmodule JSONSchemaEditor do
            "number" -> 0.0
            "integer" -> 0
            "boolean" -> true
+           "null" -> nil
            _ -> "new value"
          end
 

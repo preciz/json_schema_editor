@@ -154,4 +154,27 @@ defmodule JSONSchemaEditor.HistoryTest do
     {:noreply, socket} = JSONSchemaEditor.handle_event("undo", %{}, socket)
     assert socket.assigns.schema["type"] == "string"
   end
+
+  test "history limit of 50 items" do
+    socket = setup_socket(%{"v" => 0})
+    path_json = JSON.encode!([])
+
+    # Add 60 items to history
+    socket =
+      Enum.reduce(1..60, socket, fn i, acc ->
+        {:noreply, next} =
+          JSONSchemaEditor.handle_event(
+            "change_title",
+            %{"path" => path_json, "value" => "#{i}"},
+            acc
+          )
+
+        next
+      end)
+
+    assert length(socket.assigns.history) == 50
+    # The oldest items should be dropped.
+    # The first item in history should be the 59th version (since 60th is current)
+    assert hd(socket.assigns.history)["title"] == "59"
+  end
 end

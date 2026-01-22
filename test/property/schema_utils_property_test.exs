@@ -44,6 +44,12 @@ defmodule JSONSchemaEditor.SchemaUtilsPropertyTest do
     end
   end
 
+  property "cast_value always returns nil for null type" do
+    check all(val <- term()) do
+      assert SchemaUtils.cast_value("null", val) == nil
+    end
+  end
+
   property "cast_value handles garbage strings gracefully" do
     check all(str <- string(:printable)) do
       # Should return 0 for min/max fields on error, or nil

@@ -2,7 +2,7 @@ defmodule JSONSchemaEditor.SchemaGeneratorPropertyTest do
   use ExUnit.Case, async: true
   use ExUnitProperties
 
-  alias JSONSchemaEditor.{SchemaGenerator, Validator}
+  alias JSONSchemaEditor.{SchemaGenerator, Validator, SimpleValidator}
 
   # Use the same data generator as in other tests, or a variation
   def json_data do
@@ -34,6 +34,16 @@ defmodule JSONSchemaEditor.SchemaGeneratorPropertyTest do
 
       assert errors == %{},
              "Generated schema was invalid: #{inspect(errors)}\nSchema: #{inspect(schema)}"
+    end
+  end
+
+  property "generated schema validates the source data (Roundtrip)" do
+    check all(data <- json_data()) do
+      schema = SchemaGenerator.generate(data)
+      errors = SimpleValidator.validate(schema, data)
+
+      assert errors == [],
+             "Generated schema failed to validate source data.\nErrors: #{inspect(errors)}\nData: #{inspect(data)}\nSchema: #{inspect(schema)}"
     end
   end
 end

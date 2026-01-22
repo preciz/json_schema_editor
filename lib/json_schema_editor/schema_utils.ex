@@ -65,5 +65,6 @@ defmodule JSONSchemaEditor.SchemaUtils do
   end
 
   def cast_value(field, value) when field in ~w(boolean uniqueItems), do: value == "true"
+  def cast_value("null", _value), do: nil
   def cast_value(_field, value), do: value
 end

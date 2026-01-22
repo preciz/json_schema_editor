@@ -50,4 +50,15 @@ defmodule JSONSchemaEditor.TestLabTest do
     assert socket.assigns.test_errors != :ok
     assert length(socket.assigns.test_errors) > 0
   end
+
+  test "validate_test_data handles invalid json syntax error" do
+    socket = setup_socket()
+    socket = %{socket | assigns: %{socket.assigns | test_data_str: "invalid json"}}
+
+    # We can trigger it via any event that calls validate_test_data or calling it via handle_event update_test_data
+    {:noreply, socket} =
+      JSONSchemaEditor.handle_event("update_test_data", %{"value" => "{"}, socket)
+
+    assert socket.assigns.test_errors == ["Invalid JSON Syntax"]
+  end
 end

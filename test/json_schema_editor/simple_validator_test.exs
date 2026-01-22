@@ -9,9 +9,11 @@ defmodule JSONSchemaEditor.SimpleValidatorTest do
     assert SimpleValidator.validate(%{"type" => "boolean"}, true) == []
     assert SimpleValidator.validate(%{"type" => "object"}, %{}) == []
     assert SimpleValidator.validate(%{"type" => "array"}, []) == []
+    assert SimpleValidator.validate(%{"type" => "null"}, nil) == []
 
     assert SimpleValidator.validate(%{"type" => "string"}, 123) != []
     assert SimpleValidator.validate(%{"type" => "integer"}, 1.5) != []
+    assert SimpleValidator.validate(%{"type" => "null"}, "not null") != []
   end
 
   test "validates const" do

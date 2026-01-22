@@ -62,4 +62,26 @@ defmodule JSONSchemaEditor.SchemaUtilsTest do
       assert SchemaUtils.generate_unique_key(%{}, "test") == "test"
     end
   end
+
+  describe "cast_value/2" do
+    test "casts to null" do
+      assert SchemaUtils.cast_value("null", "anything") == nil
+      assert SchemaUtils.cast_value("null", 123) == nil
+    end
+
+    test "casts integer" do
+      assert SchemaUtils.cast_value("integer", "123") == 123
+      assert SchemaUtils.cast_value("integer", "abc") == 0
+    end
+
+    test "casts float" do
+      assert SchemaUtils.cast_value("number", "12.3") == 12.3
+      assert SchemaUtils.cast_value("number", "abc") == 0.0
+    end
+
+    test "casts boolean" do
+      assert SchemaUtils.cast_value("boolean", "true") == true
+      assert SchemaUtils.cast_value("boolean", "false") == false
+    end
+  end
 end
