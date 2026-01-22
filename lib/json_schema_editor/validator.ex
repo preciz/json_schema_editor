@@ -10,11 +10,15 @@ defmodule JSONSchemaEditor.Validator do
   ]
 
   def validate_schema(schema, path \\ []) do
-    path_json = JSON.encode!(path)
+    node_errors = validate_node(schema)
 
     base_errors =
-      validate_node(schema)
-      |> Enum.into(%{}, fn {field, msg} -> {"#{path_json}:#{field}", msg} end)
+      if map_size(node_errors) > 0 do
+        path_json = JSON.encode!(path)
+        Enum.into(node_errors, %{}, fn {field, msg} -> {"#{path_json}:#{field}", msg} end)
+      else
+        %{}
+      end
 
     child_errors =
       schema
