@@ -31,7 +31,9 @@ defmodule JSONSchemaEditor.SchemaUtils do
       List.replace_at(data, key, new_child)
     else
       # Pad with nil if there's a gap
-      padding = if key > length(data), do: Enum.map(length(data)..(key - 1), fn _ -> nil end), else: []
+      padding =
+        if key > length(data), do: Enum.map(length(data)..(key - 1), fn _ -> nil end), else: []
+
       data ++ padding ++ [new_child]
     end
   end
