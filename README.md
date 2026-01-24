@@ -29,7 +29,7 @@ This library uses a small CSS file for styling and a JavaScript hook for clipboa
 ```elixir
 def deps do
   [
-    {:json_schema_editor, "~> 0.9.1"}
+    {:json_schema_editor, "~> 0.9.3"}
   ]
 end
 ```
