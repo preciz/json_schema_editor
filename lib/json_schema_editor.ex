@@ -6,8 +6,11 @@ defmodule JSONSchemaEditor do
   nested structures, arrays, validation constraints, logical composition (oneOf, anyOf, allOf),
   and conditional logic (if, then, else, not).
 
-  The component also includes a "Test Lab" for live validation of sample data and a "JSON Preview"
-  with syntax highlighting.
+  The library also includes a dedicated `JSONSchemaEditor.JSONEditor` component for editing
+  JSON data according to a provided schema.
+
+  The components include "Test Lab" for live validation, "JSON Preview" with syntax highlighting,
+  and visual tree editors.
 
   ## Attributes
 

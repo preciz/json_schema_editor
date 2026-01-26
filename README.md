@@ -29,7 +29,7 @@ This library uses a small CSS file for styling and a JavaScript hook for clipboa
 ```elixir
 def deps do
   [
-    {:json_schema_editor, "~> 0.9.3"}
+    {:json_schema_editor, "~> 0.9.4"}
   ]
 end
 ```
@@ -131,8 +131,12 @@ It features real-time validation, a visual tree editor, and a live preview of th
 mix test --cover
 ```
 
-### Running the Demo
+### Running the Demos
 ```bash
+# Main Schema Editor Demo
 elixir examples/demo.exs
+
+# JSON Data Editor Demo
+elixir examples/json_editor.exs
 ```
-Visit `http://localhost:4040` to see the editor in action with a sample schema.
+Visit `http://localhost:4040` (or `4041` for the JSON editor) to see the components in action.
