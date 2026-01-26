@@ -9,8 +9,6 @@ A Phoenix LiveComponent for visually building, editing, and validating JSON Sche
 ## Features
 
 - **Visual Editing**: Recursively build and edit deeply nested objects and arrays.
-- **JSON Viewer**: Dedicated component for displaying JSON with syntax highlighting and indentation guides.
-- **Tabbed Interface**: Switch between a visual editor, live JSON preview, and the Test Lab.
 - **Advanced Logic**: Support for `oneOf`, `anyOf`, `allOf` and conditional keywords (`if`, `then`, `else`, `not`).
 - **Test Lab**: Validate sample JSON data against your schema in real-time with detailed error reporting.
 - **Schema Generation**: Automatically infer a JSON Schema from a pasted JSON object.
@@ -19,6 +17,8 @@ A Phoenix LiveComponent for visually building, editing, and validating JSON Sche
 - **Draft 07 Support**: Includes constraints, enums, constants, `null` type, and $schema management.
 - **Copy to Clipboard**: One-click export of the generated schema.
 - **Lightweight**: Zero external JS dependencies (uses native Phoenix hooks), only requires `phoenix_live_view`.
+- **JSON Viewer**: Dedicated component for displaying JSON with syntax highlighting and indentation guides.
+- **JSON Editor**: Specialized component for editing JSON data according to a provided JSON Schema.
 
 ## Installation
 
@@ -107,6 +107,22 @@ You can also use the standalone viewer component to display any JSON data with s
 ```
 
 It accepts maps, lists, or even raw JSON strings (which it will attempt to decode and pretty-print).
+
+### JSON Editor
+
+The library also includes a dedicated JSON Editor component for editing JSON data according to a schema.
+
+```heex
+<.live_component
+  module={JSONSchemaEditor.JSONEditor}
+  id="json-data-editor"
+  schema={@my_schema}
+  json={@my_data}
+  on_save={fn updated_json -> send(self(), {:json_updated, updated_json}) end}
+/>
+```
+
+It features real-time validation, a visual tree editor, and a live preview of the edited data.
 
 ## Development
 

@@ -78,4 +78,48 @@ defmodule JSONSchemaEditor.SchemaUtils do
   def cast_value(field, value) when field in ~w(boolean uniqueItems), do: value == "true"
   def cast_value("null", _value), do: nil
   def cast_value(_field, value), do: value
+
+  def cast_type(value, "string") when is_map(value) or is_list(value), do: ""
+  def cast_type(value, "string"), do: to_string(value)
+
+  def cast_type(value, "number") when is_map(value) or is_list(value), do: 0
+
+  def cast_type(value, "number") do
+    value = to_string(value)
+
+    case Float.parse(value) do
+      {num, _} -> if String.contains?(value, "."), do: num, else: trunc(num)
+      :error -> 0
+    end
+  end
+
+  def cast_type(value, "integer") when is_map(value) or is_list(value), do: 0
+
+  def cast_type(value, "integer") do
+    cast_type(value, "number") |> trunc()
+  end
+
+  def cast_type(value, "boolean") when is_map(value) or is_list(value), do: false
+
+  def cast_type(value, "boolean") do
+    cond do
+      is_boolean(value) -> value
+      value == "true" -> true
+      value == "false" -> false
+      true -> false
+    end
+  end
+
+  def cast_type(_value, "object"), do: %{}
+  def cast_type(_value, "array"), do: []
+  def cast_type(_value, "null"), do: nil
+  def cast_type(value, _), do: value
+
+  def get_type(v) when is_binary(v), do: "string"
+  def get_type(v) when is_boolean(v), do: "boolean"
+  def get_type(v) when is_number(v), do: "number"
+  def get_type(v) when is_list(v), do: "array"
+  def get_type(v) when is_map(v), do: "object"
+  def get_type(nil), do: "null"
+  def get_type(_), do: "string"
 end

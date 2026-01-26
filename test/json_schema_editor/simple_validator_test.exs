@@ -201,6 +201,28 @@ defmodule JSONSchemaEditor.SimpleValidatorTest do
     assert hd(errors) |> elem(1) =~ "got unknown"
   end
 
+  test "handles non-map or non-list schemas gracefully" do
+    # These are invalid schemas according to standard but we handle them gracefully
+    assert SimpleValidator.validate(%{"items" => "not-map"}, ["data"]) == []
+    assert SimpleValidator.validate(%{"contains" => "not-map"}, ["data"]) == []
+    assert SimpleValidator.validate(%{"properties" => %{"a" => "not-map"}}, %{"a" => 1}) == []
+    assert SimpleValidator.validate(%{"anyOf" => "not-list"}, "data") == []
+    assert SimpleValidator.validate(%{"allOf" => ["not-map"]}, "data") != []
+    assert SimpleValidator.validate(%{"oneOf" => ["not-map"]}, "data") != []
+    assert SimpleValidator.validate(%{"if" => "not-map"}, "data") == []
+    assert SimpleValidator.validate(%{"not" => "not-map"}, "data") == []
+  end
+
+  test "handles unknown types gracefully" do
+    assert SimpleValidator.validate(%{"type" => "unknown"}, "data") == []
+  end
+
+  test "handles pattern as binary that fails to compile" do
+    # This should be handled by compile_schema or within validate_string_constraints
+    schema = %{"pattern" => "("}
+    assert SimpleValidator.validate(schema, "anything") == []
+  end
+
   describe "conditional logic (if/then/else)" do
     test "validates if/then/else" do
       schema = %{

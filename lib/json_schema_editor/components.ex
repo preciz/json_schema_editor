@@ -24,6 +24,9 @@ defmodule JSONSchemaEditor.Components do
     assigns = %{}
 
     case name do
+      :pencil ->
+        ~H(<path d="M2.695 14.763l-1.262 3.155a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.886L17.5 5.501a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z" />)
+
       :check ->
         ~H(<path
   fill-rule="evenodd"
@@ -507,8 +510,11 @@ defmodule JSONSchemaEditor.Components do
           )
 
         "object" ->
-          Enum.any?(["minProperties", "maxProperties", "additionalProperties"], &Map.has_key?(node, &1)) or
-            (Map.get(node, "required") not in [nil, []])
+          Enum.any?(
+            ["minProperties", "maxProperties", "additionalProperties"],
+            &Map.has_key?(node, &1)
+          ) or
+            Map.get(node, "required") not in [nil, []]
 
         _ ->
           false

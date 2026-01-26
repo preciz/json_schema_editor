@@ -51,6 +51,8 @@ defmodule JSONSchemaEditor.MixProject do
   defp deps do
     [
       {:phoenix_live_view, "~> 1.1"},
+      {:floki, ">= 0.30.0", only: :test},
+      {:lazy_html, ">= 0.1.0", only: :test},
       {:benchee, "~> 1.5", only: :dev},
       {:stream_data, "~> 1.2", only: :test},
       {:ex_doc, "~> 0.39.3", only: :dev, runtime: false}

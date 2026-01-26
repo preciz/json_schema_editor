@@ -1409,4 +1409,26 @@ defmodule JSONSchemaEditorTest do
     assert socket.assigns.test_data_str =~ "example"
     assert socket.assigns.history == []
   end
+
+  test "handle_event unknown event" do
+    socket = setup_socket()
+    {:noreply, ^socket} = JSONSchemaEditor.handle_event("unknown_event", %{}, socket)
+  end
+
+  test "toggle_ui auto-expands node" do
+    socket = setup_socket(%{"type" => "object"})
+    path_json = JSON.encode!([])
+    socket = Phoenix.Component.assign(socket, ui_state: %{"collapsed_node:[]" => true})
+
+    # Toggle constraints ensures node is not collapsed
+    {:noreply, socket} =
+      JSONSchemaEditor.handle_event(
+        "toggle_ui",
+        %{"path" => path_json, "type" => "expanded_constraints"},
+        socket
+      )
+
+    assert socket.assigns.ui_state["expanded_constraints:[]"] == true
+    assert socket.assigns.ui_state["collapsed_node:[]"] == false
+  end
 end

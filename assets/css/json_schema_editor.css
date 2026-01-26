@@ -38,6 +38,10 @@
     --jse-syntax-null: #9ca3af; /* Gray 400 */
     --jse-syntax-punctuation: #4b5563; /* Gray 600 */
     --jse-indent-guide: #e5e7eb; /* Gray 200 */
+    
+    /* JSON Editor Tree Settings */
+    --jse-tree-row-height: 1.75rem;
+    --jse-tree-indent: 1.25rem;
   }
 
   @media (prefers-color-scheme: dark) {
@@ -286,7 +290,7 @@
     background-color: var(--jse-danger-bg);
   }
 
-  /* Node Structure */
+  /* Node Structure (Schema Editor) */
   .jse-node-container {
     margin-left: 1rem;
     padding-left: 1rem;
@@ -1006,5 +1010,223 @@
     background-color: var(--jse-danger-bg);
     color: var(--jse-danger);
     border-color: var(--jse-danger-border);
+  }
+
+  /* 
+   * NEW TREE VIEW STYLES 
+   * Adapted to reuse existing variables where possible
+   */
+   
+  .jse-editor-pane {
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 13px;
+    line-height: var(--jse-tree-row-height);
+    padding: 0.5rem 0;
+  }
+
+  .jse-tree-node {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .jse-tree-row {
+    display: flex;
+    align-items: center;
+    padding-left: 0.5rem;
+    height: var(--jse-tree-row-height);
+    white-space: nowrap;
+    cursor: default;
+    position: relative;
+  }
+
+  .jse-tree-row:hover {
+    background-color: var(--jse-bg-secondary);
+  }
+
+  .jse-tree-row:hover .jse-tree-actions {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .jse-indent-guide {
+    display: inline-block;
+    width: var(--jse-tree-indent);
+    height: 100%;
+    border-left: 1px solid transparent; 
+  }
+  
+  .jse-tree-row:hover .jse-indent-guide {
+      border-left-color: var(--jse-border);
+  }
+
+  .jse-tree-toggle {
+    width: 1.25rem;
+    height: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: var(--jse-text-secondary);
+    cursor: pointer;
+    margin-right: 2px;
+    padding: 0;
+  }
+
+  .jse-tree-toggle:hover {
+    color: var(--jse-text-primary);
+  }
+
+  .jse-tree-toggle.placeholder {
+    pointer-events: none;
+    opacity: 0;
+  }
+
+  .jse-key-input {
+    background: transparent;
+    border: none;
+    color: var(--jse-syntax-key); /* Reusing syntax variable */
+    font-family: inherit;
+    font-size: inherit;
+    width: auto;
+    min-width: 2rem;
+    max-width: 150px;
+    padding: 0 2px;
+    margin: 0 2px;
+    border-radius: 2px;
+  }
+
+  .jse-key-input:hover {
+     background-color: var(--jse-bg);
+     box-shadow: 0 0 0 1px var(--jse-border);
+  }
+
+  .jse-key-input:focus {
+    outline: none;
+    background-color: var(--jse-bg);
+    color: var(--jse-text-primary);
+    box-shadow: 0 0 0 1px var(--jse-primary);
+  }
+
+  .jse-separator {
+    color: var(--jse-text-primary);
+    margin-right: 0.5rem;
+  }
+
+  .jse-value-input {
+    background: transparent;
+    border: none;
+    font-family: inherit;
+    font-size: inherit;
+    padding: 0 2px;
+    border-radius: 2px;
+    min-width: 4rem;
+    max-width: 600px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .jse-value-input:hover {
+    box-shadow: 0 0 0 1px var(--jse-border);
+  }
+
+  .jse-value-input:focus {
+    outline: none;
+    background-color: var(--jse-bg);
+    color: var(--jse-text-primary);
+    box-shadow: 0 0 0 1px var(--jse-primary);
+    max-width: none; /* Show full text when focused if possible, or at least don't truncate with ... */
+    overflow: visible;
+  }
+
+  .jse-multiline-preview {
+    max-width: 600px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    vertical-align: bottom;
+  }
+
+  /* Reuse syntax variables */
+  .jse-val-string { color: var(--jse-syntax-string); }
+  .jse-val-number { color: var(--jse-syntax-number); }
+  .jse-val-boolean { color: var(--jse-syntax-boolean); }
+  .jse-val-null { color: var(--jse-syntax-null); font-style: italic; }
+
+  .jse-meta {
+    margin-left: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--jse-text-tertiary);
+    user-select: none;
+  }
+
+  .jse-tree-actions {
+    margin-left: auto;
+    padding-right: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    opacity: 0; 
+    transition: opacity 0.1s;
+    pointer-events: none;
+  }
+
+  .jse-action-btn {
+    background: transparent;
+    border: none;
+    color: var(--jse-text-secondary);
+    cursor: pointer;
+    padding: 2px;
+    border-radius: 3px;
+    display: flex;
+  }
+
+  .jse-action-btn:hover {
+    background-color: var(--jse-bg-tertiary); /* Adjusted to tertiary for better contrast on hover row */
+    color: var(--jse-text-primary);
+  }
+  
+  .jse-action-btn.delete:hover {
+      color: var(--jse-danger);
+  }
+
+  /* Custom override for type select in tree view */
+  .jse-tree-row .jse-type-select {
+     appearance: none;
+     background: transparent;
+     border: none;
+     color: var(--jse-text-tertiary);
+     font-size: 0.75rem;
+     font-family: inherit;
+     cursor: pointer;
+     padding: 0 4px;
+     text-align: right;
+  }
+  
+  .jse-tree-row .jse-type-select:hover {
+      color: var(--jse-text-primary);
+      text-decoration: underline;
+      background: none;
+      box-shadow: none;
+  }
+  
+  .jse-tree-row .jse-type-select:focus {
+      outline: none;
+      color: var(--jse-primary);
+      box-shadow: none;
+  }
+
+  .jse-row-error {
+      background-color: rgba(239, 68, 68, 0.1);
+  }
+  
+  .jse-validation-msg {
+      font-size: 0.75rem;
+      color: var(--jse-danger);
+      margin-left: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 4px;
   }
 }
