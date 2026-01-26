@@ -71,6 +71,39 @@ defmodule JSONSchemaEditor.SimpleValidatorPropertyTest do
     end
   end
 
+  property "validates array length constraints" do
+    check all(
+            min <- integer(0..10),
+            len <- integer(min..20),
+            list <- list_of(term(), length: len)
+          ) do
+      schema = %{"type" => "array", "minItems" => min}
+      assert SimpleValidator.validate(schema, list) == []
+    end
+  end
+
+  property "validates array length failure" do
+    check all(
+            min <- integer(1..10),
+            len <- integer(0..(min - 1)),
+            list <- list_of(term(), length: len)
+          ) do
+      schema = %{"type" => "array", "minItems" => min}
+      assert SimpleValidator.validate(schema, list) != []
+    end
+  end
+
+  property "validates object properties count" do
+    check all(
+            min <- integer(0..5),
+            count <- integer(min..10),
+            map <- map_of(string(:alphanumeric), term(), length: count)
+          ) do
+      schema = %{"type" => "object", "minProperties" => min}
+      assert SimpleValidator.validate(schema, map) == []
+    end
+  end
+
   defp matches_type?("string", v), do: is_binary(v)
   defp matches_type?("number", v), do: is_number(v)
   defp matches_type?("integer", v), do: is_integer(v)

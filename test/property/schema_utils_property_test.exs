@@ -75,7 +75,81 @@ defmodule JSONSchemaEditor.SchemaUtilsPropertyTest do
     end
   end
 
+  property "update_in_path handles list indices and padding" do
+    check all(
+            initial_list <- list_of(simple_term(), max_length: 10),
+            index <- integer(0..20),
+            new_value <- simple_term()
+          ) do
+      path = [index]
+      updated_list = SchemaUtils.update_in_path(initial_list, path, fn _ -> new_value end)
+
+      assert is_list(updated_list)
+      assert length(updated_list) >= index + 1
+      assert Enum.at(updated_list, index) == new_value
+
+      # Check padding if we went beyond original length
+      if index > length(initial_list) do
+        # Indices between old_len and index-1 should be nil
+        for i <- length(initial_list)..(index - 1) do
+          assert Enum.at(updated_list, i) == nil
+        end
+      end
+    end
+  end
+
+  property "cast_type always returns value of requested type" do
+    check all(
+            val <- any_json_value(),
+            target_type <- member_of(~w(string number integer boolean object array null))
+          ) do
+      casted = SchemaUtils.cast_type(val, target_type)
+
+      case target_type do
+        "string" -> assert is_binary(casted)
+        "number" -> assert is_number(casted)
+        "integer" -> assert is_integer(casted)
+        "boolean" -> assert is_boolean(casted)
+        "object" -> assert is_map(casted)
+        "array" -> assert is_list(casted)
+        "null" -> assert is_nil(casted)
+      end
+    end
+  end
+
+  property "get_type correctly identifies types" do
+    check all(val <- any_json_value()) do
+      type = SchemaUtils.get_type(val)
+
+      assert type in ~w(string number boolean array object null)
+
+      case val do
+        v when is_binary(v) -> assert type == "string"
+        v when is_boolean(v) -> assert type == "boolean"
+        # Integers are numbers
+        v when is_integer(v) -> assert type == "number"
+        v when is_float(v) -> assert type == "number"
+        v when is_list(v) -> assert type == "array"
+        v when is_map(v) -> assert type == "object"
+        nil -> assert type == "null"
+        _ -> :ok
+      end
+    end
+  end
+
   defp simple_term do
     one_of([integer(), boolean(), string(:alphanumeric, min_length: 1, max_length: 10)])
+  end
+
+  defp any_json_value do
+    one_of([
+      integer(),
+      float(),
+      boolean(),
+      string(:printable),
+      constant(nil),
+      list_of(boolean(), max_length: 3),
+      map_of(string(:alphanumeric, max_length: 5), boolean(), max_length: 3)
+    ])
   end
 end
