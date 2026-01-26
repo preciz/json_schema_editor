@@ -70,7 +70,13 @@ defmodule JSONSchemaEditor.JSONEditor do
   end
 
   def handle_event("save", _, socket) do
-    if socket.assigns[:on_save], do: socket.assigns.on_save.(socket.assigns.json)
+    has_errors = not Enum.empty?(socket.assigns[:validation_errors] || [])
+    has_schema = not is_nil(socket.assigns[:schema])
+
+    if socket.assigns[:on_save] && not (has_schema and has_errors) do
+      socket.assigns.on_save.(socket.assigns.json)
+    end
+
     {:noreply, socket}
   end
 
@@ -221,7 +227,12 @@ defmodule JSONSchemaEditor.JSONEditor do
             <% end %>
           </div>
           <div class="jse-actions">
-            <button class="jse-btn jse-btn-primary" phx-click="save" phx-target={@myself}>
+            <button
+              class="jse-btn jse-btn-primary"
+              phx-click="save"
+              phx-target={@myself}
+              disabled={@schema && not Enum.empty?(@validation_errors)}
+            >
               <span>Save</span> <Components.icon name={:save} class="jse-icon-xs" />
             </button>
           </div>
