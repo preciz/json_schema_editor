@@ -18,7 +18,12 @@ defmodule JSONSchemaEditor do
     * `schema` (required) - The initial JSON Schema map to edit. Defaults to a basic schema if empty.
     * `on_save` (optional) - A 1-arity callback function invoked when the user clicks "Save".
       It receives the current schema as a map.
+    * `on_change` (optional) - A 1-arity callback function invoked when the schema changes.
+      It receives the updated schema as a map.
+      Note: This callback is NOT invoked if the schema is invalid.
     * `class` (optional) - Additional CSS classes to apply to the root container.
+    * `header_class` (optional) - Additional CSS classes to apply to the header section.
+    * `toolbar_class` (optional) - Additional CSS classes to apply to the toolbar/actions section.
 
   ## Usage
 
@@ -28,6 +33,7 @@ defmodule JSONSchemaEditor do
         schema={@my_schema}
         on_save={fn new_schema -> send(self(), {:save_schema, new_schema}) end}
         class="my-custom-theme"
+        header_class="bg-gray-100"
       />
   """
   use Phoenix.LiveComponent
@@ -53,10 +59,13 @@ defmodule JSONSchemaEditor do
       :id,
       :schema,
       :on_save,
+      :on_change,
       :ui_state,
       :active_tab,
       :myself,
       :class,
+      :header_class,
+      :toolbar_class,
       :show_import_modal,
       :import_error,
       :import_mode,
@@ -71,8 +80,12 @@ defmodule JSONSchemaEditor do
       |> assign(known_assigns)
       |> assign(:rest, Map.merge(Map.get(socket.assigns, :rest, %{}), rest))
       |> assign_new(:class, fn -> nil end)
+      |> assign_new(:header_class, fn -> nil end)
+      |> assign_new(:toolbar_class, fn -> nil end)
       |> assign_new(:ui_state, fn -> %{} end)
       |> assign_new(:schema, fn -> %{} end)
+      |> assign_new(:on_save, fn -> nil end)
+      |> assign_new(:on_change, fn -> nil end)
       |> update(:schema, &Map.put_new(&1, "$schema", "https://json-schema.org/draft-07/schema"))
       |> assign(types: @types, formats: @formats, logic_types: @logic_types)
       |> assign_new(:active_tab, fn -> :editor end)
@@ -112,6 +125,20 @@ defmodule JSONSchemaEditor do
     |> assign(:future, [])
   end
 
+  defp update_schema_and_notify(socket, new_schema) do
+    socket =
+      socket
+      |> push_history()
+      |> assign(:schema, new_schema)
+      |> validate_and_assign_errors()
+
+    if socket.assigns.on_change && Enum.empty?(socket.assigns.validation_errors) do
+      socket.assigns.on_change.(new_schema)
+    end
+
+    socket
+  end
+
   def handle_event("update_test_data", %{"value" => value}, socket) do
     {:noreply,
      socket
@@ -129,6 +156,10 @@ defmodule JSONSchemaEditor do
           |> assign(:schema, previous)
           |> validate_and_assign_errors()
 
+        if socket.assigns.on_change && Enum.empty?(socket.assigns.validation_errors) do
+          socket.assigns.on_change.(previous)
+        end
+
         {:noreply, socket}
 
       [] ->
@@ -145,6 +176,10 @@ defmodule JSONSchemaEditor do
           |> assign(:future, rest)
           |> assign(:schema, next)
           |> validate_and_assign_errors()
+
+        if socket.assigns.on_change && Enum.empty?(socket.assigns.validation_errors) do
+          socket.assigns.on_change.(next)
+        end
 
         {:noreply, socket}
 
@@ -178,11 +213,9 @@ defmodule JSONSchemaEditor do
         if is_map(schema) do
           socket =
             socket
-            |> push_history()
-            |> assign(:schema, schema)
+            |> update_schema_and_notify(schema)
             |> assign(:show_import_modal, false)
             |> assign(:import_error, nil)
-            |> validate_and_assign_errors()
 
           {:noreply, socket}
         else
@@ -213,19 +246,15 @@ defmodule JSONSchemaEditor do
 
     {:noreply,
      socket
-     |> push_history()
-     |> assign(:schema, new_schema)
-     |> update(:ui_state, &UIState.add_property(&1, path, current_props, new_key))
-     |> validate_and_assign_errors()}
+     |> update_schema_and_notify(new_schema)
+     |> update(:ui_state, &UIState.add_property(&1, path, current_props, new_key))}
   end
 
   def handle_event("delete_property", %{"path" => path, "key" => key}, socket) do
     {:noreply,
      socket
-     |> push_history()
-     |> assign(:schema, SchemaMutator.delete_property(socket.assigns.schema, path, key))
-     |> update(:ui_state, &UIState.remove_property(&1, path, key))
-     |> validate_and_assign_errors()}
+     |> update_schema_and_notify(SchemaMutator.delete_property(socket.assigns.schema, path, key))
+     |> update(:ui_state, &UIState.remove_property(&1, path, key))}
   end
 
   def handle_event("rename_property", %{"path" => path, "old_key" => old, "value" => new}, socket) do
@@ -238,13 +267,11 @@ defmodule JSONSchemaEditor do
 
         {:noreply,
          socket
-         |> push_history()
-         |> assign(:schema, new_schema)
+         |> update_schema_and_notify(new_schema)
          |> update(
            :ui_state,
            &UIState.rename_property(&1, path, current_props, old, String.trim(new))
-         )
-         |> validate_and_assign_errors()}
+         )}
 
       _ ->
         {:noreply, socket}
@@ -273,10 +300,10 @@ defmodule JSONSchemaEditor do
     case get_mutation(event, params) do
       {func, args} ->
         {:noreply,
-         socket
-         |> push_history()
-         |> assign(:schema, apply(SchemaMutator, func, [socket.assigns.schema | args]))
-         |> validate_and_assign_errors()}
+         update_schema_and_notify(
+           socket,
+           apply(SchemaMutator, func, [socket.assigns.schema | args])
+         )}
 
       nil ->
         {:noreply, socket}
@@ -330,7 +357,7 @@ defmodule JSONSchemaEditor do
     ~H"""
     <div id={@id} class={["jse-host", @class]} {@rest}>
       <div class="jse-container">
-        <div class="jse-header">
+        <div class={["jse-header", @header_class]}>
           <div class="jse-tabs">
             <button
               class={["jse-tab-btn", @active_tab == :editor && "active"]}
@@ -380,7 +407,7 @@ defmodule JSONSchemaEditor do
               <% end %>
             </div>
           </div>
-          <div class="jse-actions">
+          <div class={["jse-actions", @toolbar_class]}>
             <button
               class="jse-btn jse-btn-icon"
               phx-click="undo"
@@ -406,14 +433,16 @@ defmodule JSONSchemaEditor do
             >
               <span>Import</span> <Components.icon name={:import} />
             </button>
-            <button
-              class="jse-btn jse-btn-primary"
-              phx-click="save"
-              phx-target={@myself}
-              disabled={not Enum.empty?(@validation_errors)}
-            >
-              <span>Save</span> <Components.icon name={:save} />
-            </button>
+            <%= if @on_save do %>
+              <button
+                class="jse-btn jse-btn-primary"
+                phx-click="save"
+                phx-target={@myself}
+                disabled={not Enum.empty?(@validation_errors)}
+              >
+                <span>Save</span> <Components.icon name={:save} />
+              </button>
+            <% end %>
           </div>
         </div>
         <div class="jse-content-area">

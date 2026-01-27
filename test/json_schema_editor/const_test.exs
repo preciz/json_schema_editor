@@ -17,7 +17,8 @@ defmodule JSONSchemaEditor.ConstTest do
         test_data_str: "{}",
         test_errors: [],
         __changed__: %{},
-        on_save: nil
+        on_save: nil,
+        on_change: nil
       }
     }
   end

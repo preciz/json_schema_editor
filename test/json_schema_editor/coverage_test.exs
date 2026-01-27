@@ -23,7 +23,8 @@ defmodule JSONSchemaEditor.CoverageTest do
       import_error: nil,
       import_mode: :schema,
       myself: %Phoenix.LiveComponent.CID{cid: 1},
-      __changed__: %{}
+      __changed__: %{},
+      on_change: nil
     }
 
     struct(Phoenix.LiveView.Socket, assigns: assigns)

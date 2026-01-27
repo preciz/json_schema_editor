@@ -10,6 +10,8 @@ defmodule JSONSchemaEditor.JSONEditorPropertyTest do
         id: "test",
         json: json,
         schema: nil,
+        on_save: nil,
+        on_change: nil,
         collapsed_nodes: MapSet.new(),
         expanded_editor: nil,
         validation_errors: [],

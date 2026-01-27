@@ -15,7 +15,9 @@ defmodule JSONSchemaEditor.SchemaUriButtonTest do
         myself: %Phoenix.LiveComponent.CID{cid: 1},
         __changed__: %{},
         test_data_str: "{}",
-        test_errors: []
+        test_errors: [],
+        on_save: nil,
+        on_change: nil
       }
     }
   end

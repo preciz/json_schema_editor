@@ -12,7 +12,12 @@ defmodule JSONSchemaEditor.JSONEditor do
     * `schema` (optional) - A JSON Schema (as a map) to validate the data against.
     * `on_save` (optional) - A 1-arity callback function invoked when the user clicks "Save".
       It receives the current JSON data as a map or list.
+    * `on_change` (optional) - A 1-arity callback function invoked when the JSON data changes.
+      It receives the updated JSON data as a map or list.
+      Note: This callback is NOT invoked if the data is invalid according to the provided schema.
     * `class` (optional) - Additional CSS classes to apply to the root container.
+    * `header_class` (optional) - Additional CSS classes to apply to the header section.
+    * `toolbar_class` (optional) - Additional CSS classes to apply to the toolbar/actions section.
 
   ## Examples
 
@@ -22,6 +27,7 @@ defmodule JSONSchemaEditor.JSONEditor do
         module={JSONSchemaEditor.JSONEditor}
         id="json-editor"
         json={%{"foo" => "bar", "count" => 42}}
+        on_change={fn new_json -> IO.inspect(new_json) end}
       />
 
   ### With Schema Validation
@@ -46,9 +52,13 @@ defmodule JSONSchemaEditor.JSONEditor do
       |> assign_new(:active_tab, fn -> :editor end)
       |> assign_new(:json, fn -> %{} end)
       |> assign_new(:schema, fn -> nil end)
+      |> assign_new(:on_save, fn -> nil end)
+      |> assign_new(:on_change, fn -> nil end)
       |> assign_new(:collapsed_nodes, fn -> MapSet.new() end)
       |> assign_new(:expanded_editor, fn -> nil end)
       |> assign_new(:class, fn -> nil end)
+      |> assign_new(:header_class, fn -> nil end)
+      |> assign_new(:toolbar_class, fn -> nil end)
       |> validate_json()
 
     {:ok, socket}
@@ -73,7 +83,7 @@ defmodule JSONSchemaEditor.JSONEditor do
     has_errors = not Enum.empty?(socket.assigns[:validation_errors] || [])
     has_schema = not is_nil(socket.assigns[:schema])
 
-    if socket.assigns[:on_save] && not (has_schema and has_errors) do
+    if socket.assigns.on_save && not (has_schema and has_errors) do
       socket.assigns.on_save.(socket.assigns.json)
     end
 
@@ -154,7 +164,18 @@ defmodule JSONSchemaEditor.JSONEditor do
 
   defp handle_json_update(socket, path, func) do
     new_json = SchemaUtils.update_in_path(socket.assigns.json, path, func)
-    {:noreply, socket |> assign(:json, new_json) |> validate_json()}
+    socket = socket |> assign(:json, new_json) |> validate_json()
+
+    if socket.assigns.on_change do
+      has_errors = not Enum.empty?(socket.assigns.validation_errors)
+      has_schema = not is_nil(socket.assigns.schema)
+
+      if not (has_schema and has_errors) do
+        socket.assigns.on_change.(new_json)
+      end
+    end
+
+    {:noreply, socket}
   end
 
   defp path_to_id(path) do
@@ -188,7 +209,7 @@ defmodule JSONSchemaEditor.JSONEditor do
     ~H"""
     <div id={@id} class={["jse-host", @class]}>
       <div class="jse-container">
-        <div class="jse-header">
+        <div class={["jse-header", @header_class]}>
           <div class="jse-tabs">
             <button
               class={["jse-tab-btn", @active_tab == :editor && "active"]}
@@ -226,15 +247,17 @@ defmodule JSONSchemaEditor.JSONEditor do
               <% end %>
             <% end %>
           </div>
-          <div class="jse-actions">
-            <button
-              class="jse-btn jse-btn-primary"
-              phx-click="save"
-              phx-target={@myself}
-              disabled={@schema && not Enum.empty?(@validation_errors)}
-            >
-              <span>Save</span> <Components.icon name={:save} class="jse-icon-xs" />
-            </button>
+          <div class={["jse-actions", @toolbar_class]}>
+            <%= if @on_save do %>
+              <button
+                class="jse-btn jse-btn-primary"
+                phx-click="save"
+                phx-target={@myself}
+                disabled={@schema && not Enum.empty?(@validation_errors)}
+              >
+                <span>Save</span> <Components.icon name={:save} class="jse-icon-xs" />
+              </button>
+            <% end %>
           </div>
         </div>
 
