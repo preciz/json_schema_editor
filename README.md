@@ -92,7 +92,7 @@ end
   toolbar_class="flex gap-2"
 />
 ```
-*Note: `on_save` is optional. If omitted, the "Save" button will not be rendered. `on_change` triggers on every valid update.*
+*Note: Both `on_save` and `on_change` are optional. If `on_save` is omitted, the "Save" button will not be rendered. `on_change` triggers on every valid update.*
 
 ### 3. Handle Updates
 
