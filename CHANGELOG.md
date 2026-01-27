@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.7] - 2026-01-27
+
+### Added
+- `on_change` callback for real-time schema and data updates
+- `header_class` and `toolbar_class` assigns for custom styling
+- `on_save` callback support to conditionally render the "Save" button
+
+### Changed
+- Refactored CSS to use private variables with fallbacks for better theming support
+
 ## [0.9.6] - 2026-01-27
 
 ### Changed
