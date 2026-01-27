@@ -123,7 +123,7 @@ defmodule JSONEditorDemo do
          
          <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); overflow-y: auto;">
             <h3>Live Data View</h3>
-            <pre style="font-size: 12px; color: #333;"><%= JSON.encode!(@json, pretty: true) %></pre>
+            <JSONSchemaEditor.Viewer.render json={@json} style="font-size: 12px;" />
          </div>
        </div>
     </div>

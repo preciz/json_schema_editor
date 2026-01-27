@@ -282,7 +282,7 @@ defmodule Demo do
         <p><strong>Last Event:</strong> {@last_event}</p>
         
         <h3>Current Schema State</h3>
-        <pre><%= JSON.encode!(@my_schema, pretty: true) %></pre>
+        <JSONSchemaEditor.Viewer.render json={@my_schema} />
       </div>
     </div>
     """
