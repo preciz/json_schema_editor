@@ -29,7 +29,7 @@ This library uses a small CSS file for styling and a JavaScript hook for clipboa
 ```elixir
 def deps do
   [
-    {:json_schema_editor, "~> 0.9.6"}
+    {:json_schema_editor, "~> 0.9.7"}
   ]
 end
 ```
@@ -85,15 +85,25 @@ end
   module={JSONSchemaEditor}
   id="json-editor"
   schema={@my_schema}
+  on_change={fn updated_schema -> send(self(), {:schema_changed, updated_schema}) end}
   on_save={fn updated_schema -> send(self(), {:schema_saved, updated_schema}) end}
+  class="my-custom-theme"
+  header_class="bg-gray-100 p-4"
+  toolbar_class="flex gap-2"
 />
 ```
+*Note: `on_save` is optional. If omitted, the "Save" button will not be rendered. `on_change` triggers on every valid update.*
 
 ### 3. Handle Updates
 
 ```elixir
 def handle_info({:schema_saved, updated_schema}, socket) do
   # The schema is guaranteed to be logically consistent here
+  {:noreply, assign(socket, my_schema: updated_schema)}
+end
+
+def handle_info({:schema_changed, updated_schema}, socket) do
+  # Triggered whenever the schema is modified and valid
   {:noreply, assign(socket, my_schema: updated_schema)}
 end
 ```
@@ -118,11 +128,29 @@ The library also includes a dedicated JSON Editor component for editing JSON dat
   id="json-data-editor"
   schema={@my_schema}
   json={@my_data}
+  on_change={fn updated_json -> send(self(), {:json_changed, updated_json}) end}
   on_save={fn updated_json -> send(self(), {:json_updated, updated_json}) end}
 />
 ```
 
 It features real-time validation, a visual tree editor, and a live preview of the edited data.
+
+## Theming
+
+The editor uses CSS variables for styling, which can be easily overridden in your project's CSS or via the `class` attribute.
+
+```css
+.my-custom-theme {
+  /* Override main colors */
+  --jse-primary: #ec4899;
+  --jse-primary-hover: #db2777;
+  
+  /* Override layout dimensions */
+  --jse-tree-row-height: 2rem;
+}
+```
+
+See `assets/css/json_schema_editor.css` for the full list of available variables.
 
 ## Development
 
