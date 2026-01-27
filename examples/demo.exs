@@ -190,7 +190,7 @@ defmodule Demo do
     css_path = Path.expand("../assets/css/json_schema_editor.css", __DIR__)
     css_content = File.read!(css_path)
 
-    {:ok, assign(socket, my_schema: schema, css: css_content)}
+    {:ok, assign(socket, my_schema: schema, css: css_content, last_event: "Initialized")}
   end
 
   def render(assigns) do
@@ -198,6 +198,45 @@ defmodule Demo do
     <style>
       body {
         margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background-color: #f9fafb;
+      }
+      
+      /* Example: Overriding theme variables */
+      .custom-theme {
+        --jse-primary: #ec4899; /* Pink-500 */
+        --jse-primary-hover: #db2777; /* Pink-600 */
+        --jse-border-focus: #ec4899;
+      }
+      
+      .custom-header {
+        background-color: #fff1f2 !important; /* Pink-50 */
+      }
+      
+      .layout {
+        display: flex;
+        height: 100vh;
+      }
+      
+      .editor-container {
+        flex: 2;
+        border-right: 1px solid #e5e7eb;
+        height: 100%;
+      }
+      
+      .debug-panel {
+        flex: 1;
+        padding: 20px;
+        background: #fff;
+        overflow-y: auto;
+        font-size: 0.875rem;
+      }
+      
+      pre {
+        background: #f3f4f6;
+        padding: 10px;
+        border-radius: 4px;
+        overflow-x: auto;
       }
     </style>
     <style>
@@ -225,17 +264,36 @@ defmodule Demo do
         }
       });
     </script>
-    <.live_component
-      module={JSONSchemaEditor}
-      id="editor"
-      schema={@my_schema}
-      on_save={fn updated_json -> send(self(), {:schema_updated, updated_json}) end}
-    />
+    
+    <div class="layout">
+      <div class="editor-container">
+        <.live_component
+          module={JSONSchemaEditor}
+          id="editor"
+          schema={@my_schema}
+          on_save={fn updated_json -> send(self(), {:schema_saved, updated_json}) end}
+          on_change={fn updated_json -> send(self(), {:schema_changed, updated_json}) end}
+          class="custom-theme"
+          header_class="custom-header"
+        />
+      </div>
+      <div class="debug-panel">
+        <h2>Live Debug Panel</h2>
+        <p><strong>Last Event:</strong> {@last_event}</p>
+        
+        <h3>Current Schema State</h3>
+        <pre><%= JSON.encode!(@my_schema, pretty: true) %></pre>
+      </div>
+    </div>
     """
   end
 
-  def handle_info({:schema_updated, schema}, socket) do
-    {:noreply, assign(socket, my_schema: schema)}
+  def handle_info({:schema_saved, schema}, socket) do
+    {:noreply, assign(socket, my_schema: schema, last_event: "Saved at #{Time.to_string(Time.utc_now())}")}
+  end
+
+  def handle_info({:schema_changed, schema}, socket) do
+    {:noreply, assign(socket, my_schema: schema, last_event: "Changed at #{Time.to_string(Time.utc_now())}")}
   end
 end
 

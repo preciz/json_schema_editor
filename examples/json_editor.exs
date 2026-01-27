@@ -61,13 +61,18 @@ defmodule JSONEditorDemo do
     css_path = Path.expand("../assets/css/json_schema_editor.css", __DIR__)
     css_content = File.read!(css_path)
 
-    {:ok, assign(socket, schema: schema, json: initial_data, css: css_content)}
+    {:ok, assign(socket, schema: schema, json: initial_data, css: css_content, status: "Ready")}
   end
 
   def render(assigns) do
     ~H"""
     <style>
-      body { margin: 0; font-family: sans-serif; }
+      body { margin: 0; font-family: sans-serif; background: #f0f2f5; }
+      .custom-toolbar {
+        background-color: #e0e7ff; /* Indigo-50 */
+        border-radius: 4px;
+        padding: 4px;
+      }
     </style>
     <style>
       <%= @css %>
@@ -95,26 +100,42 @@ defmodule JSONEditorDemo do
       });
     </script>
     
-    <div style="padding: 20px;">
-       <h1>JSON Editor Demo</h1>
-       <p>Edit the JSON below. It is validated against a schema.</p>
+    <div style="padding: 20px; max-width: 1200px; margin: 0 auto;">
+       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+         <h1>JSON Editor Demo</h1>
+         <div style="background: white; padding: 10px; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+           <strong>Status:</strong> {@status}
+         </div>
+       </div>
        
-       <div style="height: 600px; border: 1px solid #ddd;">
-        <.live_component
-          module={JSONSchemaEditor.JSONEditor}
-          id="editor"
-          schema={@schema}
-          json={@json}
-          on_save={fn updated_json -> send(self(), {:json_updated, updated_json}) end}
-        />
+       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; height: 600px;">
+         <div style="background: white; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); overflow: hidden;">
+          <.live_component
+            module={JSONSchemaEditor.JSONEditor}
+            id="editor"
+            schema={@schema}
+            json={@json}
+            on_save={fn updated_json -> send(self(), {:json_saved, updated_json}) end}
+            on_change={fn updated_json -> send(self(), {:json_changed, updated_json}) end}
+            toolbar_class="custom-toolbar"
+          />
+         </div>
+         
+         <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); overflow-y: auto;">
+            <h3>Live Data View</h3>
+            <pre style="font-size: 12px; color: #333;"><%= JSON.encode!(@json, pretty: true) %></pre>
+         </div>
        </div>
     </div>
     """
   end
 
-  def handle_info({:json_updated, json}, socket) do
-    IO.puts("JSON Saved: #{inspect(json)}")
-    {:noreply, assign(socket, json: json)}
+  def handle_info({:json_saved, json}, socket) do
+    {:noreply, assign(socket, json: json, status: "Saved at #{Time.to_string(Time.utc_now())}")}
+  end
+
+  def handle_info({:json_changed, json}, socket) do
+    {:noreply, assign(socket, json: json, status: "Changed at #{Time.to_string(Time.utc_now())}")}
   end
 end
 
