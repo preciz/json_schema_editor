@@ -176,4 +176,66 @@ defmodule JSONSchemaEditor.SchemaMutator do
   def remove_child(schema, path, key) do
     SchemaUtils.update_in_path(schema, path, &Map.delete(&1, key))
   end
+
+  def add_extension(schema, path) do
+    current_node = SchemaUtils.get_in_path(schema, path)
+    new_key = SchemaUtils.generate_unique_key(current_node, "x-new-property")
+
+    new_schema =
+      SchemaUtils.update_in_path(schema, path, fn node ->
+        Map.put(node, new_key, "value")
+      end)
+
+    {new_schema, new_key}
+  end
+
+  def delete_extension(schema, path, key) do
+    SchemaUtils.update_in_path(schema, path, &Map.delete(&1, key))
+  end
+
+  def update_extension_key(schema, path, old_key, new_key) do
+    new_key = String.trim(new_key)
+
+    if new_key == "" or new_key == old_key or not String.starts_with?(new_key, "x-") do
+      :no_change
+    else
+      current_node = SchemaUtils.get_in_path(schema, path)
+
+      if Map.has_key?(current_node, new_key) do
+        :collision
+      else
+        {:ok,
+         SchemaUtils.update_in_path(schema, path, fn node ->
+           {val, node} = Map.pop(node, old_key)
+           Map.put(node, new_key, val)
+         end)}
+      end
+    end
+  end
+
+  def update_extension_value(schema, path, key, value) do
+    # Try to cast to number/bool if it looks like one, otherwise keep as string
+    casted =
+      cond do
+        value == "true" ->
+          true
+
+        value == "false" ->
+          false
+
+        value == "null" ->
+          nil
+
+        Regex.match?(~r/^-?\d+(\.\d+)?$/, value) ->
+          case Float.parse(value) do
+            {f, ""} -> if f == trunc(f), do: trunc(f), else: f
+            _ -> value
+          end
+
+        true ->
+          value
+      end
+
+    SchemaUtils.update_in_path(schema, path, &Map.put(&1, key, casted))
+  end
 end

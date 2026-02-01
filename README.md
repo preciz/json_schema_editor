@@ -15,6 +15,7 @@ A Phoenix LiveComponent for visually building, editing, and validating JSON Sche
 - **Undo/Redo**: Full history support for all schema modifications.
 - **Real-time Validation**: In-editor logic checking (e.g., `min <= max`) with immediate visual feedback.
 - **Draft 07 Support**: Includes constraints, enums, constants, `null` type, and $schema management.
+- **Custom Extensions**: Support for adding and editing custom `x-` properties at any node level.
 - **Copy to Clipboard**: One-click export of the generated schema.
 - **Lightweight**: Zero external JS dependencies (uses native Phoenix hooks), only requires `phoenix_live_view`.
 - **JSON Viewer**: Dedicated component for displaying JSON with syntax highlighting and indentation guides.

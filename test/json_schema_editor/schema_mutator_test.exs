@@ -210,4 +210,53 @@ defmodule JSONSchemaEditor.SchemaMutatorTest do
       refute Map.has_key?(new_schema, "contains")
     end
   end
+
+  describe "extension operations" do
+    test "add_extension" do
+      schema = %{"type" => "object"}
+      {new_schema, key} = SchemaMutator.add_extension(schema, "[]")
+      assert String.starts_with?(key, "x-")
+      assert new_schema[key] == "value"
+    end
+
+    test "delete_extension" do
+      schema = %{"x-test" => 1}
+      new_schema = SchemaMutator.delete_extension(schema, "[]", "x-test")
+      assert new_schema == %{}
+    end
+
+    test "update_extension_key" do
+      schema = %{"x-old" => "val"}
+      {:ok, new_schema} = SchemaMutator.update_extension_key(schema, "[]", "x-old", "x-new")
+      assert new_schema == %{"x-new" => "val"}
+
+      assert SchemaMutator.update_extension_key(schema, "[]", "x-old", "not-x") == :no_change
+      assert SchemaMutator.update_extension_key(schema, "[]", "x-old", "x-old") == :no_change
+      assert SchemaMutator.update_extension_key(schema, "[]", "x-old", "") == :no_change
+
+      schema_coll = %{"x-old" => 1, "x-new" => 2}
+      assert SchemaMutator.update_extension_key(schema_coll, "[]", "x-old", "x-new") == :collision
+    end
+
+    test "update_extension_value" do
+      schema = %{"x-test" => "old"}
+
+      assert SchemaMutator.update_extension_value(schema, "[]", "x-test", "true")["x-test"] ===
+               true
+
+      assert SchemaMutator.update_extension_value(schema, "[]", "x-test", "false")["x-test"] ===
+               false
+
+      assert SchemaMutator.update_extension_value(schema, "[]", "x-test", "null")["x-test"] ===
+               nil
+
+      assert SchemaMutator.update_extension_value(schema, "[]", "x-test", "123")["x-test"] === 123
+
+      assert SchemaMutator.update_extension_value(schema, "[]", "x-test", "12.3")["x-test"] ===
+               12.3
+
+      assert SchemaMutator.update_extension_value(schema, "[]", "x-test", "str")["x-test"] ===
+               "str"
+    end
+  end
 end

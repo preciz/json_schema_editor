@@ -139,10 +139,23 @@ defmodule JSONSchemaEditorTest do
       html = render_component(JSONSchemaEditor, id: "jse", schema: schema)
       assert html =~ "Allof Branches"
 
-      # Array items rendering
       schema = %{"type" => "array", "items" => %{"type" => "string"}}
       html = render_component(JSONSchemaEditor, id: "jse", schema: schema)
       assert html =~ "jse-badge-info"
+
+      # Custom Extensions rendering
+      schema = %{"type" => "object", "x-custom" => "value"}
+
+      html =
+        render_component(JSONSchemaEditor,
+          id: "jse",
+          schema: schema,
+          ui_state: %{"expanded_extensions:[]" => true}
+        )
+
+      assert html =~ "Custom Extensions (x-)"
+      assert html =~ "value=\"x-custom\""
+      assert html =~ "value=\"value\""
     end
   end
 
@@ -898,7 +911,8 @@ defmodule JSONSchemaEditorTest do
       :close,
       :undo,
       :redo,
-      :check
+      :check,
+      :tag
     ]
 
     for name <- icons do
@@ -1431,5 +1445,71 @@ defmodule JSONSchemaEditorTest do
 
     assert socket.assigns.ui_state["expanded_constraints:[]"] == true
     assert socket.assigns.ui_state["collapsed_node:[]"] == false
+  end
+
+  describe "extensions event handlers" do
+    test "add_extension" do
+      socket = setup_socket()
+      path_json = JSON.encode!([])
+
+      {:noreply, socket} =
+        JSONSchemaEditor.handle_event("add_extension", %{"path" => path_json}, socket)
+
+      assert Enum.any?(Map.keys(socket.assigns.schema), &String.starts_with?(&1, "x-"))
+    end
+
+    test "delete_extension" do
+      socket = setup_socket(%{"x-test" => 1})
+      path_json = JSON.encode!([])
+
+      {:noreply, socket} =
+        JSONSchemaEditor.handle_event(
+          "delete_extension",
+          %{"path" => path_json, "key" => "x-test"},
+          socket
+        )
+
+      refute Map.has_key?(socket.assigns.schema, "x-test")
+    end
+
+    test "update_extension_key" do
+      socket = setup_socket(%{"x-old" => 1})
+      path_json = JSON.encode!([])
+
+      # Success
+      {:noreply, socket} =
+        JSONSchemaEditor.handle_event(
+          "update_extension_key",
+          %{"path" => path_json, "old_key" => "x-old", "value" => "x-new"},
+          socket
+        )
+
+      assert socket.assigns.schema["x-new"] == 1
+      refute Map.has_key?(socket.assigns.schema, "x-old")
+
+      # Failure (no-op)
+      {:noreply, socket} =
+        JSONSchemaEditor.handle_event(
+          "update_extension_key",
+          %{"path" => path_json, "old_key" => "x-new", "value" => "not-x"},
+          socket
+        )
+
+      assert socket.assigns.schema["x-new"] == 1
+    end
+
+    test "update_extension_value" do
+      socket = setup_socket(%{"x-test" => "old"})
+      path_json = JSON.encode!([])
+
+      {:noreply, socket} =
+        JSONSchemaEditor.handle_event(
+          "update_extension_value",
+          %{"path" => path_json, "key" => "x-test", "value" => "123"},
+          socket
+        )
+
+      assert socket.assigns.schema["x-test"] == 123
+    end
   end
 end

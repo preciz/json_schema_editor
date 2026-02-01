@@ -432,12 +432,87 @@
     border-color: var(--_jse-border-focus);
   }
 
-  .jse-constraints-container {
+  .jse-constraints-container, .jse-extensions-container {
     background-color: var(--_jse-bg-secondary);
     border: 1px solid var(--_jse-border);
     border-radius: var(--_jse-radius);
     padding: 1rem;
     margin-bottom: 1rem;
+  }
+
+  .jse-extensions-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.25rem;
+    border-bottom: 1px dashed var(--_jse-border);
+  }
+
+  .jse-extensions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .jse-extension-item {
+    background-color: var(--_jse-bg);
+    border: 1px solid var(--_jse-border);
+    border-radius: var(--_jse-radius);
+    padding: 0.25rem 0.5rem;
+  }
+
+  .jse-extension-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .jse-extension-key-input {
+    background: transparent;
+    border: none;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--_jse-syntax-key);
+    width: 150px;
+    border-radius: 2px;
+  }
+
+  .jse-extension-value-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    font-size: 0.875rem;
+    color: var(--_jse-text-primary);
+    border-radius: 2px;
+  }
+
+  .jse-extension-key-input:hover, .jse-extension-value-input:hover {
+    background-color: var(--_jse-bg-secondary);
+  }
+
+  .jse-extension-key-input:focus, .jse-extension-value-input:focus {
+    outline: none;
+    background-color: var(--_jse-bg-secondary);
+    box-shadow: 0 0 0 1px var(--_jse-primary);
+  }
+
+  .jse-no-data {
+    font-size: 0.875rem;
+    color: var(--_jse-text-tertiary);
+    font-style: italic;
+    text-align: center;
+    padding: 0.5rem;
+  }
+
+  .jse-btn-toggle-extensions.jse-active {
+    color: var(--_jse-primary);
+    background-color: var(--_jse-bg-secondary);
+  }
+
+  .jse-btn-toggle-extensions.jse-has-data {
+    color: var(--_jse-primary);
   }
 
   .jse-constraints-grid {

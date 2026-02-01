@@ -4,7 +4,7 @@ defmodule JSONSchemaEditor do
 
   It provides a rich interface for creating and modifying JSON Schemas (Draft 07), supporting
   nested structures, arrays, validation constraints, logical composition (oneOf, anyOf, allOf),
-  and conditional logic (if, then, else, not).
+  conditional logic (if, then, else, not), and custom extensions (x- properties).
 
   The library also includes a dedicated `JSONSchemaEditor.JSONEditor` component for editing
   JSON data according to a provided schema.
@@ -282,9 +282,14 @@ defmodule JSONSchemaEditor do
     new_ui_state =
       Map.update(socket.assigns.ui_state, "#{t}:#{p}", true, fn v -> !v end)
 
-    # If we are expanding constraints, logic or description, ensure the node itself is not collapsed
+    # If we are expanding constraints, logic, extensions or description, ensure the node itself is not collapsed
     final_ui_state =
-      if t in ["expanded_constraints", "expanded_logic", "expanded_description"] and
+      if t in [
+           "expanded_constraints",
+           "expanded_logic",
+           "expanded_description",
+           "expanded_extensions"
+         ] and
            Map.get(new_ui_state, "#{t}:#{p}") do
         Map.put(new_ui_state, "collapsed_node:#{p}", false)
       else
@@ -292,6 +297,42 @@ defmodule JSONSchemaEditor do
       end
 
     {:noreply, assign(socket, :ui_state, final_ui_state)}
+  end
+
+  def handle_event("add_extension", %{"path" => path}, socket) do
+    {new_schema, _new_key} = SchemaMutator.add_extension(socket.assigns.schema, path)
+    {:noreply, update_schema_and_notify(socket, new_schema)}
+  end
+
+  def handle_event("delete_extension", %{"path" => path, "key" => key}, socket) do
+    {:noreply,
+     update_schema_and_notify(
+       socket,
+       SchemaMutator.delete_extension(socket.assigns.schema, path, key)
+     )}
+  end
+
+  def handle_event(
+        "update_extension_key",
+        %{"path" => path, "old_key" => old, "value" => new},
+        socket
+      ) do
+    case SchemaMutator.update_extension_key(socket.assigns.schema, path, old, new) do
+      {:ok, new_schema} -> {:noreply, update_schema_and_notify(socket, new_schema)}
+      _ -> {:noreply, socket}
+    end
+  end
+
+  def handle_event(
+        "update_extension_value",
+        %{"path" => path, "key" => key, "value" => value},
+        socket
+      ) do
+    {:noreply,
+     update_schema_and_notify(
+       socket,
+       SchemaMutator.update_extension_value(socket.assigns.schema, path, key, value)
+     )}
   end
 
   # --- Simple Mutations (Schema update only) ---

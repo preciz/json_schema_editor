@@ -103,6 +103,13 @@ defmodule JSONSchemaEditor.Components do
   d="M8.5 3.528v4.644c0 .729-.29 1.428-.805 1.944l-1.217 1.216a8.75 8.75 0 0 1 3.55.621l.502.201a7.25 7.25 0 0 0 4.178.365l-2.403-2.403a2.75 2.75 0 0 1-.805-1.944V3.528a40.205 40.205 0 0 0-3 0Zm4.5.084.19.015a.75.75 0 1 0 .12-1.495 41.364 41.364 0 0 0-6.62 0 .75.75 0 0 0 .12 1.495L7 3.612v4.56c0 .331-.132.649-.366.883L2.6 13.09c-1.496 1.496-.817 4.15 1.403 4.475C5.961 17.852 7.963 18 10 18s4.039-.148 5.997-.436c2.22-.325 2.9-2.979 1.403-4.475l-4.034-4.034A1.25 1.25 0 0 1 13 8.172v-4.56Z"
   clip-rule="evenodd"
 />)
+
+      :tag ->
+        ~H(<path
+  fill-rule="evenodd"
+  d="M4.5 2A2.5 2.5 0 002 4.5v3.879a2.5 2.5 0 00.732 1.767l7.5 7.5a2.5 2.5 0 003.536 0l3.878-3.878a2.5 2.5 0 000-3.536l-7.5-7.5A2.5 2.5 0 008.38 2H4.5zM5 6a1 1 0 100-2 1 1 0 000 2z"
+  clip-rule="evenodd"
+/>)
     end
   end
 
@@ -272,6 +279,13 @@ defmodule JSONSchemaEditor.Components do
             path={@path}
             validation_errors={@validation_errors}
             formats={@formats}
+            myself={@myself}
+          />
+        <% end %>
+        <%= if Map.get(@ui_state, "expanded_extensions:#{JSON.encode!(@path)}", false) do %>
+          <.extensions_section
+            node={@node}
+            path={@path}
             myself={@myself}
           />
         <% end %>
@@ -486,6 +500,20 @@ defmodule JSONSchemaEditor.Components do
       >
         <.icon name={:beaker} class="jse-icon-sm" />
       </button>
+      <button
+        class={[
+          "jse-btn-icon jse-btn-toggle-extensions",
+          Map.get(@ui_state, "expanded_extensions:#{JSON.encode!(@path)}", false) && "jse-active",
+          has_extensions?(@node) && "jse-has-data"
+        ]}
+        phx-click="toggle_ui"
+        phx-value-type="expanded_extensions"
+        phx-target={@myself}
+        phx-value-path={JSON.encode!(@path)}
+        title="Toggle Custom Extensions (x-)"
+      >
+        <.icon name={:tag} class="jse-icon-sm" />
+      </button>
     </div>
     """
   end
@@ -530,6 +558,10 @@ defmodule JSONSchemaEditor.Components do
   defp has_description?(node) do
     desc = Map.get(node, "description")
     desc != nil and desc != ""
+  end
+
+  defp has_extensions?(node) do
+    Enum.any?(Map.keys(node), &String.starts_with?(&1, "x-"))
   end
 
   defp any_errors?(validation_errors, path, fields) do
@@ -1116,6 +1148,75 @@ defmodule JSONSchemaEditor.Components do
         formats={@formats}
         myself={@myself}
       />
+    </div>
+    """
+  end
+
+  attr(:node, :map, required: true)
+  attr(:path, :list, required: true)
+  attr(:myself, :any, required: true)
+
+  defp extensions_section(assigns) do
+    extensions =
+      assigns.node
+      |> Map.keys()
+      |> Enum.filter(&String.starts_with?(&1, "x-"))
+      |> Enum.sort()
+
+    assigns = assign(assigns, :extensions, extensions)
+
+    ~H"""
+    <div class="jse-extensions-container">
+      <div class="jse-extensions-header">
+        <.badge class="jse-badge-secondary">Custom Extensions (x-)</.badge>
+        <button
+          class="jse-btn jse-btn-secondary jse-btn-xs"
+          phx-click="add_extension"
+          phx-target={@myself}
+          phx-value-path={JSON.encode!(@path)}
+        >
+          <.icon name={:plus} class="jse-icon-xs" /> Add
+        </button>
+      </div>
+      <div class="jse-extensions-list">
+        <%= if @extensions == [] do %>
+          <div class="jse-no-data">No custom extensions</div>
+        <% end %>
+        <%= for key <- @extensions do %>
+          <div class="jse-extension-item">
+            <div class="jse-extension-row">
+              <input
+                type="text"
+                value={key}
+                class="jse-extension-key-input"
+                phx-blur="update_extension_key"
+                phx-target={@myself}
+                phx-value-path={JSON.encode!(@path)}
+                phx-value-old_key={key}
+              />
+              <input
+                type="text"
+                value={to_string(Map.get(@node, key))}
+                class="jse-extension-value-input"
+                phx-blur="update_extension_value"
+                phx-target={@myself}
+                phx-value-path={JSON.encode!(@path)}
+                phx-value-key={key}
+              />
+              <button
+                class="jse-btn-icon jse-btn-delete"
+                phx-click="delete_extension"
+                phx-target={@myself}
+                phx-value-path={JSON.encode!(@path)}
+                phx-value-key={key}
+                title="Delete Extension"
+              >
+                <.icon name={:trash} class="jse-icon-xs" />
+              </button>
+            </div>
+          </div>
+        <% end %>
+      </div>
     </div>
     """
   end
