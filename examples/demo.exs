@@ -12,6 +12,8 @@ defmodule Demo do
       "$schema" => "https://json-schema.org/draft-07/schema",
       "title" => "User Profile Schema",
       "description" => "A comprehensive example demonstrating JSON Schema Editor features",
+      "x-generated-by" => "JSONSchemaEditor",
+      "x-priority" => 1,
       "type" => "object",
       "properties" => %{
         "userInfo" => %{
