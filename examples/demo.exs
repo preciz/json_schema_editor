@@ -204,17 +204,6 @@ defmodule Demo do
         background-color: #f9fafb;
       }
       
-      /* Example: Overriding theme variables */
-      .custom-theme {
-        --jse-primary: #ec4899; /* Pink-500 */
-        --jse-primary-hover: #db2777; /* Pink-600 */
-        --jse-border-focus: #ec4899;
-      }
-      
-      .custom-header {
-        background-color: #fff1f2 !important; /* Pink-50 */
-      }
-      
       .layout {
         display: flex;
         height: 100vh;
@@ -232,13 +221,6 @@ defmodule Demo do
         background: #fff;
         overflow-y: auto;
         font-size: 0.875rem;
-      }
-      
-      pre {
-        background: #f3f4f6;
-        padding: 10px;
-        border-radius: 4px;
-        overflow-x: auto;
       }
     </style>
     <style>
@@ -275,8 +257,6 @@ defmodule Demo do
           schema={@my_schema}
           on_save={fn updated_json -> send(self(), {:schema_saved, updated_json}) end}
           on_change={fn updated_json -> send(self(), {:schema_changed, updated_json}) end}
-          class="custom-theme"
-          header_class="custom-header"
         />
       </div>
       <div class="debug-panel">
