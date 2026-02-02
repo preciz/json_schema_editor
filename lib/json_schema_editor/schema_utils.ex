@@ -1,5 +1,7 @@
 defmodule JSONSchemaEditor.SchemaUtils do
-  @moduledoc false
+  @moduledoc """
+  Utility functions for working with JSON Schemas.
+  """
 
   def get_in_path(data, path) when is_binary(path), do: get_in_path(data, JSON.decode!(path))
   def get_in_path(data, []), do: data
@@ -122,4 +124,34 @@ defmodule JSONSchemaEditor.SchemaUtils do
   def get_type(v) when is_map(v), do: "object"
   def get_type(nil), do: "null"
   def get_type(_), do: "string"
+
+  @doc """
+  Recursively removes a specific custom property (e.g. "x-custom") from the schema.
+  """
+  def clean_custom_property(schema, property_name) when is_map(schema) do
+    schema
+    |> Map.delete(property_name)
+    |> Map.new(fn {k, v} -> {k, clean_custom_property(v, property_name)} end)
+  end
+
+  def clean_custom_property(schema, property_name) when is_list(schema) do
+    Enum.map(schema, &clean_custom_property(&1, property_name))
+  end
+
+  def clean_custom_property(schema, _), do: schema
+
+  @doc """
+  Recursively removes all properties starting with "x-" from the schema.
+  """
+  def clean_all_custom_properties(schema) when is_map(schema) do
+    schema
+    |> Map.reject(fn {k, _} -> String.starts_with?(to_string(k), "x-") end)
+    |> Map.new(fn {k, v} -> {k, clean_all_custom_properties(v)} end)
+  end
+
+  def clean_all_custom_properties(schema) when is_list(schema) do
+    Enum.map(schema, &clean_all_custom_properties/1)
+  end
+
+  def clean_all_custom_properties(schema), do: schema
 end
